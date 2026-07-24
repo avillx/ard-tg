@@ -20,20 +20,20 @@ class ChatProvidedToolCallPayload:
     """Payload of a provided tool call event in the chat stream.
 
     Example:
-        {'tool': 'my_tool', 'args': {}, 'result_link': 'http://host/api/v1/toolresult/abc', 'agent_id': 'agent_1',
-            'session_id': 'sess_1'}
+        {'tool': 'my_tool', 'args': {}, 'result_id': 'fg1ds12sg3d3f3fg342234d', 'agent_id': 'agent_1', 'session_id':
+            'sess_1'}
 
     Attributes:
         tool (str | Unset): Tool name.
         args (ChatProvidedToolCallPayloadArgs | Unset): Tool arguments.
-        result_link (str | Unset): URL for the external tool server to POST the result back.
+        result_id (str | Unset): URL safe id for path parameter to /toolresult/{id} endpoint
         agent_id (str | Unset): Agent identifier.
         session_id (str | Unset): Session identifier.
     """
 
     tool: str | Unset = UNSET
     args: ChatProvidedToolCallPayloadArgs | Unset = UNSET
-    result_link: str | Unset = UNSET
+    result_id: str | Unset = UNSET
     agent_id: str | Unset = UNSET
     session_id: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -45,7 +45,7 @@ class ChatProvidedToolCallPayload:
         if not isinstance(self.args, Unset):
             args = self.args.to_dict()
 
-        result_link = self.result_link
+        result_id = self.result_id
 
         agent_id = self.agent_id
 
@@ -58,8 +58,8 @@ class ChatProvidedToolCallPayload:
             field_dict["tool"] = tool
         if args is not UNSET:
             field_dict["args"] = args
-        if result_link is not UNSET:
-            field_dict["result_link"] = result_link
+        if result_id is not UNSET:
+            field_dict["result_id"] = result_id
         if agent_id is not UNSET:
             field_dict["agent_id"] = agent_id
         if session_id is not UNSET:
@@ -81,7 +81,7 @@ class ChatProvidedToolCallPayload:
         else:
             args = ChatProvidedToolCallPayloadArgs.from_dict(_args)
 
-        result_link = d.pop("result_link", UNSET)
+        result_id = d.pop("result_id", UNSET)
 
         agent_id = d.pop("agent_id", UNSET)
 
@@ -90,7 +90,7 @@ class ChatProvidedToolCallPayload:
         chat_provided_tool_call_payload = cls(
             tool=tool,
             args=args,
-            result_link=result_link,
+            result_id=result_id,
             agent_id=agent_id,
             session_id=session_id,
         )

@@ -35,10 +35,10 @@ class AgentService:
             request : str, 
             *,
             provided_tools : list[tools.AgentTool] = None,
-            on_completion : Callable[[models.ChatCompletionMessage], None] = None,
-            on_compaction : Callable[[models.ChatCompactionMessage], None] = None,
-            on_error : Callable[[models.ChatErrorMessage], None] = None,
-            on_tool_result : Callable[[models.ChatToolResultMessage], None] = None,
+            on_completion : Callable[[models.ChatCompletionEvent], None] = None,
+            on_compaction : Callable[[models.ChatCompactionEvent], None] = None,
+            on_error : Callable[[models.ChatErrorEvent], None] = None,
+            on_tool_result : Callable[[models.ChatToolResultEvent], None] = None,
         ):
 
         tool_servers = []
@@ -77,13 +77,13 @@ def _run_chat_stream(
     agent_client : agent_client.Client,
     chat_body : models.ChatBody,
     provided_tools_map: dict[str,Callable[[dict[str,any]],str]],
-    on_completion : Callable[[models.ChatCompletionMessage], None] = None,
-    on_compaction : Callable[[models.ChatCompactionMessage], None] = None,
-    on_error : Callable[[models.ChatErrorMessage], None] = None,
-    on_tool_result : Callable[[models.ChatToolResultMessage], None] = None,
+    on_completion : Callable[[models.ChatCompletionEvent], None] = None,
+    on_compaction : Callable[[models.ChatCompactionEvent], None] = None,
+    on_error : Callable[[models.ChatErrorEvent], None] = None,
+    on_tool_result : Callable[[models.ChatToolResultEvent], None] = None,
 ):
 
-    def on_provided_tool_call(call : models.ChatProvidedToolCallMessage):
+    def on_provided_tool_call(call : models.ChatProvidedToolCallEvent):
         call_executor = provided_tools_map[call.payload.tool]
         if call_executor is None:
             return
@@ -123,32 +123,32 @@ def _run_chat_stream(
 def _process_response(
     response : 
         None |
-        models.ChatProvidedToolCallMessage | 
-        models.ChatCompactionMessage | 
-        models.ChatCompletionMessage |
-        models.ChatErrorMessage |
-        models.ChatToolResultMessageType,
-    on_provided_tool_call : Callable[[models.ChatProvidedToolCallMessage], None] = None,
-    on_completion : Callable[[models.ChatCompletionMessage], None] = None,
-    on_compaction : Callable[[models.ChatCompactionMessage], None] = None,
-    on_error : Callable[[models.ChatErrorMessage], None] = None,
-    on_tool_result : Callable[[models.ChatToolResultMessage], None] = None,
+        models.ChatProvidedToolCallEvent | 
+        models.ChatCompactionEvent | 
+        models.ChatCompletionEvent |
+        models.ChatErrorEvent |
+        models.ChatToolResultEventType,
+    on_provided_tool_call : Callable[[models.ChatProvidedToolCallEvent], None] = None,
+    on_completion : Callable[[models.ChatCompletionEvent], None] = None,
+    on_compaction : Callable[[models.ChatCompactionEvent], None] = None,
+    on_error : Callable[[models.ChatErrorEvent], None] = None,
+    on_tool_result : Callable[[models.ChatToolResultEvent], None] = None,
 ):
     match response :
         case None:
             return
-        case models.ChatProvidedToolCallMessage():
+        case models.ChatProvidedToolCallEvent():
             on_provided_tool_call(response)
-        case models.ChatCompactionMessage():
+        case models.ChatCompactionEvent():
             if on_compaction is not None:
                 on_compaction(response)
-        case models.ChatCompletionMessage():
+        case models.ChatCompletionEvent():
             if on_completion is not None:
                 on_completion(response)
-        case models.ChatErrorMessage():
+        case models.ChatErrorEvent():
             if on_error is not None:
                 on_error(response)                
-        case models.ChatToolResultMessageType():
+        case models.ChatToolResultEventType():
             if on_tool_result is not None:
                 on_tool_result(response)
 
@@ -159,16 +159,16 @@ def determine_response(response : str) -> any:
     try:
         completion_dict = json.loads(response.removeprefix("data: "))
         match completion_dict["type"]:
-            case models.ChatCompletionMessageType.COMPLETE:
-                return models.ChatCompletionMessage.from_dict(completion_dict)
-            case models.ChatCompactionMessageType.COMPACTION:
-                return models.ChatCompactionMessage.from_dict(completion_dict)
-            case models.ChatErrorMessageType.ERROR:
-                return models.ChatErrorMessage.from_dict(completion_dict)
-            case models.ChatProvidedToolCallMessageType.PROVIDED_TOOLCALL:
-                return models.ChatProvidedToolCallMessage.from_dict(completion_dict)
-            case models.ChatToolResultMessageType.TOOL_RESULT:
-                return models.ChatToolResultMessage.from_dict(completion_dict)
+            case models.ChatCompletionEventType.COMPLETE:
+                return models.ChatCompletionEvent.from_dict(completion_dict)
+            case models.ChatCompactionEventType.COMPACTION:
+                return models.ChatCompactionEvent.from_dict(completion_dict)
+            case models.ChatErrorEventType.ERROR:
+                return models.ChatErrorEvent.from_dict(completion_dict)
+            case models.ChatProvidedToolCallEventType.PROVIDED_TOOLCALL:
+                return models.ChatProvidedToolCallEvent.from_dict(completion_dict)
+            case models.ChatToolResultEventType.TOOL_RESULT:
+                return models.ChatToolResultEvent.from_dict(completion_dict)
         raise("unknown result type " + completion_dict["type"])
 
     except Exception as e:

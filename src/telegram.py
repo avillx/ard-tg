@@ -111,7 +111,7 @@ class Handlers():
     def _handler_general_message(self,message : telebot_types.Message,bot: telebot.TeleBot):
 
         # on completion - sends result in chat
-        def on_completion(c : models.ChatCompletionMessage) -> None:
+        def on_completion(c : models.ChatCompletionEvent) -> None:
             completion : str  = c.payload.completion
             if completion is None:
                 return
@@ -121,11 +121,11 @@ class Handlers():
                     bot.send_message(message.chat.id,fmt.escape_markdown(m))
 
         # on compactions sens notify message in chat
-        def on_compaction(c : models.ChatCompletionMessage) -> None:
+        def on_compaction(c : models.ChatCompletionEvent) -> None:
             bot.send_message(message.chat.id,"⚠️ session compacted")
 
         # on error notify user about it
-        def on_error(e : models.ChatErrorMessage) -> None:
+        def on_error(e : models.ChatErrorEvent) -> None:
             bot.send_message(message.chat.id,"somting goes wrong: " + fmt.escape_markdown(e.payload.cause))
 
  

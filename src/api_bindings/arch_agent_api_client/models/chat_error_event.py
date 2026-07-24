@@ -6,27 +6,26 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.chat_provided_tool_call_message_type import ChatProvidedToolCallMessageType
+from ..models.chat_error_event_type import ChatErrorEventType
 
 if TYPE_CHECKING:
-    from ..models.chat_provided_tool_call_payload import ChatProvidedToolCallPayload
+    from ..models.chat_error_payload import ChatErrorPayload
 
 
-T = TypeVar("T", bound="ChatProvidedToolCallMessage")
+T = TypeVar("T", bound="ChatErrorEvent")
 
 
 @_attrs_define
-class ChatProvidedToolCallMessage:
+class ChatErrorEvent:
     """
     Attributes:
-        type_ (ChatProvidedToolCallMessageType):
-        payload (ChatProvidedToolCallPayload): Payload of a provided tool call event in the chat stream. Example:
-            {'tool': 'my_tool', 'args': {}, 'result_link': 'http://host/api/v1/toolresult/abc', 'agent_id': 'agent_1',
-            'session_id': 'sess_1'}.
+        type_ (ChatErrorEventType):
+        payload (ChatErrorPayload): Payload of an error event in the chat stream. Example: {'cause': 'something went
+            wrong', 'session': 'sess_1', 'agent': 'agent_1'}.
     """
 
-    type_: ChatProvidedToolCallMessageType
-    payload: ChatProvidedToolCallPayload
+    type_: ChatErrorEventType
+    payload: ChatErrorPayload
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,20 +46,20 @@ class ChatProvidedToolCallMessage:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.chat_provided_tool_call_payload import ChatProvidedToolCallPayload
+        from ..models.chat_error_payload import ChatErrorPayload
 
         d = dict(src_dict)
-        type_ = ChatProvidedToolCallMessageType(d.pop("type"))
+        type_ = ChatErrorEventType(d.pop("type"))
 
-        payload = ChatProvidedToolCallPayload.from_dict(d.pop("payload"))
+        payload = ChatErrorPayload.from_dict(d.pop("payload"))
 
-        chat_provided_tool_call_message = cls(
+        chat_error_event = cls(
             type_=type_,
             payload=payload,
         )
 
-        chat_provided_tool_call_message.additional_properties = d
-        return chat_provided_tool_call_message
+        chat_error_event.additional_properties = d
+        return chat_error_event
 
     @property
     def additional_keys(self) -> list[str]:

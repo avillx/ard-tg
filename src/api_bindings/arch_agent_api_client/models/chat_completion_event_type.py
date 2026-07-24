@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ChatCompletionMessageType(str, Enum):
+class ChatCompletionEventType(str, Enum):
     COMPLETE = "complete"
 
     def __str__(self) -> str:

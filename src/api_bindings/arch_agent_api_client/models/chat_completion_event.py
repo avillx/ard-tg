@@ -6,26 +6,26 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.chat_error_message_type import ChatErrorMessageType
+from ..models.chat_completion_event_type import ChatCompletionEventType
 
 if TYPE_CHECKING:
-    from ..models.chat_error_payload import ChatErrorPayload
+    from ..models.chat_completion_payload import ChatCompletionPayload
 
 
-T = TypeVar("T", bound="ChatErrorMessage")
+T = TypeVar("T", bound="ChatCompletionEvent")
 
 
 @_attrs_define
-class ChatErrorMessage:
+class ChatCompletionEvent:
     """
     Attributes:
-        type_ (ChatErrorMessageType):
-        payload (ChatErrorPayload): Payload of an error event in the chat stream. Example: {'cause': 'something went
-            wrong', 'session': 'sess_1', 'agent': 'agent_1'}.
+        type_ (ChatCompletionEventType):
+        payload (ChatCompletionPayload): Payload of a completion event in the chat stream. Example: {'done': False,
+            'completion': 'Hello!', 'tool_calls': []}.
     """
 
-    type_: ChatErrorMessageType
-    payload: ChatErrorPayload
+    type_: ChatCompletionEventType
+    payload: ChatCompletionPayload
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,20 +46,20 @@ class ChatErrorMessage:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.chat_error_payload import ChatErrorPayload
+        from ..models.chat_completion_payload import ChatCompletionPayload
 
         d = dict(src_dict)
-        type_ = ChatErrorMessageType(d.pop("type"))
+        type_ = ChatCompletionEventType(d.pop("type"))
 
-        payload = ChatErrorPayload.from_dict(d.pop("payload"))
+        payload = ChatCompletionPayload.from_dict(d.pop("payload"))
 
-        chat_error_message = cls(
+        chat_completion_event = cls(
             type_=type_,
             payload=payload,
         )
 
-        chat_error_message.additional_properties = d
-        return chat_error_message
+        chat_completion_event.additional_properties = d
+        return chat_completion_event
 
     @property
     def additional_keys(self) -> list[str]:

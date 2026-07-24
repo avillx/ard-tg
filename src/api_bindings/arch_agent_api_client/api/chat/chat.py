@@ -6,11 +6,11 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.chat_body import ChatBody
-from ...models.chat_compaction_message import ChatCompactionMessage
-from ...models.chat_completion_message import ChatCompletionMessage
-from ...models.chat_error_message import ChatErrorMessage
-from ...models.chat_provided_tool_call_message import ChatProvidedToolCallMessage
-from ...models.chat_tool_result_message import ChatToolResultMessage
+from ...models.chat_compaction_event import ChatCompactionEvent
+from ...models.chat_completion_event import ChatCompletionEvent
+from ...models.chat_error_event import ChatErrorEvent
+from ...models.chat_provided_tool_call_event import ChatProvidedToolCallEvent
+from ...models.chat_tool_result_event import ChatToolResultEvent
 from ...types import Response
 
 
@@ -36,28 +36,19 @@ def _get_kwargs(
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> (
-    ChatCompactionMessage
-    | ChatCompletionMessage
-    | ChatErrorMessage
-    | ChatProvidedToolCallMessage
-    | ChatToolResultMessage
-    | None
+    ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent | None
 ):
     if response.status_code == 200:
 
         def _parse_response_200(
             data: object,
         ) -> (
-            ChatCompactionMessage
-            | ChatCompletionMessage
-            | ChatErrorMessage
-            | ChatProvidedToolCallMessage
-            | ChatToolResultMessage
+            ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent
         ):
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                componentsschemas_chat_event_type_0 = ChatErrorMessage.from_dict(data)
+                componentsschemas_chat_event_type_0 = ChatErrorEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -65,7 +56,7 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                componentsschemas_chat_event_type_1 = ChatCompletionMessage.from_dict(data)
+                componentsschemas_chat_event_type_1 = ChatCompletionEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_1
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -73,7 +64,7 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                componentsschemas_chat_event_type_2 = ChatToolResultMessage.from_dict(data)
+                componentsschemas_chat_event_type_2 = ChatToolResultEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_2
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -81,14 +72,14 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                componentsschemas_chat_event_type_3 = ChatCompactionMessage.from_dict(data)
+                componentsschemas_chat_event_type_3 = ChatCompactionEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_3
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
-            componentsschemas_chat_event_type_4 = ChatProvidedToolCallMessage.from_dict(data)
+            componentsschemas_chat_event_type_4 = ChatProvidedToolCallEvent.from_dict(data)
 
             return componentsschemas_chat_event_type_4
 
@@ -105,11 +96,7 @@ def _parse_response(
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
-    ChatCompactionMessage
-    | ChatCompletionMessage
-    | ChatErrorMessage
-    | ChatProvidedToolCallMessage
-    | ChatToolResultMessage
+    ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -124,11 +111,7 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> Response[
-    ChatCompactionMessage
-    | ChatCompletionMessage
-    | ChatErrorMessage
-    | ChatProvidedToolCallMessage
-    | ChatToolResultMessage
+    ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent
 ]:
     """Start a chat completion
 
@@ -144,7 +127,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ChatCompactionMessage | ChatCompletionMessage | ChatErrorMessage | ChatProvidedToolCallMessage | ChatToolResultMessage]
+        Response[ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent]
     """
 
     kwargs = _get_kwargs(
@@ -163,12 +146,7 @@ def sync(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> (
-    ChatCompactionMessage
-    | ChatCompletionMessage
-    | ChatErrorMessage
-    | ChatProvidedToolCallMessage
-    | ChatToolResultMessage
-    | None
+    ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent | None
 ):
     """Start a chat completion
 
@@ -184,7 +162,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ChatCompactionMessage | ChatCompletionMessage | ChatErrorMessage | ChatProvidedToolCallMessage | ChatToolResultMessage
+        ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent
     """
 
     return sync_detailed(
@@ -198,11 +176,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> Response[
-    ChatCompactionMessage
-    | ChatCompletionMessage
-    | ChatErrorMessage
-    | ChatProvidedToolCallMessage
-    | ChatToolResultMessage
+    ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent
 ]:
     """Start a chat completion
 
@@ -218,7 +192,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ChatCompactionMessage | ChatCompletionMessage | ChatErrorMessage | ChatProvidedToolCallMessage | ChatToolResultMessage]
+        Response[ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent]
     """
 
     kwargs = _get_kwargs(
@@ -235,12 +209,7 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> (
-    ChatCompactionMessage
-    | ChatCompletionMessage
-    | ChatErrorMessage
-    | ChatProvidedToolCallMessage
-    | ChatToolResultMessage
-    | None
+    ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent | None
 ):
     """Start a chat completion
 
@@ -256,7 +225,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ChatCompactionMessage | ChatCompletionMessage | ChatErrorMessage | ChatProvidedToolCallMessage | ChatToolResultMessage
+        ChatCompactionEvent | ChatCompletionEvent | ChatErrorEvent | ChatProvidedToolCallEvent | ChatToolResultEvent
     """
 
     return (

@@ -6,26 +6,27 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.chat_completion_message_type import ChatCompletionMessageType
+from ..models.chat_provided_tool_call_event_type import ChatProvidedToolCallEventType
 
 if TYPE_CHECKING:
-    from ..models.chat_completion_payload import ChatCompletionPayload
+    from ..models.chat_provided_tool_call_payload import ChatProvidedToolCallPayload
 
 
-T = TypeVar("T", bound="ChatCompletionMessage")
+T = TypeVar("T", bound="ChatProvidedToolCallEvent")
 
 
 @_attrs_define
-class ChatCompletionMessage:
+class ChatProvidedToolCallEvent:
     """
     Attributes:
-        type_ (ChatCompletionMessageType):
-        payload (ChatCompletionPayload): Payload of a completion event in the chat stream. Example: {'done': False,
-            'completion': 'Hello!', 'tool_calls': []}.
+        type_ (ChatProvidedToolCallEventType):
+        payload (ChatProvidedToolCallPayload): Payload of a provided tool call event in the chat stream. Example:
+            {'tool': 'my_tool', 'args': {}, 'result_id': 'fg1ds12sg3d3f3fg342234d', 'agent_id': 'agent_1', 'session_id':
+            'sess_1'}.
     """
 
-    type_: ChatCompletionMessageType
-    payload: ChatCompletionPayload
+    type_: ChatProvidedToolCallEventType
+    payload: ChatProvidedToolCallPayload
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,20 +47,20 @@ class ChatCompletionMessage:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.chat_completion_payload import ChatCompletionPayload
+        from ..models.chat_provided_tool_call_payload import ChatProvidedToolCallPayload
 
         d = dict(src_dict)
-        type_ = ChatCompletionMessageType(d.pop("type"))
+        type_ = ChatProvidedToolCallEventType(d.pop("type"))
 
-        payload = ChatCompletionPayload.from_dict(d.pop("payload"))
+        payload = ChatProvidedToolCallPayload.from_dict(d.pop("payload"))
 
-        chat_completion_message = cls(
+        chat_provided_tool_call_event = cls(
             type_=type_,
             payload=payload,
         )
 
-        chat_completion_message.additional_properties = d
-        return chat_completion_message
+        chat_provided_tool_call_event.additional_properties = d
+        return chat_provided_tool_call_event
 
     @property
     def additional_keys(self) -> list[str]:

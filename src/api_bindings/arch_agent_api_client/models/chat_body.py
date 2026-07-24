@@ -27,7 +27,8 @@ class ChatBody:
         additional_prompt (str | Unset): Additional prompt text appended to the system prompt.
         tool_servers (list[ProvidedToolServer] | Unset): External client-side tool servers the agent can use for this
             call.
-            client guarantee of execution and return result for it on intoduced link
+            client guarantee of execution and return result for it on intoduced id
+            for tool result endpoint with path parameter
     """
 
     agent_id: str

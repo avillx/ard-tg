@@ -6,26 +6,26 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.chat_tool_result_message_type import ChatToolResultMessageType
+from ..models.chat_compaction_event_type import ChatCompactionEventType
 
 if TYPE_CHECKING:
-    from ..models.chat_tool_result_payload import ChatToolResultPayload
+    from ..models.chat_compaction_payload import ChatCompactionPayload
 
 
-T = TypeVar("T", bound="ChatToolResultMessage")
+T = TypeVar("T", bound="ChatCompactionEvent")
 
 
 @_attrs_define
-class ChatToolResultMessage:
+class ChatCompactionEvent:
     """
     Attributes:
-        type_ (ChatToolResultMessageType):
-        payload (ChatToolResultPayload): Payload of a tool result event in the chat stream. Example: {'id': 'call_abc',
-            'result': [{'text': 'File contents'}]}.
+        type_ (ChatCompactionEventType):
+        payload (ChatCompactionPayload): Payload of a compaction event in the chat stream. Example: {'message':
+            'compaction processed', 'result': 'summary text'}.
     """
 
-    type_: ChatToolResultMessageType
-    payload: ChatToolResultPayload
+    type_: ChatCompactionEventType
+    payload: ChatCompactionPayload
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -46,20 +46,20 @@ class ChatToolResultMessage:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.chat_tool_result_payload import ChatToolResultPayload
+        from ..models.chat_compaction_payload import ChatCompactionPayload
 
         d = dict(src_dict)
-        type_ = ChatToolResultMessageType(d.pop("type"))
+        type_ = ChatCompactionEventType(d.pop("type"))
 
-        payload = ChatToolResultPayload.from_dict(d.pop("payload"))
+        payload = ChatCompactionPayload.from_dict(d.pop("payload"))
 
-        chat_tool_result_message = cls(
+        chat_compaction_event = cls(
             type_=type_,
             payload=payload,
         )
 
-        chat_tool_result_message.additional_properties = d
-        return chat_tool_result_message
+        chat_compaction_event.additional_properties = d
+        return chat_compaction_event
 
     @property
     def additional_keys(self) -> list[str]:

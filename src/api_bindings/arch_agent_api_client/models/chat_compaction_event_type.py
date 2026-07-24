@@ -1,8 +1,8 @@
 from enum import Enum
 
 
-class ChatToolResultMessageType(str, Enum):
-    TOOL_RESULT = "tool_result"
+class ChatCompactionEventType(str, Enum):
+    COMPACTION = "compaction"
 
     def __str__(self) -> str:
         return str(self.value)

@@ -5,21 +5,21 @@ from .activity_record import ActivityRecord
 from .agent_config import AgentConfig
 from .agent_list_response import AgentListResponse
 from .chat_body import ChatBody
-from .chat_compaction_message import ChatCompactionMessage
-from .chat_compaction_message_type import ChatCompactionMessageType
+from .chat_compaction_event import ChatCompactionEvent
+from .chat_compaction_event_type import ChatCompactionEventType
 from .chat_compaction_payload import ChatCompactionPayload
-from .chat_completion_message import ChatCompletionMessage
-from .chat_completion_message_type import ChatCompletionMessageType
+from .chat_completion_event import ChatCompletionEvent
+from .chat_completion_event_type import ChatCompletionEventType
 from .chat_completion_payload import ChatCompletionPayload
-from .chat_error_message import ChatErrorMessage
-from .chat_error_message_type import ChatErrorMessageType
+from .chat_error_event import ChatErrorEvent
+from .chat_error_event_type import ChatErrorEventType
 from .chat_error_payload import ChatErrorPayload
-from .chat_provided_tool_call_message import ChatProvidedToolCallMessage
-from .chat_provided_tool_call_message_type import ChatProvidedToolCallMessageType
+from .chat_provided_tool_call_event import ChatProvidedToolCallEvent
+from .chat_provided_tool_call_event_type import ChatProvidedToolCallEventType
 from .chat_provided_tool_call_payload import ChatProvidedToolCallPayload
 from .chat_provided_tool_call_payload_args import ChatProvidedToolCallPayloadArgs
-from .chat_tool_result_message import ChatToolResultMessage
-from .chat_tool_result_message_type import ChatToolResultMessageType
+from .chat_tool_result_event import ChatToolResultEvent
+from .chat_tool_result_event_type import ChatToolResultEventType
 from .chat_tool_result_payload import ChatToolResultPayload
 from .content_part import ContentPart
 from .create_session_response_201 import CreateSessionResponse201
@@ -67,21 +67,21 @@ __all__ = (
     "AgentConfig",
     "AgentListResponse",
     "ChatBody",
-    "ChatCompactionMessage",
-    "ChatCompactionMessageType",
+    "ChatCompactionEvent",
+    "ChatCompactionEventType",
     "ChatCompactionPayload",
-    "ChatCompletionMessage",
-    "ChatCompletionMessageType",
+    "ChatCompletionEvent",
+    "ChatCompletionEventType",
     "ChatCompletionPayload",
-    "ChatErrorMessage",
-    "ChatErrorMessageType",
+    "ChatErrorEvent",
+    "ChatErrorEventType",
     "ChatErrorPayload",
-    "ChatProvidedToolCallMessage",
-    "ChatProvidedToolCallMessageType",
+    "ChatProvidedToolCallEvent",
+    "ChatProvidedToolCallEventType",
     "ChatProvidedToolCallPayload",
     "ChatProvidedToolCallPayloadArgs",
-    "ChatToolResultMessage",
-    "ChatToolResultMessageType",
+    "ChatToolResultEvent",
+    "ChatToolResultEventType",
     "ChatToolResultPayload",
     "ContentPart",
     "CreateSessionResponse201",
