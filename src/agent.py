@@ -1,4 +1,5 @@
 import api_bindings.arch_agent_api_client.api.tools.list_tools as list_tools
+import api_bindings.arch_agent_api_client.api.tool_results.resolve_tool_call as tool_result
 from api_bindings.arch_agent_api_client.models.content_part import ContentPart
 import api_bindings.arch_agent_api_client.client as agent_client
 import api_bindings.arch_agent_api_client.models as models
@@ -84,21 +85,36 @@ def _run_chat_stream(
 ):
 
     def on_provided_tool_call(call : models.ChatProvidedToolCallEvent):
-        call_executor = provided_tools_map[call.payload.tool]
-        if call_executor is None:
-            return
 
-        args : dict[str,any] = {}
-        if call.payload.args is not None:
-            args = call.payload.args
+        # process
+        result = ""
+        tool = call.payload.tool        
+        try:
+            call_executor = provided_tools_map[tool]
 
-        tools.resolve_call(
-            tool_executor=call_executor,
-            client=agent_client,
-            result_sink_id=call.payload.result_link,
-            args=args,
+            args : dict[str,any] = {}
+            if call.payload.args is not None:
+                args = call.payload.args
+
+            result = call_executor(args)
+
+        except KeyError:
+            result = f"tool '{tool}' is not exist"
+        except Exception as e:
+            result = "errors in tool precessing"
+
+
+        # respond
+        answer = models.ToolResultPayload(
+            result=[models.ContentPart(text=result)]
         )
-            
+
+        tool_result.sync(
+            client=agent_client,
+            body=answer,
+            id=call.payload.result_id,
+        )
+
     with httpx.stream(
         "POST", 
         agent_url+"/chat", 
