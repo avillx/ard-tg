@@ -188,7 +188,6 @@ def determine_response(response : str) -> any:
         raise("unknown result type " + completion_dict["type"])
 
     except Exception as e:
-        log.error(e)
-        log.error(response)
+        log.error(f"determine_response: bad response type: {e}")
 
     return None
