@@ -1,9 +1,12 @@
 import json
 import logging as log
+import time
 from collections.abc import Callable
 
 import httpx
 
+import api_bindings.arch_agent_api_client.api.chat.interrupt_chat as interrupt_chat
+import api_bindings.arch_agent_api_client.api.sessions.create_session as create_session
 import api_bindings.arch_agent_api_client.api.tool_results.resolve_tool_call as tool_result
 import api_bindings.arch_agent_api_client.api.tools.list_tools as list_tools
 import api_bindings.arch_agent_api_client.client as agent_client
@@ -12,15 +15,55 @@ import tools
 from api_bindings.arch_agent_api_client.models.content_part import ContentPart
 
 
+class SessionService:
+    _agent_id : str
+    _agent_client : agent_client.Client
+    _actual_session : str
+    _last_update : float
+    _life_time:float
+
+    def __init__(self, agent_id : str,agent_client : agent_client.Client, life_time:float):
+        self._agent_client = agent_client
+        self._life_time = life_time
+        self._agent_id = agent_id
+        self._last_update = 0
+        self._actual_session = ""
+
+    def get_session(self) -> str:
+        now = time.monotonic()
+
+        # is expired
+        if now - self._last_update > self._life_time:
+            self._actual_session = self.create_new_session()
+            self._last_update = now
+
+        return self._actual_session
+
+    def create_new_session(self) -> str:
+        resp = create_session.sync(client=self._agent_client,agent=self._agent_id)
+        if resp is None:
+            log.error("agent return empty session")
+            return ""
+        return resp.id
+
+
 class AgentService:
     _agent_url :str
     _agent_id : str
     _agent_client : agent_client.Client
+    _session_service : SessionService
 
-    def __init__(self, agent_url: str, agent_id : str, agent_client : agent_client.Client):
+    def __init__(
+            self,
+            agent_url : str,
+            agent_id : str,
+            agent_client : agent_client.Client,
+            session_service : SessionService,
+        ):
         self._agent_url = agent_url
         self._agent_id = agent_id
         self._agent_client = agent_client
+        self._session_service = session_service
 
     def tool_list(self) -> list[models.ToolServerInfo]:
         tool_servers_dto : models.ListToolsResponse200 =  list_tools.sync(client=self._agent_client)
@@ -52,13 +95,16 @@ class AgentService:
             for tool in provided_tools:
                 provided_tools_map[tool.name()] = tool.execute
 
+        session = self._session_service.get_session()
         chat_body : models.ChatBody = models.ChatBody(
             agent_id=self._agent_id,
             logging=True,
-            session_id="e0edc0a6-608e-426f-9908-bb02e7129d29",
+            session_id=session,
             user_request=[ContentPart(text=request)],
             tool_servers=tool_servers
         )
+        log.debug(f"session: {session}")
+
         try:
             _run_chat_stream(
                 agent_url=self._agent_url,
@@ -71,6 +117,11 @@ class AgentService:
                 on_tool_result=on_tool_result,
             )
         except Exception as e:
+            interrupt_chat.sync(
+                agent=self._agent_id,
+                client=self._agent_client,
+                session_id=session,
+            )
             log.error(msg=f"agent_request: {e}")
 
 
