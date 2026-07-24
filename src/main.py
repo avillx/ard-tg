@@ -1,9 +1,12 @@
-import telebot
 import os
+
+import telebot
 from dotenv import load_dotenv
+
 import api_bindings.arch_agent_api_client.client as client
-from agent import AgentService
 import telegram as tg
+from agent import AgentService
+
 
 def main():
 
@@ -13,9 +16,8 @@ def main():
     agent_url : str = os.getenv("AGENT_URL")
     agent_id : str = os.getenv("AGENT_ID")
 
-
     # bot
-    bot = telebot.TeleBot(telegram_token,"MarkdownV2")
+    bot = telebot.TeleBot(telegram_token,"MarkdownV2",num_threads=4)
     # bot_tools =
 
     # agent service
@@ -26,7 +28,6 @@ def main():
         agent_id=agent_id,
     )
 
-    
     # hanlers
     handlers = tg.Handlers(
         agent_service=agent_service,
@@ -35,7 +36,7 @@ def main():
     handlers.register_on(bot)
 
     bot.infinity_polling()
-    
+
 
 if __name__ == "__main__":
     main()

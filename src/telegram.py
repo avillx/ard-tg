@@ -1,12 +1,17 @@
+import logging as log
+import threading
+from collections.abc import Callable
+
 import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
+
 import api_bindings.arch_agent_api_client.models as models
-from agent import AgentService
 import tools
+from agent import AgentService
 
 
-class StickerChache():
+class StickerChache:
     _bot: telebot.TeleBot
     _sticker_packs : dict[dict[str,str]]
 
@@ -18,7 +23,9 @@ class StickerChache():
         try:
             pack = self._sticker_packs[name]
             return pack
-        except:      
+        except KeyError:
+            log.info(f"sticker pack {name}: not found, getting from telegram")
+
             set = self._bot.get_sticker_set(name)
             if set is None:
                 return None
@@ -69,21 +76,23 @@ class SendStickerTool(tools.AgentTool):
             return "sticker sended"
         except KeyError:
             return f"has no sticker for {emoji}"
-        except Exception as e:
+        except Exception:
             return "stricker tool occures errors"
 
-class Handlers():
+class Handlers:
     agent_service : AgentService
     _sticker_chache : StickerChache
 
-    def __init__(self, agent_service : AgentService, sticker_chache:StickerChache):
+    def __init__(self, agent_service : AgentService, sticker_chache:StickerChache,sticker_pack:str):
         self.agent_service = agent_service
         self._sticker_chache = sticker_chache
+        self._sticker_pack = sticker_pack
 
     def register_on(self,bot : telebot.TeleBot):
         bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
-        bot.register_message_handler(self._handler_general_message,func=lambda message: True,pass_bot=True)
+        bot.register_message_handler(
+            with_typing(self._handler_general_message),func=lambda message: True,pass_bot=True)
 
     def _handler_ping(self,message : telebot_types.Message,bot: telebot.TeleBot):
         bot.reply_to(message,"pong")
@@ -91,8 +100,8 @@ class Handlers():
     def _handler_tools(self,message : telebot_types.Message,bot: telebot.TeleBot):
         tool_servers_list = self.agent_service.tool_list()
 
-        for tool_server in tool_servers_list: 
-            servers_list = [fmt.mbold("🔧 "+fmt.escape_markdown(tool_server.name))] 
+        for tool_server in tool_servers_list:
+            servers_list = [fmt.mbold("🔧 "+fmt.escape_markdown(tool_server.name))]
 
             server_tools :list[models.ToolInfo] = tool_server.tools
             if server_tools is None:
@@ -103,7 +112,7 @@ class Handlers():
                         fmt.mbold("Tool: "+ fmt.escape_markdown(tool_info.name)) ,
                         fmt.escape_markdown(tool_info.description)
                     ))
-            
+
             repsonse = fmt.format_text(*servers_list,separator="\n\n")
             bot.send_message(message.chat.id,repsonse)
 
@@ -115,7 +124,7 @@ class Handlers():
             completion : str  = c.payload.completion
             if completion is None:
                 return
-                        
+
             for m in completion.split(sep="\n\n"):
                 if m != "":
                     bot.send_message(message.chat.id,fmt.escape_markdown(m))
@@ -126,19 +135,50 @@ class Handlers():
 
         # on error notify user about it
         def on_error(e : models.ChatErrorEvent) -> None:
-            bot.send_message(message.chat.id,"somting goes wrong: " + fmt.escape_markdown(e.payload.cause))
+            message = f"somting goes wrong: {fmt.escape_markdown(e.payload.cause)}"
+            bot.send_message(message.chat.id,message)
 
- 
-        sticker_tool = SendStickerTool(
-            chat_id=message.chat.id,
-            bot=bot,
-            sticker_pack=self._sticker_chache.get_pack("x44lab_alpha")
-        )
+        provided_tools : list[tools.AgentTool] = []
+        if self._sticker_pack != "" :
+            sticker_tool = SendStickerTool(
+                chat_id=message.chat.id,
+                bot=bot,
+                sticker_pack=self._sticker_chache.get_pack(self._sticker_pack)
+            )
+            provided_tools.append(sticker_tool)
 
         self.agent_service.agent_request(
-            request=f"# {message.chat.first_name}:\n{message.text}",        
+            request=f"# {message.chat.first_name}:\n{message.text}",
             on_completion=on_completion,
             on_compaction=on_compaction,
             on_error=on_error,
-            provided_tools = [sticker_tool]
+            provided_tools = provided_tools
         )
+
+
+def with_typing(
+        handler : Callable[[telebot_types.Message,telebot.TeleBot],None]
+) -> Callable[[telebot_types.Message,telebot.TeleBot],None]:
+
+    def wrapped(message : telebot_types.Message,bot: telebot.TeleBot):
+        stop_typing = threading.Event()
+
+        def typing_loop():
+            while not stop_typing.is_set():
+                try:
+                    bot.send_chat_action(chat_id=message.chat.id, action="typing")
+                except Exception as e:
+                    log.error(f"typing fall with error: {e}")
+
+                stop_typing.wait(4)
+
+        typing_thread = threading.Thread(target=typing_loop, daemon=True)
+        typing_thread.start()
+
+        try:
+            handler(message,bot)
+        finally:
+            stop_typing.set()
+            typing_thread.join()
+
+    return wrapped

@@ -1,13 +1,15 @@
-import api_bindings.arch_agent_api_client.api.tools.list_tools as list_tools
+import json
+import logging as log
+from collections.abc import Callable
+
+import httpx
+
 import api_bindings.arch_agent_api_client.api.tool_results.resolve_tool_call as tool_result
-from api_bindings.arch_agent_api_client.models.content_part import ContentPart
+import api_bindings.arch_agent_api_client.api.tools.list_tools as list_tools
 import api_bindings.arch_agent_api_client.client as agent_client
 import api_bindings.arch_agent_api_client.models as models
-import httpx
-import json
-from typing import Callable
 import tools
-import logging as log
+from api_bindings.arch_agent_api_client.models.content_part import ContentPart
 
 
 class AgentService:
@@ -26,14 +28,14 @@ class AgentService:
             return None
 
         tool_servers_list: list[models.ToolServerInfo] = tool_servers_dto.tool_servers
-        if tool_servers_list is None or len(tool_servers_list) <= 0:            
+        if tool_servers_list is None or len(tool_servers_list) <= 0:
             return None
 
         return tool_servers_list
-    
+
     def agent_request(
             self,
-            request : str, 
+            request : str,
             *,
             provided_tools : list[tools.AgentTool] = None,
             on_completion : Callable[[models.ChatCompletionEvent], None] = None,
@@ -55,7 +57,7 @@ class AgentService:
             logging=True,
             session_id="e0edc0a6-608e-426f-9908-bb02e7129d29",
             user_request=[ContentPart(text=request)],
-            tool_servers=tool_servers      
+            tool_servers=tool_servers
         )
         try:
             _run_chat_stream(
@@ -88,7 +90,7 @@ def _run_chat_stream(
 
         # process
         result = ""
-        tool = call.payload.tool        
+        tool = call.payload.tool
         try:
             call_executor = provided_tools_map[tool]
 
@@ -100,7 +102,7 @@ def _run_chat_stream(
 
         except KeyError:
             result = f"tool '{tool}' is not exist"
-        except Exception as e:
+        except Exception:
             result = "errors in tool precessing"
 
 
@@ -116,9 +118,9 @@ def _run_chat_stream(
         )
 
     with httpx.stream(
-        "POST", 
-        agent_url+"/chat", 
-        json=chat_body.to_dict(), 
+        "POST",
+        agent_url+"/chat",
+        json=chat_body.to_dict(),
         timeout=9999,
     ) as response:
         for line in response.iter_lines():
@@ -137,10 +139,10 @@ def _run_chat_stream(
 
 
 def _process_response(
-    response : 
+    response :
         None |
-        models.ChatProvidedToolCallEvent | 
-        models.ChatCompactionEvent | 
+        models.ChatProvidedToolCallEvent |
+        models.ChatCompactionEvent |
         models.ChatCompletionEvent |
         models.ChatErrorEvent |
         models.ChatToolResultEventType,
@@ -163,7 +165,7 @@ def _process_response(
                 on_completion(response)
         case models.ChatErrorEvent():
             if on_error is not None:
-                on_error(response)                
+                on_error(response)
         case models.ChatToolResultEventType():
             if on_tool_result is not None:
                 on_tool_result(response)
@@ -171,7 +173,7 @@ def _process_response(
 def determine_response(response : str) -> any:
     if "data: [DONE]" in response:
         return None
-    
+
     try:
         completion_dict = json.loads(response.removeprefix("data: "))
         match completion_dict["type"]:
