@@ -229,3 +229,52 @@ def with_typing(
             typing_thread.join()
 
     return wrapped
+
+def run_bot_with_webhook(bot : telebot.TeleBot,url : str):
+    import hmac
+    import json
+    import secrets
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    _SECRET_TOKEN = secrets.token_hex(32)
+    _WEBHOOK_PATH = f"/bot/{secrets.token_hex(16)}"
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            if self.path != _WEBHOOK_PATH:
+                self.send_response(404)
+                self.end_headers()
+                return
+
+            # virefy header token
+            if not hmac.compare_digest(
+                self.headers.get("X-Telegram-Bot-Api-Secret-Token", ""),
+                _SECRET_TOKEN,
+            ):
+                self.send_response(403)
+                self.end_headers()
+                return
+
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length)
+
+            try:
+                update = telebot.types.Update.de_json(json.loads(body))
+                bot.process_new_updates([update])
+            except Exception:
+                self.send_response(400)
+                self.end_headers()
+                return
+
+            self.send_response(200)
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    bot.remove_webhook()
+    bot.set_webhook(
+        url=url+_WEBHOOK_PATH,
+        secret_token=_SECRET_TOKEN,
+    )
+    ThreadingHTTPServer(("0.0.0.0", 8443), Handler).serve_forever()

@@ -8,13 +8,14 @@ from agent import AgentService, SessionService
 
 
 def main():
-
+    # fmt: off
     telegram_token    : str = os.getenv("TELEGRAM_TOKEN")
     agent_url         : str = os.getenv("AGENT_URL")
     agent_id          : str = os.getenv("AGENT_ID")
     session_life_time : str = os.getenv("SESSION_LIFE_TIME")
     sticker_pack      : str = os.getenv("STICKER_PACK")
     allowed_chats_raw : str = os.getenv("ALLOWED_CHATS","")
+    webhook_url       : str = os.getenv("WEBHOOK_URL","")
 
     bot = telebot.TeleBot(
         token                 = telegram_token,
@@ -51,7 +52,10 @@ def main():
         allowed_chat_ids : list[int] = [int(x) for x in allowed_chats_raw.split(",")]
         bot.setup_middleware(tg.UserWhitelistMiddleware(allowed_chat_ids))
 
-    bot.infinity_polling()
+    if webhook_url != "":
+        tg.run_bot_with_webhook(bot,webhook_url)
+    else:
+        bot.infinity_polling()
 
 
 if __name__ == "__main__":
