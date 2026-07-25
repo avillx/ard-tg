@@ -128,27 +128,6 @@ class Handlers:
         bot.register_message_handler(
             with_typing(self._handler_general_message),func=lambda message: True,pass_bot=True)
 
-    def _user_whitelist_middleware(self,bot : telebot.TeleBot, update : telebot_types.Update):
-
-        chat_id = 0
-        if update.message is not None:
-            chat_id = update.message.id
-            if self._allowed_chats.count(chat_id) <= 0:
-                update = None
-
-        if update.chosen_inline_result is not None:
-            chat_id = update.chosen_inline_result.from_user.id
-            if self._allowed_chats.count(chat_id) <= 0:
-                update = None
-
-        if update.chat_join_request is not None:
-            chat_id = update.chat_join_request.chat.id
-            if self._allowed_chats.count(chat_id) <= 0:
-                update = None
-
-        if update is None:
-            log.info(f"update with unallowed chat id {chat_id} is blocked")
-
     def _handler_ping(self,message : telebot_types.Message,bot: telebot.TeleBot):
         bot.reply_to(message,"pong")
 
