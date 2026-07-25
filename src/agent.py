@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging as log
 import time
@@ -5,6 +6,7 @@ from collections.abc import Callable
 
 import httpx
 
+import api_bindings.arch_agent_api_client.api.activity.get_activity as get_activity
 import api_bindings.arch_agent_api_client.api.chat.interrupt_chat as interrupt_chat
 import api_bindings.arch_agent_api_client.api.sessions.create_session as create_session
 import api_bindings.arch_agent_api_client.api.tool_results.resolve_tool_call as tool_result
@@ -76,6 +78,25 @@ class AgentService:
 
         return tool_servers_list
 
+    def today_activity(self) -> list[models.ActivityRecord]:
+        request = models.GetActivityBody(
+            agent=self._agent_id,
+            from_=datetime.datetime.now(datetime.UTC)
+        )
+
+        response : models.ActivityLogsResponse = get_activity.sync(
+            client=self._agent_client,
+            body=request,
+        )
+        match response:
+            case models.ActivityLogsResponse():
+                activity : list[models.ActivityRecord] = response.activity
+                if activity is not None:
+                    return activity
+
+        log.error(f"agent server return bad activity: {response}")
+        return []
+
     def agent_request(
             self,
             request : str,
@@ -127,6 +148,7 @@ class AgentService:
 
 
 def _run_chat_stream(
+
     agent_url: str,
     agent_client : agent_client.Client,
     chat_body : models.ChatBody,

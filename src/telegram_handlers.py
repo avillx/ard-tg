@@ -29,16 +29,47 @@ class Handlers:
         bot.set_my_commands(
             [
                 telebot_types.BotCommand("ping","for ping test"),
-                telebot_types.BotCommand("tools","show tools info")
+                telebot_types.BotCommand("tools","show tools info"),
+                telebot_types.BotCommand("activity","show recent activity")
             ]
         )
 
         # message handlers
         bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
+        bot.register_message_handler(self._handler_activity,commands=['activity'],pass_bot=True)
         bot.register_message_handler(
             tg_utils.with_typing(self._handler_general_message),
             func=lambda message: True,pass_bot=True)
+
+    def _handler_activity(self,message : telebot_types.Message,bot: telebot.TeleBot):
+        today_activity = self._agent_service.today_activity()
+
+        if len(today_activity) <= 0:
+            bot.send_message(message.chat.id,"🍀 Agent has no activity for today")
+            return
+
+        for activity_record in today_activity:
+            response : list[str] = []
+            for line in (activity_record.content.split("\n")):
+                if line.find("##",0,2) != -1:
+                    line = line.replace("##","")
+                    line = line.replace(" ","")
+                    line = fmt.mbold(line)
+                    response.append(line)
+                    continue
+
+                response.append(fmt.escape_markdown(line))
+
+            response = response[-30:]
+
+            formatted = fmt.format_text(
+                fmt.mbold(f"Last activity for {activity_record.date}"),
+                *response,
+            )
+
+            bot.send_message(message.chat.id,formatted)
+
 
     def _handler_ping(self,message : telebot_types.Message,bot: telebot.TeleBot):
         bot.reply_to(message,"pong")
