@@ -2,9 +2,10 @@ import os
 
 import telebot
 
+import agent
 import api_bindings.arch_agent_api_client.client as client
-import telegram as tg
-from agent import AgentService, SessionService
+import telegram_handlers as tg_handlers
+import telegram_utils as tg_utils
 
 
 def main():
@@ -31,13 +32,13 @@ def main():
         base_url = agent_url
     )
 
-    session_service = SessionService(
+    session_service = agent.SessionService(
         agent_id     = agent_id,
         agent_client = agent_client,
         life_time    = float(session_life_time)
     )
 
-    agent_service = AgentService(
+    agent_service = agent.AgentService(
         agent_url       = agent_url,
         agent_client    = agent_client,
         agent_id        = agent_id,
@@ -45,21 +46,21 @@ def main():
     )
 
     # set handlers
-    handlers = tg.Handlers(
+    handlers = tg_handlers.Handlers(
         agent_service  = agent_service,
         sticker_pack   = sticker_pack,
-        sticker_chache = tg.StickerChache(bot=bot),
+        sticker_chache = tg_utils.StickerChache(bot=bot),
     )
     handlers.register_on(bot)
 
     # white list middle wate
     if allowed_chats_raw != "":
         allowed_chat_ids : list[int] = [int(x) for x in allowed_chats_raw.split(",")]
-        bot.setup_middleware(tg.UserWhitelistMiddleware(allowed_chat_ids))
+        bot.setup_middleware(tg_utils.UserWhitelistMiddleware(allowed_chat_ids))
 
     # bot start
     if webhook_url != "":
-        tg.run_bot_with_webhook(bot,webhook_url)
+        tg_utils.run_bot_with_webhook(bot,webhook_url)
     else:
         bot.infinity_polling()
 
