@@ -114,6 +114,14 @@ class Handlers:
 
     def register_on(self,bot : telebot.TeleBot):
 
+        # set commands prompts
+        bot.set_my_commands(
+            [
+                telebot_types.BotCommand("ping","for ping test"),
+                telebot_types.BotCommand("tools","show tools info")
+            ]
+        )
+
         # message handlers
         bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
