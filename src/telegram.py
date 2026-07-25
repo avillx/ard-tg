@@ -5,11 +5,35 @@ from collections.abc import Callable
 import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
+from telebot.handler_backends import BaseMiddleware, CancelUpdate
 
 import api_bindings.arch_agent_api_client.models as models
 import tools
 from agent import AgentService
 
+
+class UserWhitelistMiddleware(BaseMiddleware):
+    _allowed_chats : list[int]
+
+    def __init__(self, allowed_chats: list[int]):
+        self.update_types = ["message", "chosen_inline_result", "chat_join_request"]
+        self._allowed_chats = allowed_chats
+
+    def pre_process(self, message, data):
+        chat_id = self._extract_chat_id(message)
+        if chat_id not in self._allowed_chats:
+            log.info(f"update with unallowed chat id {chat_id} is blocked")
+            return CancelUpdate()
+
+    def post_process(self, message, data, exception):
+        pass
+
+    def _extract_chat_id(self, message) -> int:
+        if hasattr(message, "chat"):
+            return message.chat.id
+        if hasattr(message, "from_user"):
+            return message.from_user.id
+        return 0
 
 class StickerChache:
     _bot: telebot.TeleBot
@@ -89,10 +113,33 @@ class Handlers:
         self._sticker_pack = sticker_pack
 
     def register_on(self,bot : telebot.TeleBot):
+
+        # message handlers
         bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
         bot.register_message_handler(
             with_typing(self._handler_general_message),func=lambda message: True,pass_bot=True)
+
+    def _user_whitelist_middleware(self,bot : telebot.TeleBot, update : telebot_types.Update):
+
+        chat_id = 0
+        if update.message is not None:
+            chat_id = update.message.id
+            if self._allowed_chats.count(chat_id) <= 0:
+                update = None
+
+        if update.chosen_inline_result is not None:
+            chat_id = update.chosen_inline_result.from_user.id
+            if self._allowed_chats.count(chat_id) <= 0:
+                update = None
+
+        if update.chat_join_request is not None:
+            chat_id = update.chat_join_request.chat.id
+            if self._allowed_chats.count(chat_id) <= 0:
+                update = None
+
+        if update is None:
+            log.info(f"update with unallowed chat id {chat_id} is blocked")
 
     def _handler_ping(self,message : telebot_types.Message,bot: telebot.TeleBot):
         bot.reply_to(message,"pong")
