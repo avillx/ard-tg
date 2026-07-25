@@ -3,3 +3,4 @@ venv
 .ruff_cache
 *.pyc
 .vscode
+__pycache__

@@ -1,7 +1,6 @@
 import os
 
 import telebot
-from dotenv import load_dotenv
 
 import api_bindings.arch_agent_api_client.client as client
 import telegram as tg
@@ -9,8 +8,6 @@ from agent import AgentService, SessionService
 
 
 def main():
-
-    load_dotenv()
 
     telegram_token : str = os.getenv("TELEGRAM_TOKEN")
     agent_url : str = os.getenv("AGENT_URL")
