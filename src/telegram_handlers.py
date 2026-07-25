@@ -10,7 +10,7 @@ import tools
 
 
 class Handlers:
-    agent_service : agent.AgentService
+    _agent_service : agent.AgentService
     _sticker_chache : tg_utils.StickerChache
 
     def __init__(
@@ -19,7 +19,7 @@ class Handlers:
             sticker_chache:tg_utils.StickerChache,
             sticker_pack:str,
         ):
-        self.agent_service = agent_service
+        self._agent_service = agent_service
         self._sticker_chache = sticker_chache
         self._sticker_pack = sticker_pack
 
@@ -44,7 +44,7 @@ class Handlers:
         bot.reply_to(message,"pong")
 
     def _handler_tools(self,message : telebot_types.Message,bot: telebot.TeleBot):
-        tool_servers_list = self.agent_service.tool_list()
+        tool_servers_list = self._agent_service.tool_list()
 
         args = message.text.split()[1:]
 
@@ -116,7 +116,7 @@ class Handlers:
             )
             provided_tools.append(sticker_tool)
 
-        self.agent_service.agent_request(
+        self._agent_service.agent_request(
             request=f"# {message.chat.first_name}:\n{message.text}",
             on_completion=on_completion,
             on_compaction=on_compaction,
