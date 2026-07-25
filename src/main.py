@@ -9,6 +9,8 @@ from agent import AgentService, SessionService
 
 def main():
     # fmt: off
+
+    # envirement variables
     telegram_token    : str = os.getenv("TELEGRAM_TOKEN")
     agent_url         : str = os.getenv("AGENT_URL")
     agent_id          : str = os.getenv("AGENT_ID")
@@ -17,6 +19,7 @@ def main():
     allowed_chats_raw : str = os.getenv("ALLOWED_CHATS","")
     webhook_url       : str = os.getenv("WEBHOOK_URL","")
 
+    # app building
     bot = telebot.TeleBot(
         token                 = telegram_token,
         parse_mode            = "MarkdownV2",
@@ -41,6 +44,7 @@ def main():
         session_service = session_service
     )
 
+    # set handlers
     handlers = tg.Handlers(
         agent_service  = agent_service,
         sticker_pack   = sticker_pack,
@@ -48,10 +52,12 @@ def main():
     )
     handlers.register_on(bot)
 
+    # white list middle wate
     if allowed_chats_raw != "":
         allowed_chat_ids : list[int] = [int(x) for x in allowed_chats_raw.split(",")]
         bot.setup_middleware(tg.UserWhitelistMiddleware(allowed_chat_ids))
 
+    # bot start
     if webhook_url != "":
         tg.run_bot_with_webhook(bot,webhook_url)
     else:
