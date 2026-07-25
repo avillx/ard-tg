@@ -6,6 +6,12 @@ Arch agent integration with Telegram:
 - Has `send_sticker` tool
 - Session has limited lifetime, drops session on expiry
 
+## Commands
+- `/tools <tool_server>` - Return list of available tools servers. Also accept tool server names as args
+  if args is non nil then fetch detailed list of tools in mentioned servers.
+- `/activity` - Return recent agent activity log.
+- `/ping` - Reply with "pong" message. Command for check bot.
+
 ## Configuration
 All configs provides via this envirement variables:
 - `TELEGRAM_TOKEN` *required* - Telegram bot token
