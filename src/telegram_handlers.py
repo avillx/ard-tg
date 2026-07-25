@@ -64,7 +64,7 @@ class Handlers:
             response = response[-30:]
 
             formatted = fmt.format_text(
-                fmt.mbold(f"Last activity for {activity_record.date}"),
+                fmt.mbold(f"🗂 Recent activity for {activity_record.date}:"),
                 *response,
             )
 
