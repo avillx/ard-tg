@@ -147,21 +147,44 @@ class Handlers:
     def _handler_tools(self,message : telebot_types.Message,bot: telebot.TeleBot):
         tool_servers_list = self.agent_service.tool_list()
 
-        for tool_server in tool_servers_list:
-            servers_list = [fmt.mbold("🔧 "+fmt.escape_markdown(tool_server.name))]
+        args = message.text.split()[1:]
+
+        # if has no requested servers then send list of all servers
+        if len(args) <= 0:
+            response : list[str] = []
+            response.append(fmt.mbold("🔧 Tool servers:"))
+            for tool_server in tool_servers_list:
+                response.append(fmt.escape_markdown(f"- {tool_server.name}"))
+
+            response.append(fmt.mcite("For current server: /tools <tool_server>"))
+            repsonse_text = fmt.format_text(*response,separator="\n")
+            bot.send_message(message.chat.id,repsonse_text)
+            return
+
+        # extract tool servers by name
+        tool_servers : list[models.ToolServerInfo] = []
+        for server_name in args:
+            for t in tool_servers_list:
+                if t.name == server_name:
+                    tool_servers.append(t)
+
+        if len(tool_servers) <= 0:
+            bot.send_message(message.chat.id,f"unknown tool server {server_name}")
+            return
+
+        # send info on requested servers
+        for tool_server in tool_servers:
+            response = [fmt.mbold("🔧 "+fmt.escape_markdown(tool_server.name))]
 
             server_tools :list[models.ToolInfo] = tool_server.tools
-            if server_tools is None:
-                continue
-
             for tool_info in server_tools:
-                servers_list.append(fmt.format_text(
+                response.append(fmt.format_text(
                         fmt.mbold("Tool: "+ fmt.escape_markdown(tool_info.name)) ,
                         fmt.escape_markdown(tool_info.description)
                     ))
 
-            repsonse = fmt.format_text(*servers_list,separator="\n\n")
-            bot.send_message(message.chat.id,repsonse)
+            repsonse_text = fmt.format_text(*response,separator="\n\n")
+            bot.send_message(message.chat.id,repsonse_text)
 
 
     def _handler_general_message(self,message : telebot_types.Message,bot: telebot.TeleBot):
