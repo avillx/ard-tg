@@ -1,3 +1,4 @@
+from datetime import datetime
 
 import telebot
 import telebot.formatting as fmt
@@ -189,8 +190,9 @@ class Handlers:
             )
             provided_tools.append(sticker_tool)
 
+        current_time = datetime.now().strftime("%y.%m.%d %H:%M")
         self._agent_service.agent_request(
-            request=f"# {message.chat.first_name}:\n{message.text}",
+            request=f"# From: {message.chat.first_name} ({current_time}):\n{message.text}",
             on_completion=on_completion,
             on_compaction=on_compaction,
             on_error=on_error,
