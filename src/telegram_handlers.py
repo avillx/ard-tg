@@ -30,17 +30,43 @@ class Handlers:
             [
                 telebot_types.BotCommand("ping","for ping test"),
                 telebot_types.BotCommand("tools","show tools info"),
-                telebot_types.BotCommand("activity","show recent activity")
+                telebot_types.BotCommand("activity","show recent activity"),
+                telebot_types.BotCommand("tasks","show tasks")
             ]
         )
 
         # message handlers
         bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
+        bot.register_message_handler(self._handler_tasks,commands=['tasks'],pass_bot=True)
         bot.register_message_handler(self._handler_activity,commands=['activity'],pass_bot=True)
         bot.register_message_handler(
             tg_utils.with_typing(self._handler_general_message),
             func=lambda message: True,pass_bot=True)
+
+
+    def _handler_tasks(self,message : telebot_types.Message,bot: telebot.TeleBot):
+
+        task_list = self._agent_service.task_list()
+        if task_list is None:
+            bot.send_message(message.chat.id,"♻️ Agent return no tasks")
+            return
+
+        if len(task_list) <= 0:
+            bot.send_message(message.chat.id,"♻️ Has no tasks")
+            return
+
+        for task in task_list:
+            response = fmt.format_text(
+                fmt.mbold("♻️ Task: ") + fmt.escape_markdown(task.name),
+                fmt.mbold("Schedule: ") + fmt.escape_markdown(task.schedule),
+                fmt.mbold("State: ") + ("Enabled" if task.active else "Disabled"),
+                fmt.mbold("Execution: ") + ("Once" if task.oneshot else "Regular"),
+                fmt.mbold("Recipients: ") + fmt.escape_markdown(fmt.format_text(*task.recipients,",")),
+                fmt.mbold("Description: ") + fmt.escape_markdown(task.description)
+            )
+            bot.send_message(message.chat.id,response)
+
 
     def _handler_activity(self,message : telebot_types.Message,bot: telebot.TeleBot):
         today_activity = self._agent_service.today_activity()

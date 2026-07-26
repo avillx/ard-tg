@@ -9,6 +9,7 @@ import httpx
 import api_bindings.arch_agent_api_client.api.activity.get_activity as get_activity
 import api_bindings.arch_agent_api_client.api.chat.interrupt_chat as interrupt_chat
 import api_bindings.arch_agent_api_client.api.sessions.create_session as create_session
+import api_bindings.arch_agent_api_client.api.tasks.list_tasks as list_tasks
 import api_bindings.arch_agent_api_client.api.tool_results.resolve_tool_call as tool_result
 import api_bindings.arch_agent_api_client.api.tools.list_tools as list_tools
 import api_bindings.arch_agent_api_client.client as agent_client
@@ -66,6 +67,14 @@ class AgentService:
         self._agent_id = agent_id
         self._agent_client = agent_client
         self._session_service = session_service
+
+
+    def task_list(self) -> list[models.TaskConfig]:
+        task_list : models.ListTasksResponse200 =  list_tasks.sync(client=self._agent_client)
+        if task_list is None:
+            return []
+
+        return task_list.tasks
 
     def tool_list(self) -> list[models.ToolServerInfo]:
         tool_servers_dto : models.ListToolsResponse200 =  list_tools.sync(client=self._agent_client)
