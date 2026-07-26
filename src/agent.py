@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging as log
+import threading
 import time
 from collections.abc import Callable
 
@@ -25,6 +26,7 @@ class SessionService:
     _actual_session : str
     _last_update : float
     _life_time:float
+    _mutex = threading.Lock()
 
     def __init__(self, agent_id : str,agent_client : agent_client.Client, life_time:float):
         self._agent_client = agent_client
@@ -32,16 +34,22 @@ class SessionService:
         self._agent_id = agent_id
         self._last_update = 0
         self._actual_session = ""
+        self._mutex = threading.Lock()
 
-    def get_session(self) -> str:
-        now = time.monotonic()
+    def get_current(self) -> str:
+        with self._mutex:
+            return self._actual_session
 
-        # is expired
-        if now - self._last_update > self._life_time:
-            self._actual_session = self.create_new_session()
-            self._last_update = now
+    def get_actual_session(self) -> str:
+        with self._mutex:
+            now = time.monotonic()
 
-        return self._actual_session
+            # is expired
+            if now - self._last_update > self._life_time:
+                self._actual_session = self.create_new_session()
+                self._last_update = now
+
+            return self._actual_session
 
     def create_new_session(self) -> str:
         resp = create_session.sync(client=self._agent_client,agent=self._agent_id)
@@ -69,6 +77,12 @@ class AgentService:
         self._agent_client = agent_client
         self._session_service = session_service
 
+    def interrupt(self):
+        interrupt_chat.sync(
+            agent=self._agent_id,
+            session_id=self._session_service.get_current(),
+            client=self._agent_client,
+        )
 
     def mcp_list(self) -> list[models.MCPServerInfo]:
         mcp_servers = list_mcp_servers.sync(client=self._agent_client)
@@ -133,7 +147,7 @@ class AgentService:
             for tool in provided_tools:
                 provided_tools_map[tool.name()] = tool.execute
 
-        session = self._session_service.get_session()
+        session = self._session_service.get_actual_session()
         chat_body : models.ChatBody = models.ChatBody(
             agent_id=self._agent_id,
             logging=True,

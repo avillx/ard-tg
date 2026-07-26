@@ -29,15 +29,17 @@ class Handlers:
         # set commands prompts
         bot.set_my_commands(
             [
-                telebot_types.BotCommand("tasks","show tasks"),
-                telebot_types.BotCommand("ping","for ping test"),
-                telebot_types.BotCommand("tools","show tools info"),
+                telebot_types.BotCommand("interrupt","interrupt agent response"),
                 telebot_types.BotCommand("activity","show recent activity"),
-                telebot_types.BotCommand("mcp","show list of mcp servers")
+                telebot_types.BotCommand("tasks","show tasks"),
+                telebot_types.BotCommand("tools","show tools info"),
+                telebot_types.BotCommand("mcp","show list of mcp servers"),
+                telebot_types.BotCommand("ping","for ping test"),
             ]
         )
 
         # message handlers
+        bot.register_message_handler(self._handler_interruption,commands=['interrupt'],pass_bot=True)
         bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
         bot.register_message_handler(self._handler_tasks,commands=['tasks'],pass_bot=True)
@@ -46,6 +48,11 @@ class Handlers:
         bot.register_message_handler(
             tg_utils.with_typing(self._handler_general_message),
             func=lambda message: True,pass_bot=True)
+
+    def _handler_interruption(self,message : telebot_types.Message,bot: telebot.TeleBot):
+        bot.send_message(message.chat.id,"🚧 Interrupting agent")
+        self._agent_service.interrupt()
+
 
     def _handler_mcp(self,message : telebot_types.Message,bot: telebot.TeleBot):
         mcp_servers_list = self._agent_service.mcp_list()
@@ -178,8 +185,8 @@ class Handlers:
 
         # on error notify user about it
         def on_error(e : models.ChatErrorEvent) -> None:
-            message = f"somting goes wrong: {fmt.escape_markdown(e.payload.cause)}"
-            bot.send_message(message.chat.id,message)
+            response = f"⚠️ Something goes wrong: {fmt.escape_markdown(e.payload.cause)}"
+            bot.send_message(message.chat.id,response)
 
         provided_tools : list[tools.AgentTool] = []
         if self._sticker_pack != "" :

@@ -6,6 +6,11 @@ Arch agent integration with Telegram:
 - Has `send_sticker` tool
 - Session has limited lifetime, drops session on expiry
 
+## Messages
+All messages sended to bot will directed to agent, agent responses returned as bot messages. 
+Bot has `typing...` status while agent processing request. 
+Can be interrupted by command.
+
 ## Commands
 - `/tools <tool_server>` - Return list of available tools servers. Also accept tool server names as args
   if args is non nil then fetch detailed list of tools in mentioned servers.
@@ -13,6 +18,7 @@ Arch agent integration with Telegram:
 - `/ping` - Reply with "pong" message. Command for check bot.
 - `/tasks` - Fetch message representation of taskm, per one agent scheduled task. With no request
 - `/mcp` - Fetch list of mcp servers with transport type (process/http)
+- `/interrupt` - interrupt agentic loop
 
 ## Configuration
 All configs provides via this envirement variables:
