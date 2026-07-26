@@ -12,6 +12,7 @@ Arch agent integration with Telegram:
 - `/activity` - Return recent agent activity log.
 - `/ping` - Reply with "pong" message. Command for check bot.
 - `/tasks` - Fetch message representation of taskm, per one agent scheduled task. With no request
+- `/mcp` - Fetch list of mcp servers with transport type (process/http)
 
 ## Configuration
 All configs provides via this envirement variables:

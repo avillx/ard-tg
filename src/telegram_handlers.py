@@ -28,10 +28,11 @@ class Handlers:
         # set commands prompts
         bot.set_my_commands(
             [
+                telebot_types.BotCommand("tasks","show tasks"),
                 telebot_types.BotCommand("ping","for ping test"),
                 telebot_types.BotCommand("tools","show tools info"),
                 telebot_types.BotCommand("activity","show recent activity"),
-                telebot_types.BotCommand("tasks","show tasks")
+                telebot_types.BotCommand("mcp","show list of mcp servers")
             ]
         )
 
@@ -39,11 +40,26 @@ class Handlers:
         bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
         bot.register_message_handler(self._handler_tasks,commands=['tasks'],pass_bot=True)
+        bot.register_message_handler(self._handler_mcp,commands=['mcp'],pass_bot=True)
         bot.register_message_handler(self._handler_activity,commands=['activity'],pass_bot=True)
         bot.register_message_handler(
             tg_utils.with_typing(self._handler_general_message),
             func=lambda message: True,pass_bot=True)
 
+    def _handler_mcp(self,message : telebot_types.Message,bot: telebot.TeleBot):
+        mcp_servers_list = self._agent_service.mcp_list()
+
+        if len(mcp_servers_list) <=0:
+            bot.send_message(message.chat.id,"🔧 Has no mcp servers")
+            return
+
+        response : list[str] = [
+            fmt.mbold("🔧 MCP servers:")
+        ]
+        for mcp_server in mcp_servers_list:
+            response.append(fmt.escape_markdown(f"- {mcp_server.name} ({mcp_server.transport})"))
+        response.append(fmt.mcite("For details: /tools <mcp_server>"))
+        bot.send_message(message.chat.id,fmt.format_text(*response))
 
     def _handler_tasks(self,message : telebot_types.Message,bot: telebot.TeleBot):
 

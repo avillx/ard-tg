@@ -8,6 +8,7 @@ import httpx
 
 import api_bindings.arch_agent_api_client.api.activity.get_activity as get_activity
 import api_bindings.arch_agent_api_client.api.chat.interrupt_chat as interrupt_chat
+import api_bindings.arch_agent_api_client.api.mcp.list_mcp_servers as list_mcp_servers
 import api_bindings.arch_agent_api_client.api.sessions.create_session as create_session
 import api_bindings.arch_agent_api_client.api.tasks.list_tasks as list_tasks
 import api_bindings.arch_agent_api_client.api.tool_results.resolve_tool_call as tool_result
@@ -68,6 +69,13 @@ class AgentService:
         self._agent_client = agent_client
         self._session_service = session_service
 
+
+    def mcp_list(self) -> list[models.MCPServerInfo]:
+        mcp_servers = list_mcp_servers.sync(client=self._agent_client)
+        if mcp_servers is None:
+            return []
+
+        return mcp_servers.mcp_servers
 
     def task_list(self) -> list[models.TaskConfig]:
         task_list : models.ListTasksResponse200 =  list_tasks.sync(client=self._agent_client)
