@@ -1,10 +1,13 @@
 # Arch-Agent Telegram Gateway
 
-Arch agent integration with Telegram:
-- API generated with `openapi-python-client`
-- Implements agent event stream handler
-- Has `send_sticker` tool
-- Session has limited lifetime, drops session on expiry
+Gateway for arch-agent integration with Telegram.
+
+It is intended as an additional channel, not a primary one, for contacting the agent when other
+  channels are unavailable or inconvenient.
+This means the gateway will never provide all agent capabilities, since a messenger interface
+  is not convenient for co-working, coding, etc.
+
+> Session has limited lifetime, drops session on expiry.
 
 ## Messages
 All messages sended to bot will directed to agent, agent responses returned as bot messages. 
@@ -20,6 +23,11 @@ Can be interrupted by command.
 - `/mcp` - Fetch list of mcp servers with transport type (process/http)
 - `/interrupt` - interrupt agentic loop
 
+## Tools
+Agent recieve additional tools for telegram. 
+- `send_sticker` agent can use telegram stickers in chats. 
+  To enable feature add telegram sticker pack name in `STICKER_PACK` variable.
+
 ## Configuration
 All configs provides via this envirement variables:
 - `TELEGRAM_TOKEN` *required* - Telegram bot token
@@ -32,3 +40,8 @@ All configs provides via this envirement variables:
   webhook has no ssl, for webhook you must use reverse proxy with ssl (nginx,traefic etc...)
 - `ALLOWED_CHATS` *optional* - if not empty, updates works only on allowed chats (whitelist-like)
   is a telegram chat ids enumirated via comma (e.g `ALLOWED_CHATS=666666,777777` )
+
+## Stack
+- Python
+- pytelegrambotapi
+- API generated with `openapi-python-client`
