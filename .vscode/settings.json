@@ -1,8 +1,0 @@
-{
-    "workbench.tree.indent": 18,
-    "workbench.tree.renderIndentGuides": "always",
-    "workbench.iconTheme": "material-icon-theme",
-    "makefile.configureOnOpen": false,
-    "search.useGlobalIgnoreFiles": true,
-    "search.useIgnoreFiles": false,
-}

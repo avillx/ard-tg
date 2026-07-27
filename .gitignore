@@ -2,5 +2,5 @@ venv
 .env
 .ruff_cache
 *.pyc
-.vscode
 __pycache__
+.vscode
