@@ -29,12 +29,12 @@ class Handlers:
         # set commands prompts
         bot.set_my_commands(
             [
-                telebot_types.BotCommand("interrupt","interrupt agent response"),
-                telebot_types.BotCommand("activity","show recent activity"),
-                telebot_types.BotCommand("consolidate","starts memory consolidation process"),
-                telebot_types.BotCommand("tasks","show tasks"),
-                telebot_types.BotCommand("tools","show tools info"),
-                telebot_types.BotCommand("mcp","show list of mcp servers"),
+                telebot_types.BotCommand("interrupt","🚧 interrupt agent response"),
+                telebot_types.BotCommand("activity","🗂 show recent activity"),
+                telebot_types.BotCommand("consolidate","💾 starts memory consolidation process"),
+                telebot_types.BotCommand("tasks","♻️ show tasks"),
+                telebot_types.BotCommand("tools","🔧 show tools info"),
+                telebot_types.BotCommand("mcp","🔧 show list of mcp servers"),
                 telebot_types.BotCommand("ping","for ping test"),
             ]
         )
@@ -109,7 +109,7 @@ class Handlers:
         today_activity = self._agent_service.today_activity()
 
         if len(today_activity) <= 0:
-            bot.send_message(message.chat.id,"🍀 Agent has no activity for today")
+            bot.send_message(message.chat.id,"🗂 Agent has no activity for today")
             return
 
         for activity_record in today_activity:
