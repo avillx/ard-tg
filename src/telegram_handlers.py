@@ -97,7 +97,8 @@ class Handlers:
                 fmt.mbold("Schedule: ") + fmt.escape_markdown(task.schedule),
                 fmt.mbold("State: ") + ("Enabled" if task.active else "Disabled"),
                 fmt.mbold("Execution: ") + ("Once" if task.oneshot else "Regular"),
-                fmt.mbold("Recipients: ") + fmt.escape_markdown(fmt.format_text(*task.recipients,",")),
+                fmt.mbold("Recipients: ") +
+                    fmt.escape_markdown(fmt.format_text(*task.recipients,",")),
                 fmt.mbold("Description: ") + fmt.escape_markdown(task.description)
             )
             bot.send_message(message.chat.id,response)
