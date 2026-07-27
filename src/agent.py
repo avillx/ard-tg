@@ -128,17 +128,24 @@ class AgentService:
         log.error(f"agent server return bad activity: {response}")
         return []
 
-    def consolidate(self,on_completion : Callable[[models.ChatCompletionEvent],None]= None):
-        with httpx.stream( method="POST", timeout=10000,
-            url=self.agent_url+f"/memory/{self._agent_id}/consolidate",
-        ) as response:
-            for line in response.iter_lines():
-                if line == "":
-                    continue
+    def consolidate(self,on_completion : Callable[[models.ChatCompletionPayload],None]= None):
+        try:
+            with httpx.stream( method="POST", timeout=10000,
+                url=self._agent_url+f"/memory/{self._agent_id}/consolidate",
+            ) as response:
+                for line in response.iter_lines():
+                    if line == "" or "data: [DONE]" in line:
+                        continue
 
-                response = determine_response(line)
-                if response is models.ChatCompletionEvent():
-                    on_completion(response)
+                    event_dict = json.loads(line.removeprefix("data: "))
+                    completion_event = models.ChatCompletionPayload.from_dict(event_dict)
+                    if on_completion is not None:
+                        try:
+                            on_completion(completion_event)
+                        except Exception as e:
+                            log.error(f"on_completion consolidation process: {e}")
+        except Exception as e:
+            log.error(f"consolidation process: {e}")
 
     def agent_request(
             self,
@@ -243,9 +250,8 @@ def _run_chat_stream(
             if line == "":
                 continue
 
-            response = determine_response(line)
             _process_response(
-                response=response,
+                response=determine_response(line),
                 on_provided_tool_call=on_provided_tool_call,
                 on_compaction=on_compaction,
                 on_completion=on_completion,
@@ -291,19 +297,19 @@ def determine_response(response : str) -> any:
         return None
 
     try:
-        completion_dict = json.loads(response.removeprefix("data: "))
-        match completion_dict["type"]:
+        event_dict = json.loads(response.removeprefix("data: "))
+        match event_dict["type"]:
             case models.ChatCompletionEventType.COMPLETE:
-                return models.ChatCompletionEvent.from_dict(completion_dict)
+                return models.ChatCompletionEvent.from_dict(event_dict)
             case models.ChatCompactionEventType.COMPACTION:
-                return models.ChatCompactionEvent.from_dict(completion_dict)
+                return models.ChatCompactionEvent.from_dict(event_dict)
             case models.ChatErrorEventType.ERROR:
-                return models.ChatErrorEvent.from_dict(completion_dict)
+                return models.ChatErrorEvent.from_dict(event_dict)
             case models.ChatProvidedToolCallEventType.PROVIDED_TOOLCALL:
-                return models.ChatProvidedToolCallEvent.from_dict(completion_dict)
+                return models.ChatProvidedToolCallEvent.from_dict(event_dict)
             case models.ChatToolResultEventType.TOOL_RESULT:
-                return models.ChatToolResultEvent.from_dict(completion_dict)
-        raise("unknown result type " + completion_dict["type"])
+                return models.ChatToolResultEvent.from_dict(event_dict)
+        raise("unknown result type " + event_dict["type"])
 
     except Exception as e:
         log.error(f"determine_response: bad response type: {e}")

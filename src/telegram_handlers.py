@@ -39,21 +39,21 @@ class Handlers:
         )
 
         # message handlers
-        bot.register_message_handler(
-            tg_utils.with_typing(self._handler_general_message),
-            func=lambda message: True,pass_bot=True)
         bot.register_message_handler(self._handler_interruption,commands=['interrupt'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
         bot.register_message_handler(self._handler_tasks,commands=['tasks'],pass_bot=True)
         bot.register_message_handler(self._handler_mcp,commands=['mcp'],pass_bot=True)
         bot.register_message_handler(self._handler_activity,commands=['activity'],pass_bot=True)
         bot.register_message_handler(tg_utils.with_typing(self._handler_consolidation),commands=['consolidate'],pass_bot=True)
+        bot.register_message_handler(
+            tg_utils.with_typing(self._handler_general_message),
+            func=lambda message: True,pass_bot=True)
 
     def _handler_consolidation(self,message : telebot_types.Message,bot: telebot.TeleBot):
         bot.send_message(message.chat.id,"💾 Consolidation started")
 
-        def on_completion(c : models.ChatCompletionEvent) -> None:
-            respond = fmt.escape_markdown(c.payload.completion)
+        def on_completion(c : models.ChatCompletionPayload) -> None:
+            respond = fmt.escape_markdown(c.completion)
             if respond != "":
                 bot.send_message(message.chat.id,respond)
 
