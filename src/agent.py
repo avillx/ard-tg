@@ -128,6 +128,18 @@ class AgentService:
         log.error(f"agent server return bad activity: {response}")
         return []
 
+    def consolidate(self,on_completion : Callable[[models.ChatCompletionEvent],None]= None):
+        with httpx.stream( method="POST", timeout=10000,
+            url=self.agent_url+f"/memory/{self._agent_id}/consolidate",
+        ) as response:
+            for line in response.iter_lines():
+                if line == "":
+                    continue
+
+                response = determine_response(line)
+                if response is models.ChatCompletionEvent():
+                    on_completion(response)
+
     def agent_request(
             self,
             request : str,
@@ -225,7 +237,7 @@ def _run_chat_stream(
         "POST",
         agent_url+"/chat",
         json=chat_body.to_dict(),
-        timeout=9999,
+        timeout=10000,
     ) as response:
         for line in response.iter_lines():
             if line == "":
