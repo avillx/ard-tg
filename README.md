@@ -21,7 +21,7 @@ Can be interrupted by command.
 - `/tools <tool_server>` - with no aguments - Return list of available tools servers. 
   Also accept tool server names as args when args is non nil - fetch detailed list of tools in mentioned servers.
 - `/mcp` - Fetch list of mcp servers with transport type (process/http)
-- `/consolidate` - immidiate starts memory consolidation
+- `/consolidate` - immidiate starts memory consolidation, stream colsolidatior completions as messages
 
 ## Tools
 Agent recieve additional tools for telegram. 

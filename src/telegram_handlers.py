@@ -50,15 +50,25 @@ class Handlers:
             func=lambda message: True,pass_bot=True)
 
     def _handler_consolidation(self,message : telebot_types.Message,bot: telebot.TeleBot):
-        bot.send_message(message.chat.id,"💾 Consolidation started")
 
+        _START_HEADER = "💾 Consolidation started"
+        _FINALE_HEADER = "💾 Consolidation finished"
+
+        bot.send_message(message.chat.id,_START_HEADER)
+
+        last_completion = ""
         def on_completion(c : models.ChatCompletionPayload) -> None:
-            respond = fmt.escape_markdown(c.completion)
-            if respond != "":
-                bot.send_message(message.chat.id,respond)
+            nonlocal last_completion
+
+            if c.completion != "":
+                last_completion = c.completion
+                input = telebot_types.InputRichMessage(markdown=c.completion)
+                bot.send_rich_message_draft(message.chat.id,1,input)
 
         self._agent_service.consolidate(on_completion)
-        bot.send_message(message.chat.id,"💾 Consolidation finished")
+
+        final = telebot_types.InputRichMessage(markdown=_FINALE_HEADER+"\n"+last_completion)
+        bot.send_rich_message(message.chat.id,final)
 
     def _handler_interruption(self,message : telebot_types.Message,bot: telebot.TeleBot):
         bot.send_message(message.chat.id,"🚧 Interrupting agent")
