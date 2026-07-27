@@ -15,13 +15,12 @@ Bot has `typing...` status while agent processing request.
 Can be interrupted by command.
 
 ## Commands
+- `/interrupt` - interrupt agentic loop
+- `/activity` - Return recent agent activity log.
+- `/tasks` - Fetch message representation of taskm, per one agent scheduled task. With no request
 - `/tools <tool_server>` - with no aguments - Return list of available tools servers. 
   Also accept tool server names as args when args is non nil - fetch detailed list of tools in mentioned servers.
-- `/activity` - Return recent agent activity log.
-- `/ping` - Reply with "pong" message. Command for check bot.
-- `/tasks` - Fetch message representation of taskm, per one agent scheduled task. With no request
 - `/mcp` - Fetch list of mcp servers with transport type (process/http)
-- `/interrupt` - interrupt agentic loop
 - `/consolidate` - immidiate starts memory consolidation
 
 ## Tools
