@@ -29,13 +29,12 @@ class Handlers:
         # set commands prompts
         bot.set_my_commands(
             [
-                telebot_types.BotCommand("interrupt","🚧 interrupt agent response"),
-                telebot_types.BotCommand("activity","🗂 show recent activity"),
-                telebot_types.BotCommand("consolidate","💾 starts memory consolidation process"),
-                telebot_types.BotCommand("tasks","♻️ show tasks"),
-                telebot_types.BotCommand("tools","🔧 show tools info"),
-                telebot_types.BotCommand("mcp","🔧 show list of mcp servers"),
-                telebot_types.BotCommand("ping","for ping test"),
+                telebot_types.BotCommand("interrupt", "🚧 Interrupt agent response"),
+                telebot_types.BotCommand("activity", "🗂 Show recent activity"),
+                telebot_types.BotCommand("tasks", "♻️ Show tasks"),
+                telebot_types.BotCommand("tools", "🔧 Show tools info"),
+                telebot_types.BotCommand("mcp", "⚒️ Show list of MCP servers"),
+                telebot_types.BotCommand("consolidate", "💾 Start memory consolidation process"),
             ]
         )
 
@@ -44,7 +43,6 @@ class Handlers:
             tg_utils.with_typing(self._handler_general_message),
             func=lambda message: True,pass_bot=True)
         bot.register_message_handler(self._handler_interruption,commands=['interrupt'],pass_bot=True)
-        bot.register_message_handler(self._handler_ping,commands=['ping'],pass_bot=True)
         bot.register_message_handler(self._handler_tools,commands=['tools'],pass_bot=True)
         bot.register_message_handler(self._handler_tasks,commands=['tasks'],pass_bot=True)
         bot.register_message_handler(self._handler_mcp,commands=['mcp'],pass_bot=True)
@@ -71,11 +69,11 @@ class Handlers:
         mcp_servers_list = self._agent_service.mcp_list()
 
         if len(mcp_servers_list) <=0:
-            bot.send_message(message.chat.id,"🔧 Has no mcp servers")
+            bot.send_message(message.chat.id,"⚒️ Has no mcp servers")
             return
 
         response : list[str] = [
-            fmt.mbold("🔧 MCP servers:")
+            fmt.mbold("⚒️ MCP servers:")
         ]
         for mcp_server in mcp_servers_list:
             response.append(fmt.escape_markdown(f"- {mcp_server.name} ({mcp_server.transport})"))
@@ -132,10 +130,6 @@ class Handlers:
             )
 
             bot.send_message(message.chat.id,formatted)
-
-
-    def _handler_ping(self,message : telebot_types.Message,bot: telebot.TeleBot):
-        bot.reply_to(message,"pong")
 
     def _handler_tools(self,message : telebot_types.Message,bot: telebot.TeleBot):
         tool_servers_list = self._agent_service.tool_list()
