@@ -7,11 +7,9 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY README.md ./
+COPY src/ ./
 
 RUN pip install --upgrade pip \
     && pip install .
 
-# Исходники
-COPY src/ ./src/
-
-CMD ["python", "-m", "src.main"]
+CMD ["python", "-m", "main"]
