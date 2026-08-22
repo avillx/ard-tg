@@ -3,7 +3,7 @@ import os
 import telebot
 
 import agent
-import api_bindings.arch_agent_api_client.client as client
+import arch_agent.client as client
 import telegram_handlers as tg_handlers
 import telegram_utils as tg_utils
 
@@ -67,4 +67,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

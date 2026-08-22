@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-import api_bindings.arch_agent_api_client.models as models
+import arch_agent.models as models
 
 
 class AgentTool(ABC):

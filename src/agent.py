@@ -7,28 +7,28 @@ from collections.abc import Callable
 
 import httpx
 
-import api_bindings.arch_agent_api_client.api.activity.get_activity as get_activity
-import api_bindings.arch_agent_api_client.api.chat.interrupt_chat as interrupt_chat
-import api_bindings.arch_agent_api_client.api.mcp.list_mcp_servers as list_mcp_servers
-import api_bindings.arch_agent_api_client.api.sessions.create_session as create_session
-import api_bindings.arch_agent_api_client.api.tasks.list_tasks as list_tasks
-import api_bindings.arch_agent_api_client.api.tool_results.resolve_tool_call as tool_result
-import api_bindings.arch_agent_api_client.api.tools.list_tools as list_tools
-import api_bindings.arch_agent_api_client.client as agent_client
-import api_bindings.arch_agent_api_client.models as models
+import arch_agent.api.activity.get_activity as get_activity
+import arch_agent.api.chat.interrupt_chat as interrupt_chat
+import arch_agent.api.mcp.list_mcp_servers as list_mcp_servers
+import arch_agent.api.sessions.create_session as create_session
+import arch_agent.api.tasks.list_tasks as list_tasks
+import arch_agent.api.tool_results.resolve_tool_call as tool_result
+import arch_agent.api.tools.list_tools as list_tools
+import arch_agent.client as agent_client
+import arch_agent.models as models
 import tools
-from api_bindings.arch_agent_api_client.models.content_part import ContentPart
+from arch_agent.models.content_part import ContentPart
 
 
 class SessionService:
-    _agent_id : str
-    _agent_client : agent_client.Client
-    _actual_session : str
-    _last_update : float
-    _life_time:float
+    _agent_id: str
+    _agent_client: agent_client.Client
+    _actual_session: str
+    _last_update: float
+    _life_time: float
     _mutex = threading.Lock()
 
-    def __init__(self, agent_id : str,agent_client : agent_client.Client, life_time:float):
+    def __init__(self, agent_id: str, agent_client: agent_client.Client, life_time: float):
         self._agent_client = agent_client
         self._life_time = life_time
         self._agent_id = agent_id
@@ -52,7 +52,7 @@ class SessionService:
             return self._actual_session
 
     def create_new_session(self) -> str:
-        resp = create_session.sync(client=self._agent_client,agent=self._agent_id)
+        resp = create_session.sync(client=self._agent_client, agent=self._agent_id)
         if resp is None:
             log.error("agent return empty session")
             return ""
@@ -60,18 +60,18 @@ class SessionService:
 
 
 class AgentService:
-    _agent_url :str
-    _agent_id : str
-    _agent_client : agent_client.Client
-    _session_service : SessionService
+    _agent_url: str
+    _agent_id: str
+    _agent_client: agent_client.Client
+    _session_service: SessionService
 
     def __init__(
-            self,
-            agent_url : str,
-            agent_id : str,
-            agent_client : agent_client.Client,
-            session_service : SessionService,
-        ):
+        self,
+        agent_url: str,
+        agent_id: str,
+        agent_client: agent_client.Client,
+        session_service: SessionService,
+    ):
         self._agent_url = agent_url
         self._agent_id = agent_id
         self._agent_client = agent_client
@@ -92,14 +92,14 @@ class AgentService:
         return mcp_servers.mcp_servers
 
     def task_list(self) -> list[models.TaskConfig]:
-        task_list : models.ListTasksResponse200 =  list_tasks.sync(client=self._agent_client)
+        task_list: models.ListTasksResponse200 = list_tasks.sync(client=self._agent_client)
         if task_list is None:
             return []
 
         return task_list.tasks
 
     def tool_list(self) -> list[models.ToolServerInfo]:
-        tool_servers_dto : models.ListToolsResponse200 =  list_tools.sync(client=self._agent_client)
+        tool_servers_dto: models.ListToolsResponse200 = list_tools.sync(client=self._agent_client)
         if tool_servers_dto is None:
             return None
 
@@ -111,27 +111,28 @@ class AgentService:
 
     def today_activity(self) -> list[models.ActivityRecord]:
         request = models.GetActivityBody(
-            agent=self._agent_id,
-            from_=datetime.datetime.now(datetime.UTC)
+            agent=self._agent_id, from_=datetime.datetime.now(datetime.UTC)
         )
 
-        response : models.ActivityLogsResponse = get_activity.sync(
+        response: models.ActivityLogsResponse = get_activity.sync(
             client=self._agent_client,
             body=request,
         )
         match response:
             case models.ActivityLogsResponse():
-                activity : list[models.ActivityRecord] = response.activity
+                activity: list[models.ActivityRecord] = response.activity
                 if activity is not None:
                     return activity
 
         log.error(f"agent server return bad activity: {response}")
         return []
 
-    def consolidate(self,on_completion : Callable[[models.ChatCompletionPayload],None]= None):
+    def consolidate(self, on_completion: Callable[[models.ChatCompletionPayload], None] = None):
         try:
-            with httpx.stream( method="POST", timeout=10000,
-                url=self._agent_url+f"/memory/{self._agent_id}/consolidate",
+            with httpx.stream(
+                method="POST",
+                timeout=10000,
+                url=self._agent_url + f"/memory/{self._agent_id}/consolidate",
             ) as response:
                 for line in response.iter_lines():
                     if line == "" or "data: [DONE]" in line:
@@ -148,18 +149,18 @@ class AgentService:
             log.error(f"consolidation process: {e}")
 
     def agent_request(
-            self,
-            request : str,
-            *,
-            provided_tools : list[tools.AgentTool] = None,
-            on_completion : Callable[[models.ChatCompletionEvent], None] = None,
-            on_compaction : Callable[[models.ChatCompactionEvent], None] = None,
-            on_error : Callable[[models.ChatErrorEvent], None] = None,
-            on_tool_result : Callable[[models.ChatToolResultEvent], None] = None,
-        ):
+        self,
+        request: str,
+        *,
+        provided_tools: list[tools.AgentTool] = None,
+        on_completion: Callable[[models.ChatCompletionEvent], None] = None,
+        on_compaction: Callable[[models.ChatCompactionEvent], None] = None,
+        on_error: Callable[[models.ChatErrorEvent], None] = None,
+        on_tool_result: Callable[[models.ChatToolResultEvent], None] = None,
+    ):
 
         tool_servers = []
-        provided_tools_map : dict[str,Callable[[dict[str,any]],str]] = {}
+        provided_tools_map: dict[str, Callable[[dict[str, any]], str]] = {}
         if provided_tools is not None:
             tool_servers.append(tools.create_provided_tool_server(provided_tools))
 
@@ -167,12 +168,12 @@ class AgentService:
                 provided_tools_map[tool.name()] = tool.execute
 
         session = self._session_service.get_actual_session()
-        chat_body : models.ChatBody = models.ChatBody(
+        chat_body: models.ChatBody = models.ChatBody(
             agent_id=self._agent_id,
             logging=True,
             session_id=session,
             user_request=[ContentPart(text=request)],
-            tool_servers=tool_servers
+            tool_servers=tool_servers,
         )
         log.debug(f"session: {session}")
 
@@ -196,20 +197,18 @@ class AgentService:
             log.error(msg=f"agent_request: {e}")
 
 
-
 def _run_chat_stream(
-
     agent_url: str,
-    agent_client : agent_client.Client,
-    chat_body : models.ChatBody,
-    provided_tools_map: dict[str,Callable[[dict[str,any]],str]],
-    on_completion : Callable[[models.ChatCompletionEvent], None] = None,
-    on_compaction : Callable[[models.ChatCompactionEvent], None] = None,
-    on_error : Callable[[models.ChatErrorEvent], None] = None,
-    on_tool_result : Callable[[models.ChatToolResultEvent], None] = None,
+    agent_client: agent_client.Client,
+    chat_body: models.ChatBody,
+    provided_tools_map: dict[str, Callable[[dict[str, any]], str]],
+    on_completion: Callable[[models.ChatCompletionEvent], None] = None,
+    on_compaction: Callable[[models.ChatCompactionEvent], None] = None,
+    on_error: Callable[[models.ChatErrorEvent], None] = None,
+    on_tool_result: Callable[[models.ChatToolResultEvent], None] = None,
 ):
 
-    def on_provided_tool_call(call : models.ChatProvidedToolCallEvent):
+    def on_provided_tool_call(call: models.ChatProvidedToolCallEvent):
 
         # process
         result = ""
@@ -217,7 +216,7 @@ def _run_chat_stream(
         try:
             call_executor = provided_tools_map[tool]
 
-            args : dict[str,any] = {}
+            args: dict[str, any] = {}
             if call.payload.args is not None:
                 args = call.payload.args
 
@@ -228,11 +227,8 @@ def _run_chat_stream(
         except Exception:
             result = "errors in tool precessing"
 
-
         # respond
-        answer = models.ToolResultPayload(
-            result=[models.ContentPart(text=result)]
-        )
+        answer = models.ToolResultPayload(result=[models.ContentPart(text=result)])
 
         tool_result.sync(
             client=agent_client,
@@ -242,7 +238,7 @@ def _run_chat_stream(
 
     with httpx.stream(
         "POST",
-        agent_url+"/chat",
+        agent_url + "/chat",
         json=chat_body.to_dict(),
         timeout=10000,
     ) as response:
@@ -261,20 +257,19 @@ def _run_chat_stream(
 
 
 def _process_response(
-    response :
-        None |
-        models.ChatProvidedToolCallEvent |
-        models.ChatCompactionEvent |
-        models.ChatCompletionEvent |
-        models.ChatErrorEvent |
-        models.ChatToolResultEventType,
-    on_provided_tool_call : Callable[[models.ChatProvidedToolCallEvent], None] = None,
-    on_completion : Callable[[models.ChatCompletionEvent], None] = None,
-    on_compaction : Callable[[models.ChatCompactionEvent], None] = None,
-    on_error : Callable[[models.ChatErrorEvent], None] = None,
-    on_tool_result : Callable[[models.ChatToolResultEvent], None] = None,
+    response: None
+    | models.ChatProvidedToolCallEvent
+    | models.ChatCompactionEvent
+    | models.ChatCompletionEvent
+    | models.ChatErrorEvent
+    | models.ChatToolResultEventType,
+    on_provided_tool_call: Callable[[models.ChatProvidedToolCallEvent], None] = None,
+    on_completion: Callable[[models.ChatCompletionEvent], None] = None,
+    on_compaction: Callable[[models.ChatCompactionEvent], None] = None,
+    on_error: Callable[[models.ChatErrorEvent], None] = None,
+    on_tool_result: Callable[[models.ChatToolResultEvent], None] = None,
 ):
-    match response :
+    match response:
         case None:
             return
         case models.ChatProvidedToolCallEvent():
@@ -292,7 +287,8 @@ def _process_response(
             if on_tool_result is not None:
                 on_tool_result(response)
 
-def determine_response(response : str) -> any:
+
+def determine_response(response: str) -> any:
     if "data: [DONE]" in response:
         return None
 
@@ -309,7 +305,7 @@ def determine_response(response : str) -> any:
                 return models.ChatProvidedToolCallEvent.from_dict(event_dict)
             case models.ChatToolResultEventType.TOOL_RESULT:
                 return models.ChatToolResultEvent.from_dict(event_dict)
-        raise("unknown result type " + event_dict["type"])
+        raise ("unknown result type " + event_dict["type"])
 
     except Exception as e:
         log.error(f"determine_response: bad response type: {e}")
