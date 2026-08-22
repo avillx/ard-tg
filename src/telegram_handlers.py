@@ -1,3 +1,4 @@
+import logging as log
 from datetime import datetime
 
 import telebot
@@ -66,12 +67,12 @@ class Handlers:
 
         last_completion = ""
 
-        def on_completion(c: models.ChatCompletionPayload) -> None:
+        def on_completion(completion: str) -> None:
             nonlocal last_completion
 
-            if c.completion != "":
-                last_completion = c.completion
-                input = telebot_types.InputRichMessage(markdown=c.completion)
+            if completion is not None and completion != "":
+                last_completion = completion
+                input = telebot_types.InputRichMessage(markdown=completion)
                 bot.send_rich_message_draft(message.chat.id, 1, input)
 
         self._agent_service.consolidate(on_completion)
@@ -193,24 +194,65 @@ class Handlers:
 
     def _handler_general_message(self, message: telebot_types.Message, bot: telebot.TeleBot):
 
-        # on completion - sends result in chat
-        def on_completion(c: models.ChatCompletionEvent) -> None:
-            completion: str = c.payload.completion
+        lastCompltionText = ""
+        heap = ""
+
+        # on tool error notify user about it
+        def on_loop_exit(e: models.LoopExitEvent) -> None:
+            nonlocal lastCompltionText
+
+            match e.cause: # avoid unset
+                case str():
+                    if e.cause != "":
+                        lastCompltionText += f"\n\n⚠️ errors occured: {e.cause}"
+
+        # on completion - sends draft in chat
+        def on_completion(e: models.CompletionEvent) -> None:
+            nonlocal heap
+            nonlocal lastCompltionText
+
+            completion: str = e.completion
             if completion is None:
                 return
 
-            for m in completion.split(sep="\n\n"):
-                if m != "":
-                    bot.send_message(message.chat.id, fmt.escape_markdown(m))
+            lastCompltionText=completion
+
+            heap += f"\n{completion}"
+
+            if e.tool_calls is not None:
+                for call in e.tool_calls:
+                    heap += f"\n{tool_call_repr(call)}\n"
+
+            input = telebot_types.InputRichMessage(markdown=heap)
+            bot.send_rich_message_draft(message.chat.id,1,input)
+
+        # on completion mistake notify user about it
+        def on_completion_mistake(e: models.CompletionMistakeEvent) -> None:
+            nonlocal heap
+            nonlocal lastCompltionText
+
+            response = f"\n\n⚠️ agent make mistake: {fmt.escape_markdown(e.error)}"
+            heap += f"\n{response}"
+            lastCompltionText = response
+
+            input = telebot_types.InputRichMessage(markdown=heap)
+            bot.send_rich_message_draft(message.chat.id,1,input)
 
         # on compactions sens notify message in chat
-        def on_compaction(c: models.ChatCompletionEvent) -> None:
-            bot.send_message(message.chat.id, "⚠️ session compacted")
+        def on_compaction(e: models.CompactionEvent) -> None:
+            nonlocal heap
+            heap += "\n\n⚠️ session compacted"
 
-        # on error notify user about it
-        def on_error(e: models.ChatErrorEvent) -> None:
-            response = f"⚠️ Something goes wrong: {fmt.escape_markdown(e.payload.cause)}"
-            bot.send_message(message.chat.id, response)
+            input = telebot_types.InputRichMessage(markdown=heap)
+            bot.send_rich_message_draft(message.chat.id,1,input)
+
+        # on tool error notify user about it
+        def on_tool_error(e: models.ToolErrorEvent) -> None:
+            nonlocal heap
+            heap += f"\n\n⚠️ tool error: {fmt.escape_markdown(e.cause)}"
+
+            input = telebot_types.InputRichMessage(markdown=heap)
+            bot.send_rich_message_draft(message.chat.id,1,input)
 
         provided_tools: list[tools.AgentTool] = []
         if self._sticker_pack != "":
@@ -226,6 +268,36 @@ class Handlers:
             request=f"# From: {message.chat.first_name} ({current_time}):\n{message.text}",
             on_completion=on_completion,
             on_compaction=on_compaction,
-            on_error=on_error,
+            on_compltion_mistake=on_completion_mistake,
+            on_loop_exit=on_loop_exit,
+            on_tool_error=on_tool_error,
             provided_tools=provided_tools,
         )
+
+        # send final message
+        input = telebot_types.InputRichMessage(markdown=lastCompltionText)
+        bot.send_rich_message(message.chat.id,input)
+
+
+def tool_call_repr(call: models.ToolCall) -> str :
+
+    repr=f"{fmt.escape_markdown(call.tool)}:"
+
+    try:
+        args = call.args.to_dict()
+        for k,v in args.items():
+            arg_repr = ""
+            if hasattr(v,"__repr__"):
+                arg_repr : str = f"{k}={v}"
+            else:
+                arg_repr : str = f"{k}"
+
+            if len(arg_repr) > 40:
+                arg_repr = f"{arg_repr[:40]}..."
+
+            repr+=f"\n- {fmt.escape_markdown(arg_repr)}"
+
+    except Exception as e:
+        log.error(f"parse args for tool: {call.tool}: {e}")
+
+    return repr

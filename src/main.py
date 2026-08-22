@@ -1,3 +1,4 @@
+import logging
 import os
 
 import telebot
@@ -20,6 +21,13 @@ def main():
     allowed_chats_raw : str = os.getenv("ALLOWED_CHATS","")
     webhook_url       : str = os.getenv("WEBHOOK_URL","")
 
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)s] %(asctime)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    logger = logging.getLogger("app")
+
     # app building
     bot = telebot.TeleBot(
         token                 = telegram_token,
@@ -27,6 +35,9 @@ def main():
         num_threads           = 4,
         use_class_middlewares = True,
     )
+
+    # set up logging
+    bot.setup_middleware(tg_utils.LoggingMiddleware(logger))
 
     agent_client = client.Client(
         base_url = agent_url
@@ -49,19 +60,21 @@ def main():
     handlers = tg_handlers.Handlers(
         agent_service  = agent_service,
         sticker_pack   = sticker_pack,
-        sticker_chache = tg_utils.StickerChache(bot=bot),
+        sticker_chache = tg_utils.StickerChache(bot,logger),
     )
     handlers.register_on(bot)
 
     # white list middle wate
     if allowed_chats_raw != "":
         allowed_chat_ids : list[int] = [int(x) for x in allowed_chats_raw.split(",")]
-        bot.setup_middleware(tg_utils.UserWhitelistMiddleware(allowed_chat_ids))
+        bot.setup_middleware(tg_utils.UserWhitelistMiddleware(allowed_chat_ids,logger))
 
     # bot start
     if webhook_url != "":
+        logger.info("start with webhook")
         tg_utils.run_bot_with_webhook(bot,webhook_url)
     else:
+        logger.info("start with polling")
         bot.infinity_polling()
 
 

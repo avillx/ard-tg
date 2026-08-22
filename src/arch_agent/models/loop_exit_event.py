@@ -17,7 +17,7 @@ class LoopExitEvent:
     """The agent runtime stopped due to an error. Emitted with type `tool_result`.
 
     Example:
-        {'type': 'tool_result', 'cause': 'maximum iterations exceeded'}
+        {'type': 'loop_exit', 'cause': 'maximum iterations exceeded'}
 
     Attributes:
         type_ (LoopExitEventType):

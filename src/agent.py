@@ -52,7 +52,14 @@ class SessionService:
             return self._actual_session
 
     def create_new_session(self) -> str:
-        resp = create_session.sync(client=self._agent_client, agent=self._agent_id)
+
+        create_session_request = models.CreateSessionBody(instruction="")
+
+        resp = create_session.sync(
+            self._agent_id,
+            client=self._agent_client,
+            body=create_session_request,
+        )
         if resp is None:
             log.error("agent return empty session")
             return ""
@@ -92,42 +99,33 @@ class AgentService:
         return mcp_servers.mcp_servers
 
     def task_list(self) -> list[models.TaskConfig]:
-        task_list: models.ListTasksResponse200 = list_tasks.sync(client=self._agent_client)
+        task_list: list[models.TaskConfig] = list_tasks.sync(client=self._agent_client)
         if task_list is None:
             return []
 
         return task_list.tasks
 
     def tool_list(self) -> list[models.ToolServerInfo]:
-        tool_servers_dto: models.ListToolsResponse200 = list_tools.sync(client=self._agent_client)
+        tool_servers_dto: list[models.ToolServerInfo] = list_tools.sync(client=self._agent_client)
         if tool_servers_dto is None:
             return None
 
-        tool_servers_list: list[models.ToolServerInfo] = tool_servers_dto.tool_servers
-        if tool_servers_list is None or len(tool_servers_list) <= 0:
-            return None
-
-        return tool_servers_list
+        return tool_servers_dto
 
     def today_activity(self) -> list[models.ActivityRecord]:
         request = models.GetActivityBody(
             agent=self._agent_id, from_=datetime.datetime.now(datetime.UTC)
         )
 
-        response: models.ActivityLogsResponse = get_activity.sync(
+        response: list[models.ActivityRecord] = get_activity.sync(
             client=self._agent_client,
             body=request,
         )
-        match response:
-            case models.ActivityLogsResponse():
-                activity: list[models.ActivityRecord] = response.activity
-                if activity is not None:
-                    return activity
+        # TODO: chech err / none
 
-        log.error(f"agent server return bad activity: {response}")
-        return []
+        return response
 
-    def consolidate(self, on_completion: Callable[[models.ChatCompletionPayload], None] = None):
+    def consolidate(self, on_completion: Callable[[str], None] = None):
         try:
             with httpx.stream(
                 method="POST",
@@ -139,10 +137,10 @@ class AgentService:
                         continue
 
                     event_dict = json.loads(line.removeprefix("data: "))
-                    completion_event = models.ChatCompletionPayload.from_dict(event_dict)
+                    completion_event = models.CompletionEvent.from_dict(event_dict)
                     if on_completion is not None:
                         try:
-                            on_completion(completion_event)
+                            on_completion(completion_event.completion)
                         except Exception as e:
                             log.error(f"on_completion consolidation process: {e}")
         except Exception as e:
@@ -153,10 +151,12 @@ class AgentService:
         request: str,
         *,
         provided_tools: list[tools.AgentTool] = None,
-        on_completion: Callable[[models.ChatCompletionEvent], None] = None,
-        on_compaction: Callable[[models.ChatCompactionEvent], None] = None,
-        on_error: Callable[[models.ChatErrorEvent], None] = None,
-        on_tool_result: Callable[[models.ChatToolResultEvent], None] = None,
+        on_loop_exit: Callable[[models.LoopExitEvent], None] = None,
+        on_completion: Callable[[models.CompletionEvent], None] = None,
+        on_compltion_mistake: Callable[[models.CompletionMistakeEvent], None] = None,
+        on_compaction: Callable[[models.CompactionEvent], None] = None,
+        on_tool_result: Callable[[models.ToolResultEvent], None] = None,
+        on_tool_error: Callable[[models.ToolErrorEvent], None] = None,
     ):
 
         tool_servers = []
@@ -169,9 +169,7 @@ class AgentService:
 
         session = self._session_service.get_actual_session()
         chat_body: models.ChatBody = models.ChatBody(
-            agent_id=self._agent_id,
             logging=True,
-            session_id=session,
             user_request=[ContentPart(text=request)],
             tool_servers=tool_servers,
         )
@@ -179,46 +177,54 @@ class AgentService:
 
         try:
             _run_chat_stream(
+                agent_id=self._agent_id,
+                session_id=session,
                 agent_url=self._agent_url,
                 agent_client=self._agent_client,
                 chat_body=chat_body,
                 provided_tools_map=provided_tools_map,
+                on_loop_exit=on_loop_exit,
                 on_completion=on_completion,
+                on_compltion_mistake=on_compltion_mistake,
                 on_compaction=on_compaction,
-                on_error=on_error,
                 on_tool_result=on_tool_result,
+                on_tool_error=on_tool_error,
             )
         except Exception as e:
             interrupt_chat.sync(
                 agent=self._agent_id,
                 client=self._agent_client,
-                session_id=session,
+                session=session,
             )
-            log.error(msg=f"agent_request: {e}")
+            log.error(msg=f"agent request: {e}")
 
 
 def _run_chat_stream(
     agent_url: str,
     agent_client: agent_client.Client,
+    agent_id: str,
+    session_id : str,
     chat_body: models.ChatBody,
     provided_tools_map: dict[str, Callable[[dict[str, any]], str]],
-    on_completion: Callable[[models.ChatCompletionEvent], None] = None,
-    on_compaction: Callable[[models.ChatCompactionEvent], None] = None,
-    on_error: Callable[[models.ChatErrorEvent], None] = None,
-    on_tool_result: Callable[[models.ChatToolResultEvent], None] = None,
+    on_loop_exit: Callable[[models.LoopExitEvent], None] = None,
+    on_completion: Callable[[models.CompletionEvent], None] = None,
+    on_compltion_mistake: Callable[[models.CompletionMistakeEvent], None] = None,
+    on_compaction: Callable[[models.CompactionEvent], None] = None,
+    on_tool_result: Callable[[models.ToolResultEvent], None] = None,
+    on_tool_error: Callable[[models.ToolErrorEvent], None] = None,
 ):
 
-    def on_provided_tool_call(call: models.ChatProvidedToolCallEvent):
+    def on_provided_tool_call(call: models.ProvidedToolCallEvent):
 
         # process
         result = ""
-        tool = call.payload.tool
+        tool = call.tool
         try:
             call_executor = provided_tools_map[tool]
 
             args: dict[str, any] = {}
-            if call.payload.args is not None:
-                args = call.payload.args
+            if call.args is not None:
+                args = call.args
 
             result = call_executor(args)
 
@@ -233,12 +239,12 @@ def _run_chat_stream(
         tool_result.sync(
             client=agent_client,
             body=answer,
-            id=call.payload.result_id,
+            id=call.result_id,
         )
 
     with httpx.stream(
         "POST",
-        agent_url + "/chat",
+        agent_url + f"chat/{agent_id}/{session_id}",
         json=chat_body.to_dict(),
         timeout=10000,
     ) as response:
@@ -249,43 +255,71 @@ def _run_chat_stream(
             _process_response(
                 response=determine_response(line),
                 on_provided_tool_call=on_provided_tool_call,
-                on_compaction=on_compaction,
+                on_loop_exit=on_loop_exit,
                 on_completion=on_completion,
-                on_error=on_error,
+                on_compltion_mistake=on_compltion_mistake,
+                on_compaction=on_compaction,
                 on_tool_result=on_tool_result,
+                on_tool_error=on_tool_error,
             )
 
 
 def _process_response(
     response: None
-    | models.ChatProvidedToolCallEvent
-    | models.ChatCompactionEvent
-    | models.ChatCompletionEvent
-    | models.ChatErrorEvent
-    | models.ChatToolResultEventType,
-    on_provided_tool_call: Callable[[models.ChatProvidedToolCallEvent], None] = None,
-    on_completion: Callable[[models.ChatCompletionEvent], None] = None,
-    on_compaction: Callable[[models.ChatCompactionEvent], None] = None,
-    on_error: Callable[[models.ChatErrorEvent], None] = None,
-    on_tool_result: Callable[[models.ChatToolResultEvent], None] = None,
+    | models.LoopExitEvent
+    | models.ProvidedToolCallEvent
+    | models.CompactionEvent
+    | models.CompletionEvent
+    | models.CompletionMistakeEvent
+    | models.ToolErrorEvent
+    | models.ToolResultEvent,
+
+    # callbacks
+    on_loop_exit: Callable[[models.LoopExitEvent], None] = None,
+    on_provided_tool_call: Callable[[models.ProvidedToolCallEvent], None] = None,
+    on_completion: Callable[[models.CompletionEvent], None] = None,
+    on_compltion_mistake: Callable[[models.CompletionMistakeEvent], None] = None,
+    on_compaction: Callable[[models.CompactionEvent], None] = None,
+    on_tool_result: Callable[[models.ToolResultEvent], None] = None,
+    on_tool_error: Callable[[models.ToolErrorEvent], None] = None,
 ):
     match response:
         case None:
             return
-        case models.ChatProvidedToolCallEvent():
+
+        # provided call event
+        case models.ProvidedToolCallEvent():
             on_provided_tool_call(response)
-        case models.ChatCompactionEvent():
+
+        # compactuion event
+        case models.CompactionEvent():
             if on_compaction is not None:
                 on_compaction(response)
-        case models.ChatCompletionEvent():
+
+        # compltion event
+        case models.CompletionEvent():
             if on_completion is not None:
                 on_completion(response)
-        case models.ChatErrorEvent():
-            if on_error is not None:
-                on_error(response)
-        case models.ChatToolResultEventType():
+
+        # completion mistake event
+        case models.CompletionMistakeEvent():
+            if on_compltion_mistake is not None:
+                on_compltion_mistake(response)
+
+        # exit loop event
+        case models.LoopExitEvent():
+            if on_loop_exit is not None:
+                on_loop_exit(response)
+
+        # tool result event
+        case models.ToolResultEventType():
             if on_tool_result is not None:
                 on_tool_result(response)
+
+        # tool err event
+        case models.ToolErrorEvent():
+            if on_tool_error is not None:
+                on_tool_error(response)
 
 
 def determine_response(response: str) -> any:
@@ -295,17 +329,36 @@ def determine_response(response: str) -> any:
     try:
         event_dict = json.loads(response.removeprefix("data: "))
         match event_dict["type"]:
-            case models.ChatCompletionEventType.COMPLETE:
-                return models.ChatCompletionEvent.from_dict(event_dict)
-            case models.ChatCompactionEventType.COMPACTION:
-                return models.ChatCompactionEvent.from_dict(event_dict)
-            case models.ChatErrorEventType.ERROR:
-                return models.ChatErrorEvent.from_dict(event_dict)
-            case models.ChatProvidedToolCallEventType.PROVIDED_TOOLCALL:
-                return models.ChatProvidedToolCallEvent.from_dict(event_dict)
-            case models.ChatToolResultEventType.TOOL_RESULT:
-                return models.ChatToolResultEvent.from_dict(event_dict)
-        raise ("unknown result type " + event_dict["type"])
+
+            # loop exit
+            case "loop_exit":
+                return models.LoopExitEvent.from_dict(event_dict)
+
+            # completion
+            case "complete":
+                return models.CompletionEvent.from_dict(event_dict)
+
+            # completion mistake
+            case "complete_mistake":
+                return models.CompletionMistakeEvent.from_dict(event_dict)
+
+            # compaction
+            case "compaction":
+                return models.CompactionEvent.from_dict(event_dict)
+
+            # tool error
+            case "tool_error":
+                return models.ToolErrorEventType.from_dict(event_dict)
+
+            # provided tool call
+            case "provided_toolcall":
+                return models.ProvidedToolCallEvent.from_dict(event_dict)
+
+            # tool result
+            case "tool_result":
+                return models.ToolResultEvent.from_dict(event_dict)
+
+        raise f'unknown result type {event_dict["type"]}'
 
     except Exception as e:
         log.error(f"determine_response: bad response type: {e}")
