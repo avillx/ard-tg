@@ -1,4 +1,4 @@
-import logging as log
+import logging
 from datetime import datetime
 
 import telebot
@@ -14,32 +14,34 @@ import tools
 class Handlers:
     _agent_service: agent.AgentService
     _sticker_chache: tg_utils.StickerChache
+    _logger: logging.Logger
 
     def __init__(
         self,
         agent_service: agent.AgentService,
         sticker_chache: tg_utils.StickerChache,
         sticker_pack: str,
+        logger : logging.Logger,
     ):
+        self._logger = logger.getChild("Telegram.Hanlders")
         self._agent_service = agent_service
         self._sticker_chache = sticker_chache
         self._sticker_pack = sticker_pack
 
+    def set_commands_prompt(self,bot: telebot.TeleBot):
+        commands : list[telebot_types.BotCommand] = [
+
+            telebot_types.BotCommand("interrupt", "🚧 Interrupt agent response"),
+            telebot_types.BotCommand("activity", "🗂 Show recent activity"),
+            telebot_types.BotCommand("tasks", "♻️ Show tasks"),
+            telebot_types.BotCommand("tools", "🔧 Show tools info"),
+            telebot_types.BotCommand("mcp", "⚒️ Show list of MCP servers"),
+            telebot_types.BotCommand("consolidate", "💾 Start memory consolidation process"),
+        ]
+        bot.set_my_commands(commands)
+
     def register_on(self, bot: telebot.TeleBot):
 
-        # set commands prompts
-        bot.set_my_commands(
-            [
-                telebot_types.BotCommand("interrupt", "🚧 Interrupt agent response"),
-                telebot_types.BotCommand("activity", "🗂 Show recent activity"),
-                telebot_types.BotCommand("tasks", "♻️ Show tasks"),
-                telebot_types.BotCommand("tools", "🔧 Show tools info"),
-                telebot_types.BotCommand("mcp", "⚒️ Show list of MCP servers"),
-                telebot_types.BotCommand("consolidate", "💾 Start memory consolidation process"),
-            ]
-        )
-
-        # message handlers
         bot.register_message_handler(
             self._handler_interruption, commands=["interrupt"], pass_bot=True
         )
@@ -60,25 +62,21 @@ class Handlers:
 
     def _handler_consolidation(self, message: telebot_types.Message, bot: telebot.TeleBot):
 
-        _START_HEADER = "💾 Consolidation started"
-        _FINALE_HEADER = "💾 Consolidation finished"
+        rich_message = tg_utils.RichMessage(
+            chat_id = message.chat.id,
+            bot = bot,
+            draft_id = 2,
+        )
 
-        bot.send_message(message.chat.id, _START_HEADER)
-
-        last_completion = ""
+        rich_message.append("💾 Consolidation started")
 
         def on_completion(completion: str) -> None:
-            nonlocal last_completion
-
             if completion is not None and completion != "":
-                last_completion = completion
-                input = telebot_types.InputRichMessage(markdown=completion)
-                bot.send_rich_message_draft(message.chat.id, 1, input)
+                rich_message.append(completion)
 
         self._agent_service.consolidate(on_completion)
 
-        final = telebot_types.InputRichMessage(markdown=_FINALE_HEADER + "\n" + last_completion)
-        bot.send_rich_message(message.chat.id, final)
+        rich_message.commit()
 
     def _handler_interruption(self, message: telebot_types.Message, bot: telebot.TeleBot):
         bot.send_message(message.chat.id, "🚧 Interrupting agent")
@@ -160,7 +158,7 @@ class Handlers:
             for tool_server in tool_servers_list:
                 response.append(fmt.escape_markdown(f"- {tool_server.name}"))
 
-            response.append(fmt.mcite("For current server: /tools <tool_server>"))
+            response.append("\nDetails: /tools <tool_server>")
             repsonse_text = fmt.format_text(*response, separator="\n")
             bot.send_message(message.chat.id, repsonse_text)
             return
@@ -194,78 +192,66 @@ class Handlers:
 
     def _handler_general_message(self, message: telebot_types.Message, bot: telebot.TeleBot):
 
-        lastCompltionText = ""
-        heap = ""
+        rich_message = tg_utils.RichMessage(
+            chat_id=message.chat.id,
+            bot=bot,
+            draft_id=1,
+        )
 
         # on tool error notify user about it
         def on_loop_exit(e: models.LoopExitEvent) -> None:
-            nonlocal lastCompltionText
-
             match e.cause: # avoid unset
                 case str():
                     if e.cause != "":
-                        lastCompltionText += f"\n\n⚠️ errors occured: {e.cause}"
+                        rich_message.append(f"\n\n⚠️ errors occured: {e.cause}")
+
 
         # on completion - sends draft in chat
         def on_completion(e: models.CompletionEvent) -> None:
-            nonlocal heap
-            nonlocal lastCompltionText
-
             completion: str = e.completion
+
             if completion is None:
-                return
+                completion = "\n"
 
-            lastCompltionText=completion
-
-            heap += f"\n{completion}"
-
-            if e.tool_calls is not None:
+            if e.tool_calls is not None and len(e.tool_calls) > 0:
                 for call in e.tool_calls:
-                    heap += f"\n{tool_call_repr(call)}\n"
+                    completion += f"\n{tg_utils.tool_call_repr(call)}\n"
 
-            input = telebot_types.InputRichMessage(markdown=heap)
-            bot.send_rich_message_draft(message.chat.id,1,input)
+            rich_message.append(completion)
+
 
         # on completion mistake notify user about it
         def on_completion_mistake(e: models.CompletionMistakeEvent) -> None:
-            nonlocal heap
-            nonlocal lastCompltionText
+            warn = f"\n\n⚠️ agent make mistake: {fmt.escape_markdown(e.error)}"
+            rich_message.append(warn)
 
-            response = f"\n\n⚠️ agent make mistake: {fmt.escape_markdown(e.error)}"
-            heap += f"\n{response}"
-            lastCompltionText = response
-
-            input = telebot_types.InputRichMessage(markdown=heap)
-            bot.send_rich_message_draft(message.chat.id,1,input)
 
         # on compactions sens notify message in chat
         def on_compaction(e: models.CompactionEvent) -> None:
-            nonlocal heap
-            heap += "\n\n⚠️ session compacted"
+            rich_message.append("\n\n⚠️ session compacted")
 
-            input = telebot_types.InputRichMessage(markdown=heap)
-            bot.send_rich_message_draft(message.chat.id,1,input)
 
         # on tool error notify user about it
         def on_tool_error(e: models.ToolErrorEvent) -> None:
-            nonlocal heap
-            heap += f"\n\n⚠️ tool error: {fmt.escape_markdown(e.cause)}"
+            warn = f"\n\n⚠️ tool error: {fmt.escape_markdown(e.cause)}"
+            rich_message.append(warn)
 
-            input = telebot_types.InputRichMessage(markdown=heap)
-            bot.send_rich_message_draft(message.chat.id,1,input)
 
-        provided_tools: list[tools.AgentTool] = []
-        if self._sticker_pack != "":
-            sticker_tool = tg_utils.SendStickerTool(
-                chat_id=message.chat.id,
-                bot=bot,
-                sticker_pack=self._sticker_chache.get_pack(self._sticker_pack),
-            )
-            provided_tools.append(sticker_tool)
-
+        # user message for agent
         current_time = datetime.now().strftime("%y.%m.%d %H:%M")
+        user_message = f"# From: {message.chat.first_name} ({current_time}):\n{message.text}"
+
+
+        # provided tools
+        provided_tools = self._provided_tools(
+            chat_id = message.chat.id,
+            bot = bot,
+        )
+
+
+        # send request to agent
         self._agent_service.agent_request(
-            request=f"# From: {message.chat.first_name} ({current_time}):\n{message.text}",
+            request=user_message,
             on_completion=on_completion,
             on_compaction=on_compaction,
             on_compltion_mistake=on_completion_mistake,
@@ -274,30 +260,24 @@ class Handlers:
             provided_tools=provided_tools,
         )
 
-        # send final message
-        input = telebot_types.InputRichMessage(markdown=lastCompltionText)
-        bot.send_rich_message(message.chat.id,input)
+        # send final rich message
+        rich_message.commit()
 
 
-def tool_call_repr(call: models.ToolCall) -> str :
+    # class helper
+    def _provided_tools(
+            self,
+            chat_id:int,
+            bot:telebot.TeleBot,
+        ) -> list[tools.AgentTool]:
 
-    repr=f"{fmt.escape_markdown(call.tool)}:"
+        provided_tools: list[tools.AgentTool] = []
+        if self._sticker_pack != "":
+            sticker_tool = tools.SendStickerTool(
+                chat_id=chat_id,
+                bot=bot,
+                sticker_pack=self._sticker_chache.get_pack(self._sticker_pack),
+            )
+            provided_tools.append(sticker_tool)
 
-    try:
-        args = call.args.to_dict()
-        for k,v in args.items():
-            arg_repr = ""
-            if hasattr(v,"__repr__"):
-                arg_repr : str = f"{k}={v}"
-            else:
-                arg_repr : str = f"{k}"
 
-            if len(arg_repr) > 40:
-                arg_repr = f"{arg_repr[:40]}..."
-
-            repr+=f"\n- {fmt.escape_markdown(arg_repr)}"
-
-    except Exception as e:
-        log.error(f"parse args for tool: {call.tool}: {e}")
-
-    return repr

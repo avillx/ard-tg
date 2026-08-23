@@ -1,8 +1,6 @@
 import datetime
 import json
-import logging as log
-import threading
-import time
+import logging
 from collections.abc import Callable
 
 import httpx
@@ -10,88 +8,49 @@ import httpx
 import arch_agent.api.activity.get_activity as get_activity
 import arch_agent.api.chat.interrupt_chat as interrupt_chat
 import arch_agent.api.mcp.list_mcp_servers as list_mcp_servers
-import arch_agent.api.sessions.create_session as create_session
 import arch_agent.api.tasks.list_tasks as list_tasks
 import arch_agent.api.tool_results.resolve_tool_call as tool_result
 import arch_agent.api.tools.list_tools as list_tools
 import arch_agent.client as agent_client
 import arch_agent.models as models
+import session
 import tools
 from arch_agent.models.content_part import ContentPart
-
-
-class SessionService:
-    _agent_id: str
-    _agent_client: agent_client.Client
-    _actual_session: str
-    _last_update: float
-    _life_time: float
-    _mutex = threading.Lock()
-
-    def __init__(self, agent_id: str, agent_client: agent_client.Client, life_time: float):
-        self._agent_client = agent_client
-        self._life_time = life_time
-        self._agent_id = agent_id
-        self._last_update = 0
-        self._actual_session = ""
-        self._mutex = threading.Lock()
-
-    def get_current(self) -> str:
-        with self._mutex:
-            return self._actual_session
-
-    def get_actual_session(self) -> str:
-        with self._mutex:
-            now = time.monotonic()
-
-            # is expired
-            if now - self._last_update > self._life_time:
-                self._actual_session = self.create_new_session()
-                self._last_update = now
-
-            return self._actual_session
-
-    def create_new_session(self) -> str:
-
-        create_session_request = models.CreateSessionBody(instruction="")
-
-        resp = create_session.sync(
-            self._agent_id,
-            client=self._agent_client,
-            body=create_session_request,
-        )
-        if resp is None:
-            log.error("agent return empty session")
-            return ""
-        return resp.id
 
 
 class AgentService:
     _agent_url: str
     _agent_id: str
     _agent_client: agent_client.Client
-    _session_service: SessionService
+    _session_service: session.SessionService
+    _logger: logging.Logger
 
     def __init__(
         self,
         agent_url: str,
         agent_id: str,
         agent_client: agent_client.Client,
-        session_service: SessionService,
+        session_service: session.SessionService,
+        logger: logging.Logger,
     ):
+        self._logger = logger.getChild("Agent")
         self._agent_url = agent_url
         self._agent_id = agent_id
         self._agent_client = agent_client
         self._session_service = session_service
 
     def interrupt(self):
+        session_id=self._session_service.get_current()
+
+        self._logger.info(f"interrupting agent {self._agent_id}, session: {session_id}")
         interrupt_chat.sync(
             agent=self._agent_id,
-            session_id=self._session_service.get_current(),
+            session_id=session_id,
             client=self._agent_client,
         )
 
     def mcp_list(self) -> list[models.MCPServerInfo]:
+        self._logger.info("MCP servers requested")
         mcp_servers = list_mcp_servers.sync(client=self._agent_client)
         if mcp_servers is None:
             return []
@@ -99,6 +58,7 @@ class AgentService:
         return mcp_servers.mcp_servers
 
     def task_list(self) -> list[models.TaskConfig]:
+        self._logger.info("Tasks requested")
         task_list: list[models.TaskConfig] = list_tasks.sync(client=self._agent_client)
         if task_list is None:
             return []
@@ -106,6 +66,7 @@ class AgentService:
         return task_list.tasks
 
     def tool_list(self) -> list[models.ToolServerInfo]:
+        self._logger.info("Tools requested")
         tool_servers_dto: list[models.ToolServerInfo] = list_tools.sync(client=self._agent_client)
         if tool_servers_dto is None:
             return None
@@ -113,6 +74,7 @@ class AgentService:
         return tool_servers_dto
 
     def today_activity(self) -> list[models.ActivityRecord]:
+        self._logger.info("Activity requested")
         request = models.GetActivityBody(
             agent=self._agent_id, from_=datetime.datetime.now(datetime.UTC)
         )
@@ -126,6 +88,7 @@ class AgentService:
         return response
 
     def consolidate(self, on_completion: Callable[[str], None] = None):
+        self._logger.info("Consolidation requested")
         try:
             with httpx.stream(
                 method="POST",
@@ -142,9 +105,9 @@ class AgentService:
                         try:
                             on_completion(completion_event.completion)
                         except Exception as e:
-                            log.error(f"on_completion consolidation process: {e}")
+                            self._logger.error(f"consolidation process: {e}")
         except Exception as e:
-            log.error(f"consolidation process: {e}")
+            self._logger.error(f"consolidation interrupted with exception: {e}")
 
     def agent_request(
         self,
@@ -173,10 +136,11 @@ class AgentService:
             user_request=[ContentPart(text=request)],
             tool_servers=tool_servers,
         )
-        log.debug(f"session: {session}")
+        self._logger.info(f"Agentic loop requested, session: {session}")
 
         try:
             _run_chat_stream(
+                logger=self._logger,
                 agent_id=self._agent_id,
                 session_id=session,
                 agent_url=self._agent_url,
@@ -191,15 +155,12 @@ class AgentService:
                 on_tool_error=on_tool_error,
             )
         except Exception as e:
-            interrupt_chat.sync(
-                agent=self._agent_id,
-                client=self._agent_client,
-                session=session,
-            )
-            log.error(msg=f"agent request: {e}")
+            self._logger.error(f"chat declined cause: {e}")
+            self.interrupt()
 
 
 def _run_chat_stream(
+    logger : logging.Logger,
     agent_url: str,
     agent_client: agent_client.Client,
     agent_id: str,
@@ -251,17 +212,19 @@ def _run_chat_stream(
         for line in response.iter_lines():
             if line == "":
                 continue
-
-            _process_response(
-                response=determine_response(line),
-                on_provided_tool_call=on_provided_tool_call,
-                on_loop_exit=on_loop_exit,
-                on_completion=on_completion,
-                on_compltion_mistake=on_compltion_mistake,
-                on_compaction=on_compaction,
-                on_tool_result=on_tool_result,
-                on_tool_error=on_tool_error,
-            )
+            try:
+                _process_response(
+                    response=determine_response(line),
+                    on_provided_tool_call=on_provided_tool_call,
+                    on_loop_exit=on_loop_exit,
+                    on_completion=on_completion,
+                    on_compltion_mistake=on_compltion_mistake,
+                    on_compaction=on_compaction,
+                    on_tool_result=on_tool_result,
+                    on_tool_error=on_tool_error,
+                )
+            except Exception as e:
+                logger.error(f"chat response processing: {e}")
 
 
 def _process_response(
@@ -326,41 +289,35 @@ def determine_response(response: str) -> any:
     if "data: [DONE]" in response:
         return None
 
-    try:
-        event_dict = json.loads(response.removeprefix("data: "))
-        match event_dict["type"]:
+    event_dict = json.loads(response.removeprefix("data: "))
+    match event_dict["type"]:
 
-            # loop exit
-            case "loop_exit":
-                return models.LoopExitEvent.from_dict(event_dict)
+        # loop exit
+        case "loop_exit":
+            return models.LoopExitEvent.from_dict(event_dict)
 
-            # completion
-            case "complete":
-                return models.CompletionEvent.from_dict(event_dict)
+        # completion
+        case "complete":
+            return models.CompletionEvent.from_dict(event_dict)
 
-            # completion mistake
-            case "complete_mistake":
-                return models.CompletionMistakeEvent.from_dict(event_dict)
+        # completion mistake
+        case "complete_mistake":
+            return models.CompletionMistakeEvent.from_dict(event_dict)
 
-            # compaction
-            case "compaction":
-                return models.CompactionEvent.from_dict(event_dict)
+        # compaction
+        case "compaction":
+            return models.CompactionEvent.from_dict(event_dict)
 
-            # tool error
-            case "tool_error":
-                return models.ToolErrorEventType.from_dict(event_dict)
+        # tool error
+        case "tool_error":
+            return models.ToolErrorEventType.from_dict(event_dict)
 
-            # provided tool call
-            case "provided_toolcall":
-                return models.ProvidedToolCallEvent.from_dict(event_dict)
+        # provided tool call
+        case "provided_toolcall":
+            return models.ProvidedToolCallEvent.from_dict(event_dict)
 
-            # tool result
-            case "tool_result":
-                return models.ToolResultEvent.from_dict(event_dict)
+        # tool result
+        case "tool_result":
+            return models.ToolResultEvent.from_dict(event_dict)
 
-        raise f'unknown result type {event_dict["type"]}'
-
-    except Exception as e:
-        log.error(f"determine_response: bad response type: {e}")
-
-    return None
+    raise f'unknown result type {event_dict["type"]}'
