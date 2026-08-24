@@ -82,3 +82,50 @@ class SendStickerTool(AgentTool):
             return f"has no sticker for {emoji}"
         except Exception:
             return "stricker tool occures errors"
+
+class SendPhotoTool(AgentTool):
+    _bot: telebot.TeleBot
+    _chat_id: int
+
+    def __init__(
+            self,
+            bot: telebot.TeleBot,
+            chat_id: int,
+        ):
+        self._bot = bot
+        self._chat_id = chat_id
+
+    def name(self) -> str:
+        return "send_photo"
+
+    def description(self) -> str:
+        return "sends photo in actial chat"
+
+    def schema(self) -> dict[str,any]:
+        return {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type":        "string",
+                    "description": "absolute path to file",
+                }
+            },
+            "required":["path"]
+        }
+
+    def execute(self,args : dict[str,any]) -> str:
+        if args["path"] is None or "":
+            return "path is required"
+
+        path = args["path"]
+
+        try:
+            with open(path,'rb') as f:
+                self._bot.send_photo(
+                    chat_id=self._chat_id,
+                    photo=f
+                )
+            return "file sended"
+
+        except Exception as e:
+            return f"error: {e}"

@@ -215,7 +215,7 @@ class Handlers:
 
             if e.tool_calls is not None and len(e.tool_calls) > 0:
                 for call in e.tool_calls:
-                    completion += f"\n{tg_utils.tool_call_repr(call)}\n"
+                    completion += f"\n\n{tg_utils.tool_call_repr(call)}\n"
 
             rich_message.append(completion)
 
@@ -273,11 +273,23 @@ class Handlers:
 
         provided_tools: list[tools.AgentTool] = []
         if self._sticker_pack != "":
+
+            # sticker tool
             sticker_tool = tools.SendStickerTool(
-                chat_id=chat_id,
                 bot=bot,
+                chat_id=chat_id,
                 sticker_pack=self._sticker_chache.get_pack(self._sticker_pack),
             )
             provided_tools.append(sticker_tool)
+
+        # photo tool
+        photo_tool = tools.SendPhotoTool(
+            bot=bot,
+            chat_id=chat_id,
+        )
+        provided_tools.append(photo_tool)
+
+
+        return provided_tools
 
 
