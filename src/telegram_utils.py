@@ -7,6 +7,11 @@ import telebot.types as telebot_types
 
 import arch_agent.models as models
 
+_TELEGRAM_GUIDE="""
+# Gateway
+
+You recieve user messages from messanger `Telegram`. markdown has fully support.
+"""
 
 class StickerChache:
     _bot: telebot.TeleBot

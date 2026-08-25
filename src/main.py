@@ -50,6 +50,7 @@ def main():
         agent_client = agent_client,
         life_time    = float(session_life_time),
         logger       = logger,
+        instruction  = tg_utils._TELEGRAM_GUIDE
     )
 
     agent_service = agent.AgentService(

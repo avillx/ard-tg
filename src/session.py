@@ -13,14 +13,17 @@ class SessionService:
     _actual_session: str
     _last_update: float
     _life_time: float
+    _instruction: str
     _logger: logging.Logger
     _mutex = threading.Lock()
+
 
     def __init__(
             self,
             agent_id: str,
             agent_client: agent_client.Client,
             life_time: float,
+            instruction: str,
             logger: logging.Logger,
         ):
         self._logger = logger.getChild("Sessions")
@@ -30,6 +33,7 @@ class SessionService:
         self._last_update = 0
         self._actual_session = ""
         self._mutex = threading.Lock()
+        self._instruction = instruction
 
     def get_current(self) -> str:
         with self._mutex:
@@ -48,7 +52,9 @@ class SessionService:
 
     def create_new_session(self) -> str:
 
-        create_session_request = models.CreateSessionBody(instruction="")
+        create_session_request = models.CreateSessionBody(
+            instruction=self._instruction,
+        )
 
         resp = create_session.sync(
             self._agent_id,
