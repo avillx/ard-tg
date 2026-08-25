@@ -294,24 +294,29 @@ class Handlers:
             bot:telebot.TeleBot,
         ) -> list[tools.AgentTool]:
 
-        provided_tools: list[tools.AgentTool] = []
-        if self._sticker_pack != "":
-
-            # sticker tool
-            sticker_tool = tools.SendStickerTool(
+        provided_tools: list[tools.AgentTool] = [
+            tools.SendPhotoTool(
                 bot=bot,
                 chat_id=chat_id,
-                sticker_pack=self._sticker_chache.get_pack(self._sticker_pack),
+            ),
+            tools.SendFileTool(
+                bot=bot,
+                chat_id=chat_id,
+            ),
+            tools.SendVoiceTool(
+                bot=bot,
+                chat_id=chat_id,
             )
-            provided_tools.append(sticker_tool)
+        ]
 
-        # photo tool
-        photo_tool = tools.SendPhotoTool(
-            bot=bot,
-            chat_id=chat_id,
-        )
-        provided_tools.append(photo_tool)
-
+        if self._sticker_pack != "":
+            provided_tools.append(
+                tools.SendStickerTool(
+                    bot=bot,
+                    chat_id=chat_id,
+                    sticker_pack=self._sticker_chache.get_pack(self._sticker_pack),
+                )
+            )
 
         return provided_tools
 

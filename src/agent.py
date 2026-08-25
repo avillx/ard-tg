@@ -45,7 +45,7 @@ class AgentService:
         self._logger.info(f"interrupting agent {self._agent_id}, session: {session_id}")
         interrupt_chat.sync(
             agent=self._agent_id,
-            session_id=session_id,
+            session=session_id,
             client=self._agent_client,
         )
 
@@ -195,12 +195,15 @@ def _run_chat_stream(
             result = "errors in tool precessing"
 
         # respond
-        answer = models.ToolResultPayload(result=[models.ContentPart(text=result)])
+        content_part = models.ContentPart(text=result)
+        answer = models.ToolResultPayload(
+            result=[content_part]
+        )
 
         tool_result.sync(
-            client=agent_client,
-            body=answer,
             id=call.result_id,
+            body=answer,
+            client=agent_client,
         )
 
     with httpx.stream(
@@ -275,7 +278,7 @@ def _process_response(
                 on_loop_exit(response)
 
         # tool result event
-        case models.ToolResultEventType():
+        case models.ToolResultEvent():
             if on_tool_result is not None:
                 on_tool_result(response)
 
@@ -310,7 +313,7 @@ def determine_response(response: str) -> any:
 
         # tool error
         case "tool_error":
-            return models.ToolErrorEventType.from_dict(event_dict)
+            return models.ToolErrorEvent.from_dict(event_dict)
 
         # provided tool call
         case "provided_toolcall":

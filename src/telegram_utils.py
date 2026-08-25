@@ -157,7 +157,7 @@ class TypingAction:
         ):
 
         self._bot = bot
-        self.chat_id = chat_id
+        self._chat_id = chat_id
         self._stop_typing_ev = threading.Event()
         self._is_typing = False
         self._typing_thread = threading.Thread(
@@ -175,15 +175,15 @@ class TypingAction:
             self._stop_typing_ev.wait(4)
 
     def start_typing(self):
-        if not self.is_typing:
+        if not self._is_typing:
             self._typing_thread.start()
-            self.is_typing = True
+            self._is_typing = True
 
     def stop_typing(self):
-        if self.is_typing:
-            self.stop_typing_ev.set()
-            self.typing_thread.join()
-            self.is_typing = False
+        if self._is_typing:
+            self._stop_typing_ev.set()
+            self._typing_thread.join()
+            self._is_typing = False
 
 def run_bot_with_webhook(bot : telebot.TeleBot,url : str):
     import hmac
