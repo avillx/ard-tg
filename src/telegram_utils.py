@@ -1,6 +1,5 @@
 import logging
 import threading
-from collections.abc import Callable
 
 import telebot
 import telebot.formatting as fmt
@@ -43,7 +42,9 @@ class RichMessage:
     _draft_id : int
     _chat_id : int
     _candidate : str
-    _draft : str
+    _text_drafts : list[str]
+    _tool_calls_repr : str
+    _is_finally_sended : bool
 
     def __init__(
             self,
@@ -55,36 +56,61 @@ class RichMessage:
         self._draft_id = draft_id
         self._chat_id = chat_id
         self._candidate = ""
-        self._draft = ""
+        self._text_drafts = []
+        self._is_finally_sended = False
 
-    def commit(self) -> None:
-        if self._candidate == "":
-            self._candidate = self._draft
-
-        input = telebot_types.InputRichMessage(
-            markdown= self._candidate
-        )
-        self._bot.send_rich_message(
-            chat_id=self._chat_id,
-            rich_message=input,
-        )
-
-    def append(self,text : str) -> None:
-        self._draft += self._candidate
-        self._candidate = text
-
-        if self._draft == "":
+    def append_tool_calls(self, calls : list[models.ToolCall]) -> None:
+        if not calls:
             return
 
-        # commit draft
+        for call in calls:
+            self._text_drafts.append(tool_call_repr(call))
+
+    def append_text(self,text : str) -> None:
+        if text == "":
+            return
+
+        self._candidate = text
+        self._text_drafts.append(text)
+
+    def send_draft(self):
+
+        draft = "".join(self._text_drafts)
+
         input = telebot_types.InputRichMessage(
-            markdown= self._draft
+            markdown=draft,
         )
         self._bot.send_rich_message_draft(
             chat_id=self._chat_id,
             draft_id=self._draft_id,
             rich_message=input
         )
+
+    def send_finale(self) -> None:
+        if self._is_finally_sended:
+            return
+
+        if self._candidate == "":
+            if len(self._text_drafts) <= 0:
+                raise(Exception("attempt to send empty rich message"))
+
+            self._candidate = self._text_drafts[-1]
+
+        input = telebot_types.InputRichMessage(
+            markdown= self._candidate
+        )
+
+        try:
+            self._bot.send_rich_message(
+                chat_id=self._chat_id,
+                rich_message=input,
+            )
+        except Exception as e:
+            self._bot.send_message(fmt.escape_markdown(self._candidate))
+            print(f"{e}")
+
+
+        self._is_finally_sended = True
 
 def tool_call_repr(call: models.ToolCall) -> str :
 
@@ -115,33 +141,49 @@ def tool_call_repr(call: models.ToolCall) -> str :
 
     return repr
 
-def with_typing(
-        handler : Callable[[telebot_types.Message,telebot.TeleBot],None]
-) -> Callable[[telebot_types.Message,telebot.TeleBot],None]:
+class TypingAction:
+    _typing_thread : threading.Thread
+    _stop_typing_ev : threading.Event
+    _is_typing : bool
+    _bot : telebot.TeleBot
+    _chat_id : int
+    _logger:logging.Logger
 
-    def wrapped(message : telebot_types.Message,bot: telebot.TeleBot):
-        stop_typing = threading.Event()
+    def __init__(
+            self,
+            bot: telebot.TeleBot,
+            chat_id:int,
+            logger:logging.Logger,
+        ):
 
-        def typing_loop():
-            while not stop_typing.is_set():
-                try:
-                    bot.send_chat_action(chat_id=message.chat.id, action="typing")
-                except Exception as e:
-                    # TODO: think about eliminating this shit
-                    logging.error(f"typing fall with error: {e}")
+        self._bot = bot
+        self.chat_id = chat_id
+        self._stop_typing_ev = threading.Event()
+        self._is_typing = False
+        self._typing_thread = threading.Thread(
+            target=self.typing_loop,
+            daemon=True,
+        )
+        self._logger = logger.getChild("TypingAction")
 
-                stop_typing.wait(4)
+    def typing_loop(self):
+        while not self._stop_typing_ev.is_set():
+            try:
+                self._bot.send_chat_action(chat_id=self._chat_id, action="typing")
+            except Exception as e:
+                self._logger.error(f"typing fall with error: {e}")
+            self._stop_typing_ev.wait(4)
 
-        typing_thread = threading.Thread(target=typing_loop, daemon=True)
-        typing_thread.start()
+    def start_typing(self):
+        if not self.is_typing:
+            self._typing_thread.start()
+            self.is_typing = True
 
-        try:
-            handler(message,bot)
-        finally:
-            stop_typing.set()
-            typing_thread.join()
-
-    return wrapped
+    def stop_typing(self):
+        if self.is_typing:
+            self.stop_typing_ev.set()
+            self.typing_thread.join()
+            self.is_typing = False
 
 def run_bot_with_webhook(bot : telebot.TeleBot,url : str):
     import hmac

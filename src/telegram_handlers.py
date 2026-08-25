@@ -50,17 +50,24 @@ class Handlers:
         bot.register_message_handler(self._handler_mcp, commands=["mcp"], pass_bot=True)
         bot.register_message_handler(self._handler_activity, commands=["activity"], pass_bot=True)
         bot.register_message_handler(
-            tg_utils.with_typing(self._handler_consolidation),
-            commands=["consolidate"],
-            pass_bot=True,
+            self._handler_consolidation,
+                commands=["consolidate"],
+                pass_bot=True,
         )
         bot.register_message_handler(
-            tg_utils.with_typing(self._handler_general_message),
+            self._handler_general_message,
             func=lambda message: True,
             pass_bot=True,
         )
 
     def _handler_consolidation(self, message: telebot_types.Message, bot: telebot.TeleBot):
+
+        typing = tg_utils.TypingAction(
+            chat_id=message.chat.id,
+            bot=bot,
+            logger=self._logger,
+        )
+        typing.start_typing()
 
         rich_message = tg_utils.RichMessage(
             chat_id = message.chat.id,
@@ -74,9 +81,11 @@ class Handlers:
             if completion is not None and completion != "":
                 rich_message.append(completion)
 
-        self._agent_service.consolidate(on_completion)
-
-        rich_message.commit()
+        try:
+            self._agent_service.consolidate(on_completion)
+        finally:
+            rich_message.commit()
+            typing.stop_typing()
 
     def _handler_interruption(self, message: telebot_types.Message, bot: telebot.TeleBot):
         bot.send_message(message.chat.id, "🚧 Interrupting agent")
@@ -192,6 +201,13 @@ class Handlers:
 
     def _handler_general_message(self, message: telebot_types.Message, bot: telebot.TeleBot):
 
+        typing = tg_utils.TypingAction(
+            chat_id=message.chat.id,
+            bot=bot,
+            logger=self._logger
+        )
+        typing.start_typing()
+
         rich_message = tg_utils.RichMessage(
             chat_id=message.chat.id,
             bot=bot,
@@ -203,7 +219,9 @@ class Handlers:
             match e.cause: # avoid unset
                 case str():
                     if e.cause != "":
-                        rich_message.append(f"\n\n⚠️ errors occured: {e.cause}")
+                        rich_message.append_text(f"\n\n⚠️ errors occured: {e.cause}")
+            rich_message.send_finale()
+            typing.stop_typing()
 
 
         # on completion - sends draft in chat
@@ -213,28 +231,29 @@ class Handlers:
             if completion is None:
                 completion = "\n"
 
-            if e.tool_calls is not None and len(e.tool_calls) > 0:
-                for call in e.tool_calls:
-                    completion += f"\n\n{tg_utils.tool_call_repr(call)}\n"
-
-            rich_message.append(completion)
+            rich_message.append_text(completion)
+            rich_message.append_tool_calls(e.tool_calls)
+            rich_message.send_draft()
 
 
         # on completion mistake notify user about it
         def on_completion_mistake(e: models.CompletionMistakeEvent) -> None:
             warn = f"\n\n⚠️ agent make mistake: {fmt.escape_markdown(e.error)}"
-            rich_message.append(warn)
+            rich_message.append_text(warn)
+            rich_message.send_draft()
 
 
         # on compactions sens notify message in chat
         def on_compaction(e: models.CompactionEvent) -> None:
-            rich_message.append("\n\n⚠️ session compacted")
+            rich_message.append_text("\n\n⚠️ session compacted")
+            rich_message.send_draft()
 
 
         # on tool error notify user about it
         def on_tool_error(e: models.ToolErrorEvent) -> None:
             warn = f"\n\n⚠️ tool error: {fmt.escape_markdown(e.cause)}"
-            rich_message.append(warn)
+            rich_message.append_text(warn)
+            rich_message.send_draft()
 
 
         # user message for agent
@@ -261,7 +280,11 @@ class Handlers:
         )
 
         # send final rich message
-        rich_message.commit()
+        rich_message.send_finale()
+
+        # for ensure
+        # if on_loop_exit isn't called
+        typing.stop_typing()
 
 
     # class helper
