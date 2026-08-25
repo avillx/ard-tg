@@ -80,7 +80,7 @@ class RichMessage:
 
     def send_draft(self):
 
-        draft = "".join(self._text_drafts)
+        draft = "\n\n".join(self._text_drafts)
 
         input = telebot_types.InputRichMessage(
             markdown=draft,
@@ -112,6 +112,8 @@ class RichMessage:
             )
         except Exception as e:
             self._bot.send_message(fmt.escape_markdown(self._candidate))
+
+            # TODO: log this shit
             print(f"{e}")
 
 
@@ -189,6 +191,13 @@ class TypingAction:
             self._stop_typing_ev.set()
             self._typing_thread.join()
             self._is_typing = False
+
+    def __enter__(self) -> "TypingAction":
+        self.start_typing()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.stop_typing()
 
 def run_bot_with_webhook(bot : telebot.TeleBot,url : str):
     import hmac

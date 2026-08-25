@@ -201,28 +201,11 @@ class Handlers:
 
     def _handler_general_message(self, message: telebot_types.Message, bot: telebot.TeleBot):
 
-        typing = tg_utils.TypingAction(
-            chat_id=message.chat.id,
-            bot=bot,
-            logger=self._logger
-        )
-        typing.start_typing()
-
         rich_message = tg_utils.RichMessage(
             chat_id=message.chat.id,
             bot=bot,
             draft_id=1,
         )
-
-        # on tool error notify user about it
-        def on_loop_exit(e: models.LoopExitEvent) -> None:
-            match e.cause: # avoid unset
-                case str():
-                    if e.cause != "":
-                        rich_message.append_text(f"\n\n⚠️ errors occured: {e.cause}")
-            rich_message.send_finale()
-            typing.stop_typing()
-
 
         # on completion - sends draft in chat
         def on_completion(e: models.CompletionEvent) -> None:
@@ -255,36 +238,45 @@ class Handlers:
             rich_message.append_text(warn)
             rich_message.send_draft()
 
+        with tg_utils.TypingAction(bot,message.chat.id,self._logger) as typing:
 
-        # user message for agent
-        current_time = datetime.now().strftime("%y.%m.%d %H:%M")
-        user_message = f"# From: {message.chat.first_name} ({current_time}):\n{message.text}"
+            # on tool error notify user about it
+            def on_loop_exit(e: models.LoopExitEvent) -> None:
+                match e.cause: # avoid unset
+                    case str():
+                        if e.cause != "":
+                            rich_message.append_text(f"\n\n⚠️ errors occured: {e.cause}")
 
+                # send if is already done
+                typing.stop_typing()
+                rich_message.send_finale()
 
-        # provided tools
-        provided_tools = self._provided_tools(
-            chat_id = message.chat.id,
-            bot = bot,
-        )
+            # provided tools
+            provided_tools = self._provided_tools(
+                chat_id = message.chat.id,
+                bot = bot,
+            )
 
+            # user message for agent
+            current_time = datetime.now().strftime("%y.%m.%d %H:%M")
+            user_message = f"# From: {message.chat.first_name} ({current_time}):\n{message.text}"
 
-        # send request to agent
-        self._agent_service.agent_request(
-            request=user_message,
-            on_completion=on_completion,
-            on_compaction=on_compaction,
-            on_compltion_mistake=on_completion_mistake,
-            on_loop_exit=on_loop_exit,
-            on_tool_error=on_tool_error,
-            provided_tools=provided_tools,
-        )
-
-        # send final rich message
-        rich_message.send_finale()
-
-        # for ensure
-        # if on_loop_exit isn't called
-        typing.stop_typing()
+            # send request to agent
+            try:
+                self._agent_service.agent_request(
+                    request=user_message,
+                    on_completion=on_completion,
+                    on_compaction=on_compaction,
+                    on_compltion_mistake=on_completion_mistake,
+                    on_loop_exit=on_loop_exit,
+                    on_tool_error=on_tool_error,
+                    provided_tools=provided_tools,
+                )
+            except Exception as e:
+                bot.send_message(message.chat.id,"⚠️ gateway problem")
+                self._logger.error(f"gateway exception: {e}")
+            finally:
+                rich_message.send_finale()
 
 
     # class helper
