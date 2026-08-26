@@ -261,7 +261,11 @@ class Handlers:
                 bot = bot,
             )
 
-            flusher = tg_utils.MessageFlusher(bot,message,self._file_storage)
+            flusher = tg_utils.MessageFlusher(
+                bot=bot,
+                message=message,
+                storage_path=self._file_storage,
+            )
 
             # send request to agent
             try:
