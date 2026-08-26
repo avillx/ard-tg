@@ -22,6 +22,7 @@ def main():
     sticker_pack      : str = os.getenv("STICKER_PACK","")
     allowed_chats_raw : str = os.getenv("ALLOWED_CHATS","")
     webhook_url       : str = os.getenv("WEBHOOK_URL","")
+    storage_path      : str = os.getenv("STORAGE_PATH","")
 
     logger = logging.getLogger("App")
     logging.basicConfig(
@@ -64,6 +65,7 @@ def main():
     handlers = tg_handlers.Handlers(
         agent_service  = agent_service,
         sticker_pack   = sticker_pack,
+        file_storage   = storage_path,
         sticker_chache = tg_utils.StickerChache(bot,logger),
         logger=logger,
     )

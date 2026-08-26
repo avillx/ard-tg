@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 import telebot
 import telebot.formatting as fmt
@@ -14,6 +13,7 @@ import tools
 class Handlers:
     _agent_service: agent.AgentService
     _sticker_chache: tg_utils.StickerChache
+    _file_storage : str
     _logger: logging.Logger
 
     def __init__(
@@ -21,11 +21,13 @@ class Handlers:
         agent_service: agent.AgentService,
         sticker_chache: tg_utils.StickerChache,
         sticker_pack: str,
+        file_storage : str,
         logger : logging.Logger,
     ):
         self._logger = logger.getChild("Telegram.Hanlders")
         self._agent_service = agent_service
         self._sticker_chache = sticker_chache
+        self._file_storage = file_storage
         self._sticker_pack = sticker_pack
 
     def set_commands_prompt(self,bot: telebot.TeleBot):
@@ -201,6 +203,8 @@ class Handlers:
 
     def _handler_general_message(self, message: telebot_types.Message, bot: telebot.TeleBot):
 
+        # save file via gateway
+
         rich_message = tg_utils.RichMessage(
             chat_id=message.chat.id,
             bot=bot,
@@ -257,14 +261,12 @@ class Handlers:
                 bot = bot,
             )
 
-            # user message for agent
-            current_time = datetime.now().strftime("%y.%m.%d %H:%M")
-            user_message = f"# From: {message.chat.first_name} ({current_time}):\n{message.text}"
+            flusher = tg_utils.MessageFlusher(bot,message,self._file_storage)
 
             # send request to agent
             try:
                 self._agent_service.agent_request(
-                    request=user_message,
+                    request=flusher.text(),
                     on_completion=on_completion,
                     on_compaction=on_compaction,
                     on_compltion_mistake=on_completion_mistake,
