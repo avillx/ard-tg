@@ -16,6 +16,7 @@ Can be interrupted by command.
 
 ## Commands
 - `/interrupt` - interrupt agentic loop
+- `/new` - starts a new session
 - `/activity` - Return recent agent activity log.
 - `/tasks` - Fetch message representation of taskm, per one agent scheduled task. With no request
 - `/tools <tool_server>` - with no aguments - Return list of available tools servers. 
