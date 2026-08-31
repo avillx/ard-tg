@@ -119,8 +119,10 @@ class MessageFlusher:
             # create name
             file_name = ""
             if hasattr(obj,"file_name"):
-                file_name = obj.file_name
-            else:
+                if obj.file_name is not None:
+                    file_name = obj.file_name
+
+            if file_name == "":
                 ext = file_info.file_path.split(".")[-1]
                 file_name = file_info.file_unique_id +"."+ ext
 

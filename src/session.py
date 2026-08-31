@@ -39,15 +39,24 @@ class SessionService:
         with self._mutex:
             return self._actual_session
 
+    def drop_session(self) -> str:
+        with self._mutex:
+            self._actual_session = ""
+
+    def set_session(self,session_id:str) -> str:
+        with self._mutex:
+            self._last_update = time.monotonic()
+            self._actual_session = session_id
+
     def get_actual_session(self) -> str:
         with self._mutex:
             now = time.monotonic()
 
-            # is expired
-            if now - self._last_update > self._life_time:
+            # is expired or empty
+            if (now - self._last_update > self._life_time) or (self._actual_session == ""):
                 self._actual_session = self.create_new_session()
-                self._last_update = now
 
+            self._last_update = now
             return self._actual_session
 
     def create_new_session(self) -> str:

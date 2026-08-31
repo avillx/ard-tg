@@ -63,11 +63,12 @@ def main():
     )
 
     handlers = tg_handlers.Handlers(
-        agent_service  = agent_service,
-        sticker_pack   = sticker_pack,
-        file_storage   = storage_path,
-        sticker_chache = tg_utils.StickerChache(bot,logger),
-        logger=logger,
+        agent_service   = agent_service,
+        sticker_pack    = sticker_pack,
+        file_storage    = storage_path,
+        sticker_chache  = tg_utils.StickerChache(bot,logger),
+        session_service = session_service,
+        logger          = logger,
     )
     handlers.set_commands_prompt(bot)
     handlers.register_on(bot)

@@ -6,12 +6,14 @@ import telebot.types as telebot_types
 
 import agent
 import arch_agent.models as models
+import session
 import telegram_utils as tg_utils
 import tools
 
 
 class Handlers:
     _agent_service: agent.AgentService
+    _session_service: session.SessionService
     _sticker_chache: tg_utils.StickerChache
     _file_storage : str
     _logger: logging.Logger
@@ -19,6 +21,7 @@ class Handlers:
     def __init__(
         self,
         agent_service: agent.AgentService,
+        session_service: session.SessionService,
         sticker_chache: tg_utils.StickerChache,
         sticker_pack: str,
         file_storage : str,
@@ -29,11 +32,12 @@ class Handlers:
         self._sticker_chache = sticker_chache
         self._file_storage = file_storage
         self._sticker_pack = sticker_pack
+        self._session_service = session_service
 
     def set_commands_prompt(self,bot: telebot.TeleBot):
         commands : list[telebot_types.BotCommand] = [
-
             telebot_types.BotCommand("interrupt", "🚧 Interrupt agent response"),
+            telebot_types.BotCommand("new", "💠 New session"),
             telebot_types.BotCommand("activity", "🗂 Show recent activity"),
             telebot_types.BotCommand("tasks", "♻️ Show tasks"),
             telebot_types.BotCommand("tools", "🔧 Show tools info"),
@@ -51,6 +55,7 @@ class Handlers:
         bot.register_message_handler(self._handler_tasks, commands=["tasks"], pass_bot=True)
         bot.register_message_handler(self._handler_mcp, commands=["mcp"], pass_bot=True)
         bot.register_message_handler(self._handler_activity, commands=["activity"], pass_bot=True)
+        bot.register_message_handler(self._handler_new_session, commands=["new"], pass_bot=True)
         bot.register_message_handler(
             self._handler_consolidation,
                 commands=["consolidate"],
@@ -61,6 +66,7 @@ class Handlers:
             func=lambda message: True,
             pass_bot=True,
         )
+
 
     def _handler_consolidation(self, message: telebot_types.Message, bot: telebot.TeleBot):
 
@@ -92,6 +98,11 @@ class Handlers:
     def _handler_interruption(self, message: telebot_types.Message, bot: telebot.TeleBot):
         bot.send_message(message.chat.id, "🚧 Interrupting agent")
         self._agent_service.interrupt()
+
+    def _handler_new_session(self, message: telebot_types.Message, bot: telebot.TeleBot):
+        self._agent_service.interrupt()
+        self._session_service.drop_session()
+        bot.send_message(message.chat.id, "💠 New session")
 
     def _handler_mcp(self, message: telebot_types.Message, bot: telebot.TeleBot):
         mcp_servers_list = self._agent_service.mcp_list()
