@@ -1,11 +1,13 @@
 import logging
 import os
+import secrets
 
 import telebot
 
 import agent
 import arch_agent.client as client
 import middleware
+import server
 import session
 import telegram_handlers as tg_handlers
 import telegram_utils as tg_utils
@@ -82,14 +84,23 @@ def main():
         )
         bot.setup_middleware(white_list_middle_ware)
 
-    # bot start
-    if webhook_url != "":
-        logger.warning("start with webhook")
-        tg_utils.run_bot_with_webhook(bot,webhook_url)
-    else:
-        logger.warning("start with polling")
-        bot.infinity_polling()
+    # build server
+    post_routes = {
+        "/session" : server.SessionSetHandler(session_service)
+    }
 
+    if webhook_url != "":
+        webhook_path = f"/bot/{secrets.token_hex(16)}"
+        post_routes[webhook_path] = server.bot_webhook_handler(bot,webhook_url,webhook_path)
+
+    srv = server.build_server(post_routes,logger)
+
+    if webhook_url != "":
+        logger.info("run with webhook")
+        srv.serve_forever()
+    else:
+        logger.info("run with polling")
+        server.serve_with_polling(bot,srv,logger)
 
 if __name__ == "__main__":
     main()

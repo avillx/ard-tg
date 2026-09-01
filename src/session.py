@@ -43,7 +43,7 @@ class SessionService:
         with self._mutex:
             self._actual_session = ""
 
-    def set_session(self,session_id:str) -> str:
+    def set_session(self,session_id:str):
         with self._mutex:
             self._last_update = time.monotonic()
             self._actual_session = session_id

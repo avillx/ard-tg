@@ -44,6 +44,17 @@ All configs provides via this envirement variables:
 - `STORAGE_PATH` *optional* - path to folder for store message attachments. 
   (videos, photos, voice, docs, etc...) 
 
+## Set session
+Current agent session can be set from external source
+- `POST /session` accept json with only `id` string field
+
+Example:
+```json
+{
+  "id" : "xxxxx-xxxxx-xxxxx-xxxxx"
+}
+```
+
 ## Stack
 - Python
 - httpx
