@@ -26,8 +26,20 @@ Can be interrupted by command.
 
 ## Tools
 Agent recieve additional tools for telegram. 
+- `send_photo` agent can send photo in current chat by absolute path to file.
+- `send_document` agent can attach file to current chat as a document. 
+- `send_voice` agent can send file as a voice message (`.ogg`, `.mp3`).
 - `send_sticker` agent can use telegram stickers in chats. 
-  To enable feature add telegram sticker pack name in `STICKER_PACK` variable.
+  To enable feature add telegram sticker pack name in `STICKER_PACK` variable. 
+  Agent has no `send_sticker` tool if sticker pack is not defined.
+
+## Files
+Folder with files specifies via `STORAGE_PATH` environment variable. 
+Folder structure:
+- `contacts.json` - stores user contacts (all users whenever sent message to agent add to contacts)
+- `uploads/` - folder for files that was sent by user to agent 
+  (photos, audio, video, video notes, documents, voice messages, etc...)
+  All messages sent to agent goes to this path, path to saved file passed to agent in message text.
 
 ## Configuration
 All configs provides via this envirement variables:
