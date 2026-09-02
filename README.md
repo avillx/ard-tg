@@ -48,7 +48,7 @@ All configs provides via this envirement variables:
 Current agent session can be set from external source
 Also it sends notify message in selected chat
 
-`POST /attach` *required* accept json with fields:
+`POST /attach` accept json with fields:
 - `session_id` *required* agent session id
 - `chat_id` *required* user chat id
 - `message` *required* message from agent to user
