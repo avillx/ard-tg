@@ -2,6 +2,8 @@ import logging
 
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
 
+import contacts
+
 
 class LoggingMiddleware(BaseMiddleware):
     _log : logging.Logger
@@ -33,6 +35,36 @@ class UserWhitelistMiddleware(BaseMiddleware):
         if chat_id not in self._allowed_chats:
             self._log.warning(f"update from unallowed chat '{chat_id}' ignored")
             return CancelUpdate()
+
+    def post_process(self, message, data, exception):
+        pass
+
+def _extract_chat_id( message) -> int:
+    if hasattr(message, "chat"):
+        return message.chat.id
+    if hasattr(message, "from_user"):
+        return message.from_user.id
+    return 0
+
+
+class UserContactKeeper(BaseMiddleware):
+    _contact_service: contacts.ContactService
+
+    def __init__(self, contact_service: contacts.ContactService):
+        self.update_types: list[str] = ["message", "chosen_inline_result", "chat_join_request"]
+        self._contact_service = contact_service
+
+
+    def pre_process(self, message, data):
+        chat_id = _extract_chat_id(message)
+        if self._contact_service.contacts().get(str(chat_id)):
+            return
+
+        name = ""
+        if hasattr(message, "chat"):
+            name = message.chat.first_name
+
+        self._contact_service.add_contact(str(chat_id), name)
 
     def post_process(self, message, data, exception):
         pass

@@ -10,7 +10,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import telebot
 
-import session
+import attach
+import contacts
 
 
 class ResponseSink:
@@ -23,6 +24,20 @@ class ResponseSink:
         self.hanlder.send_response(code)
         self.hanlder.end_headers()
 
+    def send_error(self,code: int, explain: str):
+        self.hanlder.send_error(code=code,explain=explain)
+        self.hanlder.end_headers()
+
+    def send_json(self,code: int, data: any):
+
+        response_body = json.dumps(data).encode("utf-8")
+
+        self.hanlder.send_response(code)
+        self.hanlder.send_header("Content-type", "application/json")
+        self.hanlder.send_header("Content-Length", len(response_body))
+        self.hanlder.end_headers()
+
+        self.hanlder.wfile.write(response_body)
 
 class EndpointHandler(ABC):
     @abstractmethod
@@ -57,28 +72,67 @@ class WebhookHandler(EndpointHandler):
             response_sink.send_code(400)
             return
 
-class SessionSetHandler(EndpointHandler):
-    _session_service: session.SessionService
+class AttachSessionHandler(EndpointHandler):
+    _attach_service: attach.AttachService
 
-    def __init__(self, session_service: session.SessionService):
-        self._session_service = session_service
+    def __init__(self, attach_service: attach.AttachService):
+        self._attach_service = attach_service
 
     def handle(self, headers: HTTPMessage, body: bytes, response_sink: ResponseSink):
 
         try:
-            request : dict[str,str] = json.loads(body)
+            request : dict[str,any] = json.loads(body)
         except Exception:
             response_sink.send_code(400)
             return
 
-        session_id = request.get("id")
+        # get values
+        session_id = request.get("session_id")
+        chat_id    = request.get("chat_id")
+        message    = request.get("message")
+        await_time = request.get("await_time")
+
+        # validate values
         if not isinstance(session_id, str) or not session_id or session_id == "":
-            response_sink.send_code(400)
+            response_sink.send_error(400,"bad session_id field")
             return
 
-        self._session_service.set_session(session_id)
+        if not isinstance(chat_id, int) or not chat_id:
+            response_sink.send_error(400,"bad chat_id field")
+            return
+
+        if not isinstance(message, str) or not message:
+            response_sink.send_error(400,"bad message field")
+            return
+
+        if not isinstance(await_time, int) or not int:
+            response_sink.send_error(400,"bad await time field")
+            return
+
+        try:
+            self._attach_service.attach(
+                chat_id=chat_id,
+                session_id=session_id,
+                message=message,
+                await_time=float(await_time),
+            )
+        except Exception as e:
+            response_sink.send_error(400, f"attach {e}")
+
         response_sink.send_code(200)
 
+class ContactsHandler(EndpointHandler):
+    _contact_service : contacts.ContactService
+    def __init__(self, contact_service: contacts.ContactService):
+        super().__init__()
+        self._contact_service = contact_service
+
+    def handle(self, headers: HTTPMessage, body: bytes, response_sink: ResponseSink):
+        try:
+            contacts = self._contact_service.contacts()
+            response_sink.send_json(200,{"contacts":contacts})
+        except Exception:
+            response_sink.send_code(400)
 
 def bot_webhook_handler(bot: telebot.TeleBot, url: str, webhook_path: str) -> WebhookHandler:
     secret_token = secrets.token_hex(32)
@@ -94,25 +148,43 @@ def bot_webhook_handler(bot: telebot.TeleBot, url: str, webhook_path: str) -> We
         secret_token=secret_token,
     )
 
-def build_server(post_routes: dict[str, EndpointHandler],logger: logging.Logger):
+def build_server(
+        *,
+        post_routes: dict[str, EndpointHandler],
+        get_routes: dict[str, EndpointHandler],
+        logger: logging.Logger,
+    ):
+
+    logger = logger.getChild("Server")
 
     class Server(BaseHTTPRequestHandler):
 
         def __init__(self, request, client_address, server):
             super().__init__(request, client_address, server)
 
+        def do_GET(self):
+            sink = ResponseSink(self)
+
+            handler = get_routes.get(self.path)
+            if not handler:
+                sink.send_code(404)
+                return
+
+            length = int(self.headers.get("Content-Length", 0))
+
+            handler.handle(
+                headers=self.headers,
+                body=self.rfile.read(length),
+                response_sink=sink
+            )
+
         def do_POST(self):
 
             sink = ResponseSink(self)
 
             handler = post_routes.get(self.path)
-
             if not handler:
                 sink.send_code(404)
-                return
-
-            if not isinstance(handler, EndpointHandler):
-                sink.send_code(500)
                 return
 
             length = int(self.headers.get("Content-Length", 0))
@@ -124,7 +196,7 @@ def build_server(post_routes: dict[str, EndpointHandler],logger: logging.Logger)
             )
 
         def log_message(self, format, *args):
-            logger.info(f"path {self.path} {format % args}")
+            logger.info(f"{format % args}")
 
     return ThreadingHTTPServer(("0.0.0.0", 8443), Server)
 

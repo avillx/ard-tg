@@ -1,4 +1,5 @@
 import logging
+import os
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -55,7 +56,7 @@ class MessageFlusher:
             message : telebot_types.Message,
             storage_path: str,
         ):
-        self._storage_path = storage_path
+        self._storage_path = os.path.join(storage_path,"uploads")
         self._bot = bot
 
         # user message for agent
@@ -127,7 +128,7 @@ class MessageFlusher:
                 file_name = file_info.file_unique_id +"."+ ext
 
             # make path
-            path_string = self._storage_path + file_name
+            path_string = os.path.join(self._storage_path,file_name)
 
             # get file
             file_data = self._bot.download_file(file_info.file_path)
@@ -139,6 +140,7 @@ class MessageFlusher:
                 f.write(file_data)
 
             return path_string
+
         except Exception as _:
             # TODO: log this shit
             return "file is not saved"
