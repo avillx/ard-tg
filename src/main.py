@@ -7,13 +7,13 @@ import telebot
 import agent
 import arch_agent.client as client
 import attach
+import contacts
 import middleware
 import server
 import session
 import telegram_handlers as tg_handlers
 import telegram_utils as tg_utils
 
-import contacts
 
 def main():
     # fmt: off

@@ -10,6 +10,7 @@ import telebot.types as telebot_types
 
 import arch_agent.models as models
 
+# TODO: Create a get function that accept path to storage and inject it in guide
 _TELEGRAM_GUIDE="""
 # Gateway
 
