@@ -46,14 +46,36 @@ All configs provides via this envirement variables:
 
 ## Set session
 Current agent session can be set from external source
-- `POST /session` accept json with only `id` string field
+Also it sends notify message in selected chat
+
+`POST /attach` *required* accept json with fields:
+- `session_id` *required* agent session id
+- `chat_id` *required* user chat id
+- `message` *required* message from agent to user
+- `await_time` *required* additional time for await user answer
+
+Return:
+- `200` on success
+- `400` on invalid json
 
 Example:
 ```json
 {
-  "id" : "xxxxx-xxxxx-xxxxx-xxxxx"
+  "session_id" : "xxxxx-xxxxx-xxxxx-xxxxx",
+  "chat_id" : 0000000,
+  "message" : "Hi!",
+  "await_time" : 6000,
 }
 ```
+
+## Contacts
+All users whenever sent message to agents add to contacts
+Contacts stores in `contacts.json` in selected storage path
+It can be taken by `GET /contacts` endpoint
+
+Return:
+- `200` on success
+- `500` if something goes wrong
 
 ## Stack
 - Python
