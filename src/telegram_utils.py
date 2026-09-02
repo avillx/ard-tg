@@ -206,7 +206,8 @@ class RichMessage:
 
         if self._candidate == "":
             if len(self._text_drafts) <= 0:
-                raise(Exception("attempt to send empty rich message"))
+                # nothing to send
+                return
 
             self._candidate = self._text_drafts[-1]
 
