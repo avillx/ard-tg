@@ -36,7 +36,7 @@ Agent recieve additional tools for telegram.
   To enable feature add telegram sticker pack name in `STICKER_PACK` variable. 
   Agent has no `send_sticker` tool if sticker pack is not defined.
 
-# Skills
+## Skills
 Special skill for arch-agent for this gateway
 - [contact user](skills/contact-user) the agent can contact you outside of autonomous 
   operation and initiate messaging first.
