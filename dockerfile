@@ -7,6 +7,7 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY README.md ./
+COPY LICENSE ./
 COPY src/ ./
 
 RUN pip install --upgrade pip \
