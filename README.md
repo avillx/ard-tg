@@ -19,14 +19,13 @@ Bot has `typing...` status while agent processing request.
 Can be interrupted by command.
 
 ## Commands
-- `/interrupt` - interrupt agentic loop
-- `/new` - starts a new session
-- `/activity` - Return recent agent activity log.
-- `/tasks` - Fetch message representation of taskm, per one agent scheduled task. With no request
-- `/tools <tool_server>` - with no aguments - Return list of available tools servers. 
-  Also accept tool server names as args when args is non nil - fetch detailed list of tools in mentioned servers.
-- `/mcp` - Fetch list of mcp servers with transport type (process/http)
-- `/consolidate` - immidiate starts memory consolidation, stream colsolidatior completions as messages
+- `/interrupt` Interrupt agentic loop
+- `/new` Starts a new session
+- `/activity` Return recent agent activity log.
+- `/tasks` Fetch message representation of taskm, per one agent scheduled task. With no request
+- `/tools` Fetch list of available tools servers
+- `/mcp` Fetch list of mcp servers with transport type (process/http)
+- `/consolidate` immidiate starts memory consolidation, stream colsolidatior completions as messages
 
 ## Tools
 Agent recieve additional tools for telegram. 
@@ -45,8 +44,8 @@ Special skill for arch-agent for this gateway
 ## Files
 Folder with files specifies via `STORAGE_PATH` environment variable. 
 Folder structure:
-- `contacts.json` - stores user contacts (all users whenever sent message to agent add to contacts)
-- `uploads/` - folder for files that was sent by user to agent 
+- `contacts.json` stores user contacts (all users whenever sent message to agent add to contacts)
+- `uploads/` folder for files that was sent by user to agent 
   (photos, audio, video, video notes, documents, voice messages, etc...)
   All messages sent to agent goes to this path, path to saved file passed to agent in message text.
 
