@@ -1,5 +1,9 @@
 # Arch-Agent Telegram Gateway
 
+![Python](https://img.shields.io/badge/python-%233670A0.svg?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Pydantic](https://img.shields.io/badge/pydantic-%23E92063.svg?style=for-the-badge&logo=pydantic&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-%232CA5E0.svg?style=for-the-badge&logo=telegram&logoColor=white)
+
 Gateway for arch-agent integration with Telegram.
 
 It is intended as an additional channel, not a primary one, for contacting the agent when other
@@ -89,8 +93,11 @@ Return:
 - `200` on success
 - `500` if something goes wrong
 
+## Agent API
+API generated with `openapi-python-client` from this [Specification](./agent-api.yml)
+
 ## Stack
 - Python
 - httpx
 - pytelegrambotapi
-- API generated with `openapi-python-client`
+- Pydantic
