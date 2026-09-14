@@ -1,9 +1,9 @@
-
 import logging
 
 import telebot
+import telebot.types as telebot_types
 
-import session
+from src import agent
 
 
 class AttachService:
@@ -12,34 +12,21 @@ class AttachService:
     e.g. Agent want self initiate contact with user. from autonomus mode
     """
 
-    _session_service : session.SessionService
-    _bot : telebot.TeleBot
-    _logger : logging.Logger
-
     def __init__(
-            self, session_service : session.SessionService,
-            bot : telebot.TeleBot,
-            logger : logging.Logger,
-        ):
-        self._session_service : session.SessionService = session_service
-        self._bot : telebot.TeleBot = bot
-        self._logger : logging.Logger = logger.getChild("Attach")
+        self,
+        session_service: agent.SessionService,
+        bot: telebot.TeleBot,
+        logger: logging.Logger,
+    ):
+        self._session_service: agent.SessionService = session_service
+        self._bot: telebot.TeleBot = bot
+        self._logger: logging.Logger = logger.getChild("Attach")
 
-    def attach(
-            self,session_id: str,
-            chat_id: str,
-            message: str,
-            await_time: float
-        ) -> None:
+    def attach(self, session_id: str, chat_id: int, message: str, await_time: float) -> None:
 
-        self._session_service.set_session(
-                session_id=session_id,
-                additional_time=await_time
-            )
+        self._session_service.set(session_id=session_id, additional_time=await_time)
 
-        input = telebot.types.InputRichMessage(
-            markdown=message
-        )
+        input = telebot_types.InputRichMessage(markdown=message)
 
         self._bot.send_rich_message(
             chat_id=chat_id,

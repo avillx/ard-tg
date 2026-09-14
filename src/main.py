@@ -1,6 +1,7 @@
 import logging
 import os
 import secrets
+import sys
 
 import telebot
 
@@ -8,20 +9,17 @@ import agent
 import arch_agent.client as client
 import attach
 import contacts
-import middleware
 import server
-import session
-import telegram_handlers as tg_handlers
-import telegram_utils as tg_utils
+import telegram
 
 
 def main():
     # fmt: off
 
     # envirement variables
-    telegram_token    : str = os.getenv("TELEGRAM_TOKEN")
-    agent_url         : str = os.getenv("AGENT_URL")
-    agent_id          : str = os.getenv("AGENT_ID")
+    telegram_token    : str = os.getenv("TELEGRAM_TOKEN","")
+    agent_url         : str = os.getenv("AGENT_URL","")
+    agent_id          : str = os.getenv("AGENT_ID","default")
     session_life_time : str = os.getenv("SESSION_LIFE_TIME","600")
     sticker_pack      : str = os.getenv("STICKER_PACK","")
     allowed_chats_raw : str = os.getenv("ALLOWED_CHATS","")
@@ -35,6 +33,14 @@ def main():
         datefmt = "%Y-%m-%d %H:%M:%S",
     )
 
+    if telegram_token == "":
+        logger.fatal("'TELEGRAM_TOKEN' is required")
+        sys.exit(1)
+
+    if agent_url == "":
+        logger.fatal("'AGENT_URL' is required")
+        sys.exit(1)
+
     # app building
     bot = telebot.TeleBot(
         token                 = telegram_token,
@@ -44,7 +50,7 @@ def main():
     )
 
     # set up logging
-    bot.setup_middleware(middleware.LoggingMiddleware(
+    bot.setup_middleware(telegram.LoggingMiddleware(
         logger = logger,
     ))
 
@@ -54,12 +60,12 @@ def main():
         file_path = storage_path
     )
 
-    bot.setup_middleware(middleware.UserContactKeeper(
+    bot.setup_middleware(telegram.UserContactKeeper(
         contact_service = contact_service,
     ))
 
     if allowed_chats_raw != "":
-        bot.setup_middleware(middleware.UserWhitelistMiddleware(
+        bot.setup_middleware(telegram.UserWhitelistMiddleware(
             allowed_chats = [int(x) for x in allowed_chats_raw.split(",")],
             logger        = logger,
         ))
@@ -68,15 +74,15 @@ def main():
         base_url = agent_url
     )
 
-    session_service = session.SessionService(
+    session_service = agent.SessionService(
         agent_id     = agent_id,
         agent_client = agent_client,
         life_time    = float(session_life_time),
         logger       = logger,
-        instruction  = tg_utils._TELEGRAM_GUIDE
+        instruction  = telegram._TELEGRAM_GUIDE
     )
 
-    agent_service = agent.AgentService(
+    agent_service = agent.Service(
         agent_url       = agent_url,
         agent_client    = agent_client,
         agent_id        = agent_id,
@@ -84,16 +90,16 @@ def main():
         logger          = logger,
     )
 
-    handlers = tg_handlers.Handlers(
+    telegram_svc = telegram.Service(
         agent_service   = agent_service,
         sticker_pack    = sticker_pack,
         file_storage    = os.path.join(storage_path,"uploads"),
-        sticker_chache  = tg_utils.StickerChache(bot,logger),
+        sticker_cache  = telegram.StickerCache(bot,logger),
         session_service = session_service,
         logger          = logger,
     )
-    handlers.set_commands_prompt(bot)
-    handlers.register_on(bot)
+    telegram_svc.set_commands_prompt(bot)
+    telegram_svc.register_on(bot)
 
     attachment_service  = attach.AttachService(
         bot             = bot,
@@ -102,7 +108,7 @@ def main():
     )
 
     # build server
-    post_routes = {
+    post_routes : dict[str, server.EndpointHandler] = {
         "/attach" : server.AttachSessionHandler(attachment_service)
     }
 
@@ -122,6 +128,7 @@ def main():
     else:
         logger.info("run with polling")
         server.serve_with_polling(bot,srv,logger)
+
 
 if __name__ == "__main__":
     main()

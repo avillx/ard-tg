@@ -1,5 +1,3 @@
-from arch_agent.models.create_session_response_200 import CreateSessionResponse200
-from arch_agent.models.error import Error
 import logging
 import threading
 import time
@@ -10,6 +8,10 @@ import arch_agent.models as models
 
 
 class SessionService:
+    """
+    Sevice with session manage responsobility
+    """
+
     _agent_id: str
     _agent_client: agent_client.Client
     _actual_session: str
@@ -18,17 +20,16 @@ class SessionService:
     _instruction: str
     _logger: logging.Logger
     _mutex = threading.Lock()
-    _additional_time : float
-
+    _additional_time: float
 
     def __init__(
-            self,
-            agent_id: str,
-            agent_client: agent_client.Client,
-            life_time: float,
-            instruction: str,
-            logger: logging.Logger,
-        ):
+        self,
+        agent_id: str,
+        agent_client: agent_client.Client,
+        life_time: float,
+        instruction: str,
+        logger: logging.Logger,
+    ):
         self._logger = logger.getChild("Sessions")
         self._agent_client = agent_client
         self._life_time = life_time
@@ -39,21 +40,33 @@ class SessionService:
         self._instruction = instruction
         self._additional_time = 0.0
 
-    def get_current(self) -> str:
-        with self._mutex:
-            return self._actual_session
-
-    def drop_session(self) -> str:
+    def drop(self):
+        """
+        Drops current session and set it to None
+        """
         with self._mutex:
             self._actual_session = ""
 
-    def set_session(self,session_id:str, additional_time: float = 0.0):
+    def set(self, session_id: str, additional_time: float = 0.0):
+        """
+        Set session id as actual session. addiational time to live for setted session
+        """
         with self._mutex:
             self._additional_time = additional_time
             self._last_update = time.monotonic()
             self._actual_session = session_id
 
-    def get_actual_session(self) -> str:
+    def get(self) -> str:
+        """
+        Return current setted session
+        """
+        with self._mutex:
+            return self._actual_session
+
+    def get_actual(self) -> str:
+        """
+        Get session, if session expires or is None then creates a new
+        """
         with self._mutex:
             now = time.monotonic()
 
@@ -67,26 +80,35 @@ class SessionService:
                 self._actual_session = self._create_new_session()
 
             self._last_update = now
-            self._additional_time = 0.0 # set zero cause last_time is upddated.
+            self._additional_time = 0.0  # set zero cause last_time is upddated.
             return self._actual_session
 
     def _create_new_session(self, additional_time: float = 0.0) -> str:
-
+        """
+        Make request to agent to create a new system and return id on created session
+        """
         self._additional_time = additional_time
 
         create_session_request = models.CreateSessionBody(
             instruction=self._instruction,
         )
 
-        resp: CreateSessionResponse200 | Error | None = create_session.sync(
+        resp = create_session.sync(
             self._agent_id,
             client=self._agent_client,
             body=create_session_request,
         )
-        if resp is None:
-            self._logger.error("agent return empty session")
-            return ""
 
-        self._logger.info(f"created new session with id: {resp.id}")
+        match resp:
+            case None:
+                raise Exception("agent return no session")
 
-        return resp.id
+            case models.ValidationError():
+                raise Exception(f"problem with session: {resp.problems}")
+
+            case models.Error():
+                raise Exception(f"problem with session: {resp.message}")
+
+            case models.CreateSessionResponse200():
+                self._logger.info(f"created new session with id: {resp.id}")
+                return resp.id
