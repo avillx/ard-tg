@@ -1,15 +1,15 @@
 import logging
 
-import message_flusher
 import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
-import tools
 
 import agent
 import arch_agent.models as models
-from src.telegram import rich_message, sticker_cache
-from src.telegram.typing_action import TypingAction
+import telegram.message_flusher as message_flusher
+import telegram.tools as tools
+from telegram import rich_message, sticker_cache
+from telegram.typing_action import TypingAction
 
 _TELEGRAM_GUIDE = """
 # Gateway

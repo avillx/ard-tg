@@ -3,7 +3,7 @@ import logging
 import telebot
 import telebot.types as telebot_types
 
-from src import agent
+import agent
 
 
 class AttachService:

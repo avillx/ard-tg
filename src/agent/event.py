@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import Any, Protocol, Self
 
-import tool
-
+import agent.tool as tool
 import arch_agent.api.tool_results.resolve_tool_call as tool_result
 import arch_agent.client as agent_client
 import arch_agent.models as models

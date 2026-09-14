@@ -44,7 +44,7 @@ class ResponseSink:
 
 class EndpointHandler(ABC):
     @abstractmethod
-    def handle(self, headers: Message[str, str], body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
         pass
 
 
@@ -57,7 +57,7 @@ class WebhookHandler(EndpointHandler):
         self._bot = bot
         self._secret_token = secret_token
 
-    def handle(self, headers: Message[str, str], body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
 
         # virefy header token
         if not hmac.compare_digest(
@@ -85,7 +85,7 @@ class AttachSessionHandler(EndpointHandler):
     def __init__(self, attach_service: attach.AttachService):
         self._attach_service = attach_service
 
-    def handle(self, headers: Message[str, str], body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
 
         try:
             request: dict[str, Any] = json.loads(body)
@@ -136,7 +136,7 @@ class ContactsHandler(EndpointHandler):
         super().__init__()
         self._contact_service = contact_service
 
-    def handle(self, headers: Message[str, str], body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
         try:
             contacts = self._contact_service.contacts()
             response_sink.send_json(200, {"contacts": contacts})

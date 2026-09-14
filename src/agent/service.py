@@ -3,11 +3,11 @@ import json
 import logging
 from collections.abc import Callable
 
-import event
 import httpx
-import session
-import tool
 
+import agent.event as event
+import agent.session as session
+import agent.tool as tool
 import arch_agent.api.activity.get_activity as get_activity
 import arch_agent.api.chat.interrupt_chat as interrupt_chat
 import arch_agent.api.mcp.list_mcp_servers as list_mcp_servers
