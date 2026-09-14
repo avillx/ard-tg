@@ -88,6 +88,7 @@ class AgentEventHandler:
     ) -> None:
         self._event_handler = event_handler
         self._client = client
+        self._tools_map = {}
         for t in provided_tools:
             self._tools_map[t.name()] = t
 
