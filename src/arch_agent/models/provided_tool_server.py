@@ -9,7 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .provided_tool import ProvidedTool
+    from ..models.provided_tool import ProvidedTool
 
 
 T = TypeVar("T", bound="ProvidedToolServer")
@@ -19,10 +19,6 @@ T = TypeVar("T", bound="ProvidedToolServer")
 class ProvidedToolServer:
     """Client-provided tool servers available for a single chat call.
     The client guarantees execution and returns results via the tool result endpoint.
-
-        Example:
-            {'tools': [{'name': 'my_custom_tool', 'description': 'A custom tool', 'schema': {'type': 'object', 'properties':
-                {'input': {'type': 'string'}}}}], 'instruction': 'Use my_custom_tool when the user asks for custom data'}
 
         Attributes:
             tools (list[ProvidedTool]):
@@ -55,7 +51,7 @@ class ProvidedToolServer:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .provided_tool import ProvidedTool
+        from ..models.provided_tool import ProvidedTool
 
         d = dict(src_dict)
         tools = []

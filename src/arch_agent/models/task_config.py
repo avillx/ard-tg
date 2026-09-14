@@ -16,19 +16,15 @@ class TaskConfig:
     """Configuration for a periodic autonomous task.
     Tasks are executed on a cron schedule and send requests to agent recipients.
 
-        Example:
-            {'name': 'daily_report', 'description': 'Generate daily activity report', 'recipients': ['agent_main'],
-                'schedule': '0 9 * * 1', 'request': 'Generate the daily report', 'active': True, 'oneshot': False}
-
         Attributes:
             name (str):
             description (str):
             recipients (list[str]): Agent IDs that receive the task.
-            schedule (str): Cron expression (5-field: minute hour day month weekday). Supports standard 5-field cron syntax
-                including step values (e.g. `*/15`). Example: 0 9 * * 1.
+            schedule (str): 5-field cron expression (minute hour day-of-month month day-of-week), e.g. `0 9 * * 1`. Example:
+                0 9 * * 1.
             request (str): The task request text.
-            active (bool | Unset): Whether the task is active. Default: False.
-            oneshot (bool | Unset): Whether the task runs only once. Default: False.
+            active (bool | Unset): Whether the task is active.
+            oneshot (bool | Unset): Whether the task runs only once.
     """
 
     name: str
@@ -36,8 +32,8 @@ class TaskConfig:
     recipients: list[str]
     schedule: str
     request: str
-    active: bool | Unset = False
-    oneshot: bool | Unset = False
+    active: bool | Unset = UNSET
+    oneshot: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

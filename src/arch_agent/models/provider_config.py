@@ -6,10 +6,11 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.provider_config_api_type import ProviderConfigApiType
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .provider_config_models import ProviderConfigModels
+    from ..models.provider_config_models import ProviderConfigModels
 
 
 T = TypeVar("T", bound="ProviderConfig")
@@ -26,14 +27,14 @@ class ProviderConfig:
     Attributes:
         name (str): Provider name.
         base_url (str): Base URL for the API endpoint.
-        api_type (str): API type (e.g. `openai`).
+        api_type (ProviderConfigApiType): API type.
         key_ref (str | Unset): Reference to the API key in secrets.
         models (ProviderConfigModels | Unset): Model configurations keyed by model name.
     """
 
     name: str
     base_url: str
-    api_type: str
+    api_type: ProviderConfigApiType
     key_ref: str | Unset = UNSET
     models: ProviderConfigModels | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -43,7 +44,7 @@ class ProviderConfig:
 
         base_url = self.base_url
 
-        api_type = self.api_type
+        api_type = self.api_type.value
 
         key_ref = self.key_ref
 
@@ -69,14 +70,14 @@ class ProviderConfig:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .provider_config_models import ProviderConfigModels
+        from ..models.provider_config_models import ProviderConfigModels
 
         d = dict(src_dict)
         name = d.pop("name")
 
         base_url = d.pop("base_url")
 
-        api_type = d.pop("api_type")
+        api_type = ProviderConfigApiType(d.pop("api_type"))
 
         key_ref = d.pop("key_ref", UNSET)
 

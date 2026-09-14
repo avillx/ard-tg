@@ -6,10 +6,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
 if TYPE_CHECKING:
-    from .tool_call_args import ToolCallArgs
+    from ..models.tool_call_args import ToolCallArgs
 
 
 T = TypeVar("T", bound="ToolCall")
@@ -23,14 +21,14 @@ class ToolCall:
         {'id': 'call_abc123', 'tool': 'read_file', 'args': {'path': '/data/report.txt'}}
 
     Attributes:
-        id (str | Unset): Tool call ID assigned by the model provider.
-        tool (str | Unset): Tool name.
-        args (ToolCallArgs | Unset): Tool arguments. The actual schema is determined by the tool definition.
+        id (str): Tool call ID assigned by the model provider.
+        tool (str): Tool name.
+        args (ToolCallArgs): Tool arguments. The actual schema is determined by the tool definition.
     """
 
-    id: str | Unset = UNSET
-    tool: str | Unset = UNSET
-    args: ToolCallArgs | Unset = UNSET
+    id: str
+    tool: str
+    args: ToolCallArgs
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,37 +36,30 @@ class ToolCall:
 
         tool = self.tool
 
-        args: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.args, Unset):
-            args = self.args.to_dict()
+        args = self.args.to_dict()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if id is not UNSET:
-            field_dict["id"] = id
-        if tool is not UNSET:
-            field_dict["tool"] = tool
-        if args is not UNSET:
-            field_dict["args"] = args
+        field_dict.update(
+            {
+                "id": id,
+                "tool": tool,
+                "args": args,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .tool_call_args import ToolCallArgs
+        from ..models.tool_call_args import ToolCallArgs
 
         d = dict(src_dict)
-        id = d.pop("id", UNSET)
+        id = d.pop("id")
 
-        tool = d.pop("tool", UNSET)
+        tool = d.pop("tool")
 
-        _args = d.pop("args", UNSET)
-        args: ToolCallArgs | Unset
-        if isinstance(_args, Unset):
-            args = UNSET
-        else:
-            args = ToolCallArgs.from_dict(_args)
+        args = ToolCallArgs.from_dict(d.pop("args"))
 
         tool_call = cls(
             id=id,

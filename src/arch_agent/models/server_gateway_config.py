@@ -9,8 +9,8 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .server_gateway_config_command_gateway import ServerGatewayConfigCommandGateway
-    from .server_gateway_config_http_gateway import ServerGatewayConfigHttpGateway
+    from ..models.server_gateway_config_command_gateway import ServerGatewayConfigCommandGateway
+    from ..models.server_gateway_config_http_gateway import ServerGatewayConfigHttpGateway
 
 
 T = TypeVar("T", bound="ServerGatewayConfig")
@@ -21,11 +21,8 @@ class ServerGatewayConfig:
     """Exactly one of `http_gateway` or `command_gateway` must be provided.
     If neither or both are provided, the request is rejected with 400.
 
-        Example:
-            {'http_gateway': {'url': 'http://localhost:3001/mcp', 'token': 'secret-token'}}
-
         Attributes:
-            http_gateway (ServerGatewayConfigHttpGateway | Unset): Connect to a remote SSE-based MCP server via URL.
+            http_gateway (ServerGatewayConfigHttpGateway | Unset): Connect to a remote MCP server via URL.
             command_gateway (ServerGatewayConfigCommandGateway | Unset): Spawn a local MCP server process.
     """
 
@@ -54,8 +51,8 @@ class ServerGatewayConfig:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .server_gateway_config_command_gateway import ServerGatewayConfigCommandGateway
-        from .server_gateway_config_http_gateway import ServerGatewayConfigHttpGateway
+        from ..models.server_gateway_config_command_gateway import ServerGatewayConfigCommandGateway
+        from ..models.server_gateway_config_http_gateway import ServerGatewayConfigHttpGateway
 
         d = dict(src_dict)
         _http_gateway = d.pop("http_gateway", UNSET)

@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class ToolErrorEventType(str, Enum):
-    COMPLETE_MISTAKE = "complete_mistake"
+    TOOL_ERROR = "tool_error"
 
     def __str__(self) -> str:
         return str(self.value)

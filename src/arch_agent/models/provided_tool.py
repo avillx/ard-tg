@@ -9,7 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .provided_tool_schema import ProvidedToolSchema
+    from ..models.provided_tool_schema import ProvidedToolSchema
 
 
 T = TypeVar("T", bound="ProvidedTool")
@@ -18,10 +18,6 @@ T = TypeVar("T", bound="ProvidedTool")
 @_attrs_define
 class ProvidedTool:
     """A single client-provided tool with optional JSON Schema for parameters.
-
-    Example:
-        {'name': 'my_custom_tool', 'description': 'A custom tool', 'schema': {'type': 'object', 'properties': {'input':
-            {'type': 'string'}}}}
 
     Attributes:
         name (str):
@@ -58,7 +54,7 @@ class ProvidedTool:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .provided_tool_schema import ProvidedToolSchema
+        from ..models.provided_tool_schema import ProvidedToolSchema
 
         d = dict(src_dict)
         name = d.pop("name")

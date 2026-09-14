@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .loop_exit_event_type import LoopExitEventType
+from ..models.loop_exit_event_type import LoopExitEventType
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="LoopExitEvent")
@@ -14,14 +14,11 @@ T = TypeVar("T", bound="LoopExitEvent")
 
 @_attrs_define
 class LoopExitEvent:
-    """The agent runtime stopped due to an error. Emitted with type `tool_result`.
-
-    Example:
-        {'type': 'loop_exit', 'cause': 'maximum iterations exceeded'}
+    """The agent runtime stopped. Emitted with type `loop_exit`.
 
     Attributes:
         type_ (LoopExitEventType):
-        cause (str | Unset): Human-readable error message explaining why the loop exited.
+        cause (str | Unset): Human-readable error message explaining why the loop exited (empty when no error).
     """
 
     type_: LoopExitEventType

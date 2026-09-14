@@ -1,40 +1,31 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .tool_error_event_type import ToolErrorEventType
-from ..types import UNSET, Unset
-
-if TYPE_CHECKING:
-    from .tool_error_event_args import ToolErrorEventArgs
-
+from ..models.tool_error_event_type import ToolErrorEventType
 
 T = TypeVar("T", bound="ToolErrorEvent")
 
 
 @_attrs_define
 class ToolErrorEvent:
-    """A tool execution error. Emitted with type `complete_mistake`.
-
-    Example:
-        {'type': 'complete_mistake', 'cause': 'permission denied', 'tool_name': 'read_file', 'args': {'path':
-            '/etc/shadow'}}
+    """A tool execution error. Emitted with type `tool_error`.
 
     Attributes:
         type_ (ToolErrorEventType):
         cause (str): Human-readable error message.
         tool_name (str): Name of the tool that failed.
-        args (ToolErrorEventArgs | Unset): Arguments passed to the failed tool call.
+        args (str): Raw tool arguments as a JSON string (empty when the tool was called without arguments).
     """
 
     type_: ToolErrorEventType
     cause: str
     tool_name: str
-    args: ToolErrorEventArgs | Unset = UNSET
+    args: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,9 +35,7 @@ class ToolErrorEvent:
 
         tool_name = self.tool_name
 
-        args: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.args, Unset):
-            args = self.args.to_dict()
+        args = self.args
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -55,17 +44,14 @@ class ToolErrorEvent:
                 "type": type_,
                 "cause": cause,
                 "tool_name": tool_name,
+                "args": args,
             }
         )
-        if args is not UNSET:
-            field_dict["args"] = args
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .tool_error_event_args import ToolErrorEventArgs
-
         d = dict(src_dict)
         type_ = ToolErrorEventType(d.pop("type"))
 
@@ -73,12 +59,7 @@ class ToolErrorEvent:
 
         tool_name = d.pop("tool_name")
 
-        _args = d.pop("args", UNSET)
-        args: ToolErrorEventArgs | Unset
-        if isinstance(_args, Unset):
-            args = UNSET
-        else:
-            args = ToolErrorEventArgs.from_dict(_args)
+        args = d.pop("args")
 
         tool_error_event = cls(
             type_=type_,

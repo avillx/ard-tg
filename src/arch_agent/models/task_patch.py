@@ -13,37 +13,28 @@ T = TypeVar("T", bound="TaskPatch")
 
 @_attrs_define
 class TaskPatch:
-    """Partial update for a task. Only supplied fields are updated. Fields set to `null` are ignored.
-
-    Example:
-        {'active': False}
+    """Partial update for a task. Only supplied fields are updated.
 
     Attributes:
-        active (bool | None | Unset):
         name (None | str | Unset):
         description (None | str | Unset):
         recipients (list[str] | None | Unset):
         schedule (None | str | Unset):
         request (None | str | Unset):
+        active (bool | None | Unset):
         oneshot (bool | None | Unset):
     """
 
-    active: bool | None | Unset = UNSET
     name: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     recipients: list[str] | None | Unset = UNSET
     schedule: None | str | Unset = UNSET
     request: None | str | Unset = UNSET
+    active: bool | None | Unset = UNSET
     oneshot: bool | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        active: bool | None | Unset
-        if isinstance(self.active, Unset):
-            active = UNSET
-        else:
-            active = self.active
-
         name: None | str | Unset
         if isinstance(self.name, Unset):
             name = UNSET
@@ -77,6 +68,12 @@ class TaskPatch:
         else:
             request = self.request
 
+        active: bool | None | Unset
+        if isinstance(self.active, Unset):
+            active = UNSET
+        else:
+            active = self.active
+
         oneshot: bool | None | Unset
         if isinstance(self.oneshot, Unset):
             oneshot = UNSET
@@ -86,8 +83,6 @@ class TaskPatch:
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
-        if active is not UNSET:
-            field_dict["active"] = active
         if name is not UNSET:
             field_dict["name"] = name
         if description is not UNSET:
@@ -98,6 +93,8 @@ class TaskPatch:
             field_dict["schedule"] = schedule
         if request is not UNSET:
             field_dict["request"] = request
+        if active is not UNSET:
+            field_dict["active"] = active
         if oneshot is not UNSET:
             field_dict["oneshot"] = oneshot
 
@@ -106,15 +103,6 @@ class TaskPatch:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-
-        def _parse_active(data: object) -> bool | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(bool | None | Unset, data)
-
-        active = _parse_active(d.pop("active", UNSET))
 
         def _parse_name(data: object) -> None | str | Unset:
             if data is None:
@@ -169,6 +157,15 @@ class TaskPatch:
 
         request = _parse_request(d.pop("request", UNSET))
 
+        def _parse_active(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        active = _parse_active(d.pop("active", UNSET))
+
         def _parse_oneshot(data: object) -> bool | None | Unset:
             if data is None:
                 return data
@@ -179,12 +176,12 @@ class TaskPatch:
         oneshot = _parse_oneshot(d.pop("oneshot", UNSET))
 
         task_patch = cls(
-            active=active,
             name=name,
             description=description,
             recipients=recipients,
             schedule=schedule,
             request=request,
+            active=active,
             oneshot=oneshot,
         )
 

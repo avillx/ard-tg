@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.tool_server_info import ToolServerInfo
+from ...models.tool_servers import ToolServers
 from ...types import Response
 
 
@@ -19,14 +19,9 @@ def _get_kwargs() -> dict[str, Any]:
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> list[ToolServerInfo] | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ToolServers | None:
     if response.status_code == 200:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = ToolServerInfo.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
+        response_200 = ToolServers.from_dict(response.json())
 
         return response_200
 
@@ -36,9 +31,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[list[ToolServerInfo]]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ToolServers]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -50,18 +43,18 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[list[ToolServerInfo]]:
+) -> Response[ToolServers]:
     """List all registered tool servers and their tools
 
-     Returns all tool servers known to the system with their available tools.
-    Tool servers include built-in tools (filesystem, search, etc.) and MCP-connected tools.
+     Returns all tool servers known to the system, keyed by server name.
+    Each server maps tool names to their descriptions.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list[ToolServerInfo]]
+        Response[ToolServers]
     """
 
     kwargs = _get_kwargs()
@@ -76,18 +69,18 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-) -> list[ToolServerInfo] | None:
+) -> ToolServers | None:
     """List all registered tool servers and their tools
 
-     Returns all tool servers known to the system with their available tools.
-    Tool servers include built-in tools (filesystem, search, etc.) and MCP-connected tools.
+     Returns all tool servers known to the system, keyed by server name.
+    Each server maps tool names to their descriptions.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list[ToolServerInfo]
+        ToolServers
     """
 
     return sync_detailed(
@@ -98,18 +91,18 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[list[ToolServerInfo]]:
+) -> Response[ToolServers]:
     """List all registered tool servers and their tools
 
-     Returns all tool servers known to the system with their available tools.
-    Tool servers include built-in tools (filesystem, search, etc.) and MCP-connected tools.
+     Returns all tool servers known to the system, keyed by server name.
+    Each server maps tool names to their descriptions.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[list[ToolServerInfo]]
+        Response[ToolServers]
     """
 
     kwargs = _get_kwargs()
@@ -122,18 +115,18 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-) -> list[ToolServerInfo] | None:
+) -> ToolServers | None:
     """List all registered tool servers and their tools
 
-     Returns all tool servers known to the system with their available tools.
-    Tool servers include built-in tools (filesystem, search, etc.) and MCP-connected tools.
+     Returns all tool servers known to the system, keyed by server name.
+    Each server maps tool names to their descriptions.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        list[ToolServerInfo]
+        ToolServers
     """
 
     return (

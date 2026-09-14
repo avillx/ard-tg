@@ -5,7 +5,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.agent_list_response import AgentListResponse
+from ...models.agent_config import AgentConfig
 from ...types import Response
 
 
@@ -19,9 +19,14 @@ def _get_kwargs() -> dict[str, Any]:
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> AgentListResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> list[AgentConfig] | None:
     if response.status_code == 200:
-        response_200 = AgentListResponse.from_dict(response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = AgentConfig.from_dict(response_200_item_data)
+
+            response_200.append(response_200_item)
 
         return response_200
 
@@ -31,7 +36,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[AgentListResponse]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[list[AgentConfig]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -43,7 +48,7 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[AgentListResponse]:
+) -> Response[list[AgentConfig]]:
     """List all agents
 
     Raises:
@@ -51,7 +56,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AgentListResponse]
+        Response[list[AgentConfig]]
     """
 
     kwargs = _get_kwargs()
@@ -66,7 +71,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-) -> AgentListResponse | None:
+) -> list[AgentConfig] | None:
     """List all agents
 
     Raises:
@@ -74,7 +79,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AgentListResponse
+        list[AgentConfig]
     """
 
     return sync_detailed(
@@ -85,7 +90,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[AgentListResponse]:
+) -> Response[list[AgentConfig]]:
     """List all agents
 
     Raises:
@@ -93,7 +98,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AgentListResponse]
+        Response[list[AgentConfig]]
     """
 
     kwargs = _get_kwargs()
@@ -106,7 +111,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-) -> AgentListResponse | None:
+) -> list[AgentConfig] | None:
     """List all agents
 
     Raises:
@@ -114,7 +119,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AgentListResponse
+        list[AgentConfig]
     """
 
     return (

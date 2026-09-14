@@ -6,11 +6,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .completion_event_type import CompletionEventType
-from ..types import UNSET, Unset
+from ..models.completion_event_type import CompletionEventType
 
 if TYPE_CHECKING:
-    from .tool_call import ToolCall
+    from ..models.tool_call import ToolCall
 
 
 T = TypeVar("T", bound="CompletionEvent")
@@ -20,20 +19,17 @@ T = TypeVar("T", bound="CompletionEvent")
 class CompletionEvent:
     """A successful completion chunk. Emitted with type `complete`.
 
-    Example:
-        {'type': 'complete', 'done': False, 'completion': 'Hello!', 'tool_calls': []}
-
     Attributes:
         type_ (CompletionEventType):
         done (bool): Whether this is the final completion chunk.
         completion (str): The completion text chunk.
-        tool_calls (list[ToolCall] | Unset): Tool calls made by the model (non-empty only on done chunks).
+        tool_calls (list[ToolCall]): Tool calls made by the model.
     """
 
     type_: CompletionEventType
     done: bool
     completion: str
-    tool_calls: list[ToolCall] | Unset = UNSET
+    tool_calls: list[ToolCall]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,12 +39,10 @@ class CompletionEvent:
 
         completion = self.completion
 
-        tool_calls: list[dict[str, Any]] | Unset = UNSET
-        if not isinstance(self.tool_calls, Unset):
-            tool_calls = []
-            for tool_calls_item_data in self.tool_calls:
-                tool_calls_item = tool_calls_item_data.to_dict()
-                tool_calls.append(tool_calls_item)
+        tool_calls = []
+        for tool_calls_item_data in self.tool_calls:
+            tool_calls_item = tool_calls_item_data.to_dict()
+            tool_calls.append(tool_calls_item)
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -57,16 +51,15 @@ class CompletionEvent:
                 "type": type_,
                 "done": done,
                 "completion": completion,
+                "tool_calls": tool_calls,
             }
         )
-        if tool_calls is not UNSET:
-            field_dict["tool_calls"] = tool_calls
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .tool_call import ToolCall
+        from ..models.tool_call import ToolCall
 
         d = dict(src_dict)
         type_ = CompletionEventType(d.pop("type"))
@@ -75,14 +68,12 @@ class CompletionEvent:
 
         completion = d.pop("completion")
 
-        _tool_calls = d.pop("tool_calls", UNSET)
-        tool_calls: list[ToolCall] | Unset = UNSET
-        if _tool_calls is not UNSET:
-            tool_calls = []
-            for tool_calls_item_data in _tool_calls:
-                tool_calls_item = ToolCall.from_dict(tool_calls_item_data)
+        tool_calls = []
+        _tool_calls = d.pop("tool_calls")
+        for tool_calls_item_data in _tool_calls:
+            tool_calls_item = ToolCall.from_dict(tool_calls_item_data)
 
-                tool_calls.append(tool_calls_item)
+            tool_calls.append(tool_calls_item)
 
         completion_event = cls(
             type_=type_,

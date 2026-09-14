@@ -51,11 +51,6 @@ def _parse_response(
 
         return response_404
 
-    if response.status_code == 500:
-        response_500 = Error.from_dict(response.json())
-
-        return response_500
-
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -82,12 +77,11 @@ def sync_detailed(
     """Update a provider
 
      Partially updates a provider configuration. Only supplied fields are updated.
-    Fields set to `null` are ignored.
 
     Args:
         name (str):
         body (ProviderConfigPatch): Partial update for a provider. Only supplied fields are
-            updated. Fields set to `null` are ignored.
+            updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -118,12 +112,11 @@ def sync(
     """Update a provider
 
      Partially updates a provider configuration. Only supplied fields are updated.
-    Fields set to `null` are ignored.
 
     Args:
         name (str):
         body (ProviderConfigPatch): Partial update for a provider. Only supplied fields are
-            updated. Fields set to `null` are ignored.
+            updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -149,12 +142,11 @@ async def asyncio_detailed(
     """Update a provider
 
      Partially updates a provider configuration. Only supplied fields are updated.
-    Fields set to `null` are ignored.
 
     Args:
         name (str):
         body (ProviderConfigPatch): Partial update for a provider. Only supplied fields are
-            updated. Fields set to `null` are ignored.
+            updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -183,12 +175,11 @@ async def asyncio(
     """Update a provider
 
      Partially updates a provider configuration. Only supplied fields are updated.
-    Fields set to `null` are ignored.
 
     Args:
         name (str):
         body (ProviderConfigPatch): Partial update for a provider. Only supplied fields are
-            updated. Fields set to `null` are ignored.
+            updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

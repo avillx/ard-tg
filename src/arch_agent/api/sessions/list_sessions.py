@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 
 import httpx
@@ -7,6 +7,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
+from ...models.session_header import SessionHeader
 from ...types import Response
 
 
@@ -24,9 +25,16 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Error | list[str] | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Error | list[SessionHeader] | None:
     if response.status_code == 200:
-        response_200 = cast(list[str], response.json())
+        response_200 = []
+        _response_200 = response.json()
+        for response_200_item_data in _response_200:
+            response_200_item = SessionHeader.from_dict(response_200_item_data)
+
+            response_200.append(response_200_item)
 
         return response_200
 
@@ -41,7 +49,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Error | list[str]]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Error | list[SessionHeader]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -54,10 +64,10 @@ def sync_detailed(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Error | list[str]]:
+) -> Response[Error | list[SessionHeader]]:
     """List sessions for an agent
 
-     Returns a list of session IDs for the given agent.
+     Returns a list of session headers for the given agent.
 
     Args:
         agent (str):
@@ -67,7 +77,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | list[str]]
+        Response[Error | list[SessionHeader]]
     """
 
     kwargs = _get_kwargs(
@@ -85,10 +95,10 @@ def sync(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Error | list[str] | None:
+) -> Error | list[SessionHeader] | None:
     """List sessions for an agent
 
-     Returns a list of session IDs for the given agent.
+     Returns a list of session headers for the given agent.
 
     Args:
         agent (str):
@@ -98,7 +108,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | list[str]
+        Error | list[SessionHeader]
     """
 
     return sync_detailed(
@@ -111,10 +121,10 @@ async def asyncio_detailed(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Error | list[str]]:
+) -> Response[Error | list[SessionHeader]]:
     """List sessions for an agent
 
-     Returns a list of session IDs for the given agent.
+     Returns a list of session headers for the given agent.
 
     Args:
         agent (str):
@@ -124,7 +134,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | list[str]]
+        Response[Error | list[SessionHeader]]
     """
 
     kwargs = _get_kwargs(
@@ -140,10 +150,10 @@ async def asyncio(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Error | list[str] | None:
+) -> Error | list[SessionHeader] | None:
     """List sessions for an agent
 
-     Returns a list of session IDs for the given agent.
+     Returns a list of session headers for the given agent.
 
     Args:
         agent (str):
@@ -153,7 +163,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | list[str]
+        Error | list[SessionHeader]
     """
 
     return (

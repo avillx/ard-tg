@@ -6,6 +6,7 @@ from typing import Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..models.provider_config_patch_api_type import ProviderConfigPatchApiType
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="ProviderConfigPatch")
@@ -13,19 +14,19 @@ T = TypeVar("T", bound="ProviderConfigPatch")
 
 @_attrs_define
 class ProviderConfigPatch:
-    """Partial update for a provider. Only supplied fields are updated. Fields set to `null` are ignored.
+    """Partial update for a provider. Only supplied fields are updated.
 
     Attributes:
         name (None | str | Unset):
         base_url (None | str | Unset):
         key_ref (None | str | Unset):
-        api_type (None | str | Unset):
+        api_type (ProviderConfigPatchApiType | Unset):
     """
 
     name: None | str | Unset = UNSET
     base_url: None | str | Unset = UNSET
     key_ref: None | str | Unset = UNSET
-    api_type: None | str | Unset = UNSET
+    api_type: ProviderConfigPatchApiType | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,11 +48,9 @@ class ProviderConfigPatch:
         else:
             key_ref = self.key_ref
 
-        api_type: None | str | Unset
-        if isinstance(self.api_type, Unset):
-            api_type = UNSET
-        else:
-            api_type = self.api_type
+        api_type: str | Unset = UNSET
+        if not isinstance(self.api_type, Unset):
+            api_type = self.api_type.value
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -98,14 +97,12 @@ class ProviderConfigPatch:
 
         key_ref = _parse_key_ref(d.pop("key_ref", UNSET))
 
-        def _parse_api_type(data: object) -> None | str | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(None | str | Unset, data)
-
-        api_type = _parse_api_type(d.pop("api_type", UNSET))
+        _api_type = d.pop("api_type", UNSET)
+        api_type: ProviderConfigPatchApiType | Unset
+        if isinstance(_api_type, Unset):
+            api_type = UNSET
+        else:
+            api_type = ProviderConfigPatchApiType(_api_type)
 
         provider_config_patch = cls(
             name=name,

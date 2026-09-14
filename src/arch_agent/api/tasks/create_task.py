@@ -69,16 +69,13 @@ def sync_detailed(
     """Create a task
 
      Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task name in the path
-    and the `name` field in the body must match.
+    and can send requests to one or more agent recipients. The task `name` is taken from the
+    request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
             Tasks are executed on a cron schedule and send requests to agent recipients.
-             Example: {'name': 'daily_report', 'description': 'Generate daily activity report',
-            'recipients': ['agent_main'], 'schedule': '0 9 * * 1', 'request': 'Generate the daily
-            report', 'active': True, 'oneshot': False}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -109,16 +106,13 @@ def sync(
     """Create a task
 
      Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task name in the path
-    and the `name` field in the body must match.
+    and can send requests to one or more agent recipients. The task `name` is taken from the
+    request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
             Tasks are executed on a cron schedule and send requests to agent recipients.
-             Example: {'name': 'daily_report', 'description': 'Generate daily activity report',
-            'recipients': ['agent_main'], 'schedule': '0 9 * * 1', 'request': 'Generate the daily
-            report', 'active': True, 'oneshot': False}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -144,16 +138,13 @@ async def asyncio_detailed(
     """Create a task
 
      Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task name in the path
-    and the `name` field in the body must match.
+    and can send requests to one or more agent recipients. The task `name` is taken from the
+    request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
             Tasks are executed on a cron schedule and send requests to agent recipients.
-             Example: {'name': 'daily_report', 'description': 'Generate daily activity report',
-            'recipients': ['agent_main'], 'schedule': '0 9 * * 1', 'request': 'Generate the daily
-            report', 'active': True, 'oneshot': False}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -182,16 +173,13 @@ async def asyncio(
     """Create a task
 
      Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task name in the path
-    and the `name` field in the body must match.
+    and can send requests to one or more agent recipients. The task `name` is taken from the
+    request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
             Tasks are executed on a cron schedule and send requests to agent recipients.
-             Example: {'name': 'daily_report', 'description': 'Generate daily activity report',
-            'recipients': ['agent_main'], 'schedule': '0 9 * * 1', 'request': 'Generate the daily
-            report', 'active': True, 'oneshot': False}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

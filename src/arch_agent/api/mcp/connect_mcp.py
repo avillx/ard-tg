@@ -1,18 +1,18 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error import Error
-from ...models.mcp_connect_response import MCPConnectResponse
 from ...models.server_gateway_config import ServerGatewayConfig
 from ...models.validation_error import ValidationError
 from ...types import Response
 
 
 def _get_kwargs(
+    mcp: str,
     *,
     body: ServerGatewayConfig,
 ) -> dict[str, Any]:
@@ -20,7 +20,9 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/mcp",
+        "url": "/mcp/{mcp}".format(
+            mcp=quote(str(mcp), safe=""),
+        ),
     }
 
     _kwargs["json"] = body.to_dict()
@@ -31,32 +33,13 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | ValidationError | MCPConnectResponse | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ValidationError | None:
     if response.status_code == 200:
-        response_200 = MCPConnectResponse.from_dict(response.json())
-
+        response_200 = cast(Any, None)
         return response_200
 
     if response.status_code == 400:
-
-        def _parse_response_400(data: object) -> Error | ValidationError:
-            try:
-                if not isinstance(data, dict):
-                    raise TypeError()
-                response_400_type_0 = Error.from_dict(data)
-
-                return response_400_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            if not isinstance(data, dict):
-                raise TypeError()
-            response_400_type_1 = ValidationError.from_dict(data)
-
-            return response_400_type_1
-
-        response_400 = _parse_response_400(response.json())
+        response_400 = ValidationError.from_dict(response.json())
 
         return response_400
 
@@ -68,7 +51,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | ValidationError | MCPConnectResponse]:
+) -> Response[Any | ValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -78,32 +61,35 @@ def _build_response(
 
 
 def sync_detailed(
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
     body: ServerGatewayConfig,
-) -> Response[Error | ValidationError | MCPConnectResponse]:
+) -> Response[Any | ValidationError]:
     """Connect an MCP server
 
-     Connects an MCP server. Two connection methods are supported:
-    - `http_gateway`: connect to a remote SSE-based MCP server via URL.
+     Connects (or replaces) an MCP server with the ID given in the path.
+    Two connection methods are supported:
+    - `http_gateway`: connect to a remote MCP server via URL.
     - `command_gateway`: spawn a local MCP server process.
     Exactly one of `http_gateway` or `command_gateway` must be provided.
 
     Args:
+        mcp (str):
         body (ServerGatewayConfig): Exactly one of `http_gateway` or `command_gateway` must be
             provided.
             If neither or both are provided, the request is rejected with 400.
-             Example: {'http_gateway': {'url': 'http://localhost:3001/mcp', 'token': 'secret-token'}}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | ValidationError | MCPConnectResponse]
+        Response[Any | ValidationError]
     """
 
     kwargs = _get_kwargs(
+        mcp=mcp,
         body=body,
     )
 
@@ -115,64 +101,70 @@ def sync_detailed(
 
 
 def sync(
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
     body: ServerGatewayConfig,
-) -> Error | ValidationError | MCPConnectResponse | None:
+) -> Any | ValidationError | None:
     """Connect an MCP server
 
-     Connects an MCP server. Two connection methods are supported:
-    - `http_gateway`: connect to a remote SSE-based MCP server via URL.
+     Connects (or replaces) an MCP server with the ID given in the path.
+    Two connection methods are supported:
+    - `http_gateway`: connect to a remote MCP server via URL.
     - `command_gateway`: spawn a local MCP server process.
     Exactly one of `http_gateway` or `command_gateway` must be provided.
 
     Args:
+        mcp (str):
         body (ServerGatewayConfig): Exactly one of `http_gateway` or `command_gateway` must be
             provided.
             If neither or both are provided, the request is rejected with 400.
-             Example: {'http_gateway': {'url': 'http://localhost:3001/mcp', 'token': 'secret-token'}}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | ValidationError | MCPConnectResponse
+        Any | ValidationError
     """
 
     return sync_detailed(
+        mcp=mcp,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
     body: ServerGatewayConfig,
-) -> Response[Error | ValidationError | MCPConnectResponse]:
+) -> Response[Any | ValidationError]:
     """Connect an MCP server
 
-     Connects an MCP server. Two connection methods are supported:
-    - `http_gateway`: connect to a remote SSE-based MCP server via URL.
+     Connects (or replaces) an MCP server with the ID given in the path.
+    Two connection methods are supported:
+    - `http_gateway`: connect to a remote MCP server via URL.
     - `command_gateway`: spawn a local MCP server process.
     Exactly one of `http_gateway` or `command_gateway` must be provided.
 
     Args:
+        mcp (str):
         body (ServerGatewayConfig): Exactly one of `http_gateway` or `command_gateway` must be
             provided.
             If neither or both are provided, the request is rejected with 400.
-             Example: {'http_gateway': {'url': 'http://localhost:3001/mcp', 'token': 'secret-token'}}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | ValidationError | MCPConnectResponse]
+        Response[Any | ValidationError]
     """
 
     kwargs = _get_kwargs(
+        mcp=mcp,
         body=body,
     )
 
@@ -182,33 +174,36 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
     body: ServerGatewayConfig,
-) -> Error | ValidationError | MCPConnectResponse | None:
+) -> Any | ValidationError | None:
     """Connect an MCP server
 
-     Connects an MCP server. Two connection methods are supported:
-    - `http_gateway`: connect to a remote SSE-based MCP server via URL.
+     Connects (or replaces) an MCP server with the ID given in the path.
+    Two connection methods are supported:
+    - `http_gateway`: connect to a remote MCP server via URL.
     - `command_gateway`: spawn a local MCP server process.
     Exactly one of `http_gateway` or `command_gateway` must be provided.
 
     Args:
+        mcp (str):
         body (ServerGatewayConfig): Exactly one of `http_gateway` or `command_gateway` must be
             provided.
             If neither or both are provided, the request is rejected with 400.
-             Example: {'http_gateway': {'url': 'http://localhost:3001/mcp', 'token': 'secret-token'}}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | ValidationError | MCPConnectResponse
+        Any | ValidationError
     """
 
     return (
         await asyncio_detailed(
+            mcp=mcp,
             client=client,
             body=body,
         )

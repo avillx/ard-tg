@@ -50,8 +50,8 @@ def sync_detailed(
 ) -> Response[ListMCPServersResponse200]:
     """List connected MCP servers
 
-     Returns all currently connected MCP servers with their transport type, name, and available tools.
-    MCP servers are third-party tool servers connected via the Model Context Protocol.
+     Returns all currently connected MCP servers, keyed by server ID.
+    Each entry contains the gateway config and the server's tools.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -76,8 +76,8 @@ def sync(
 ) -> ListMCPServersResponse200 | None:
     """List connected MCP servers
 
-     Returns all currently connected MCP servers with their transport type, name, and available tools.
-    MCP servers are third-party tool servers connected via the Model Context Protocol.
+     Returns all currently connected MCP servers, keyed by server ID.
+    Each entry contains the gateway config and the server's tools.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -98,8 +98,8 @@ async def asyncio_detailed(
 ) -> Response[ListMCPServersResponse200]:
     """List connected MCP servers
 
-     Returns all currently connected MCP servers with their transport type, name, and available tools.
-    MCP servers are third-party tool servers connected via the Model Context Protocol.
+     Returns all currently connected MCP servers, keyed by server ID.
+    Each entry contains the gateway config and the server's tools.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -122,8 +122,8 @@ async def asyncio(
 ) -> ListMCPServersResponse200 | None:
     """List connected MCP servers
 
-     Returns all currently connected MCP servers with their transport type, name, and available tools.
-    MCP servers are third-party tool servers connected via the Model Context Protocol.
+     Returns all currently connected MCP servers, keyed by server ID.
+    Each entry contains the gateway config and the server's tools.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

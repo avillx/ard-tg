@@ -11,13 +11,13 @@ from ...types import Response
 
 
 def _get_kwargs(
-    id: str,
+    mcp: str,
 ) -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": "/mcp/{id}".format(
-            id=quote(str(id), safe=""),
+        "url": "/mcp/{mcp}".format(
+            mcp=quote(str(mcp), safe=""),
         ),
     }
 
@@ -50,7 +50,7 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 
 def sync_detailed(
-    id: str,
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any | Error]:
@@ -60,7 +60,7 @@ def sync_detailed(
     to agents after disconnection.
 
     Args:
-        id (str):
+        mcp (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -71,7 +71,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        id=id,
+        mcp=mcp,
     )
 
     response = client.get_httpx_client().request(
@@ -82,7 +82,7 @@ def sync_detailed(
 
 
 def sync(
-    id: str,
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Any | Error | None:
@@ -92,7 +92,7 @@ def sync(
     to agents after disconnection.
 
     Args:
-        id (str):
+        mcp (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -103,13 +103,13 @@ def sync(
     """
 
     return sync_detailed(
-        id=id,
+        mcp=mcp,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    id: str,
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any | Error]:
@@ -119,7 +119,7 @@ async def asyncio_detailed(
     to agents after disconnection.
 
     Args:
-        id (str):
+        mcp (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -130,7 +130,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        id=id,
+        mcp=mcp,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -139,7 +139,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    id: str,
+    mcp: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Any | Error | None:
@@ -149,7 +149,7 @@ async def asyncio(
     to agents after disconnection.
 
     Args:
-        id (str):
+        mcp (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -161,7 +161,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            id=id,
+            mcp=mcp,
             client=client,
         )
     ).parsed

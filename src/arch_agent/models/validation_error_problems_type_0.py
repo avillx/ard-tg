@@ -6,56 +6,38 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="MCPConnectResponse")
+T = TypeVar("T", bound="ValidationErrorProblemsType0")
 
 
 @_attrs_define
-class MCPConnectResponse:
-    """Response from a successful MCP server connection.
+class ValidationErrorProblemsType0:
+    """Map of field names to error messages."""
 
-    Example:
-        {'created_id': 'mcp_server_1'}
-
-    Attributes:
-        created_id (str | Unset):
-    """
-
-    created_id: str | Unset = UNSET
-    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+    additional_properties: dict[str, str] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        created_id = self.created_id
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if created_id is not UNSET:
-            field_dict["created_id"] = created_id
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        created_id = d.pop("created_id", UNSET)
+        validation_error_problems_type_0 = cls()
 
-        mcp_connect_response = cls(
-            created_id=created_id,
-        )
-
-        mcp_connect_response.additional_properties = d
-        return mcp_connect_response
+        validation_error_problems_type_0.additional_properties = d
+        return validation_error_problems_type_0
 
     @property
     def additional_keys(self) -> list[str]:
         return list(self.additional_properties.keys())
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> str:
         return self.additional_properties[key]
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: str) -> None:
         self.additional_properties[key] = value
 
     def __delitem__(self, key: str) -> None:

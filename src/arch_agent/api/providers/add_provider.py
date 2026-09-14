@@ -32,7 +32,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | Error | Error | ValidationError | None:
+) -> Any | Error | ValidationError | None:
     if response.status_code == 200:
         response_200 = cast(Any, None)
         return response_200
@@ -58,11 +58,6 @@ def _parse_response(
 
         return response_400
 
-    if response.status_code == 500:
-        response_500 = Error.from_dict(response.json())
-
-        return response_500
-
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -71,7 +66,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | Error | Error | ValidationError]:
+) -> Response[Any | Error | ValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -84,7 +79,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ProviderConfig,
-) -> Response[Any | Error | Error | ValidationError]:
+) -> Response[Any | Error | ValidationError]:
     """Add a provider
 
      Adds a new API provider. The provider must have a unique name, a base URL,
@@ -100,7 +95,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | Error | Error | ValidationError]
+        Response[Any | Error | ValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -118,7 +113,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: ProviderConfig,
-) -> Any | Error | Error | ValidationError | None:
+) -> Any | Error | ValidationError | None:
     """Add a provider
 
      Adds a new API provider. The provider must have a unique name, a base URL,
@@ -134,7 +129,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | Error | Error | ValidationError
+        Any | Error | ValidationError
     """
 
     return sync_detailed(
@@ -147,7 +142,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ProviderConfig,
-) -> Response[Any | Error | Error | ValidationError]:
+) -> Response[Any | Error | ValidationError]:
     """Add a provider
 
      Adds a new API provider. The provider must have a unique name, a base URL,
@@ -163,7 +158,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | Error | Error | ValidationError]
+        Response[Any | Error | ValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -179,7 +174,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: ProviderConfig,
-) -> Any | Error | Error | ValidationError | None:
+) -> Any | Error | ValidationError | None:
     """Add a provider
 
      Adds a new API provider. The provider must have a unique name, a base URL,
@@ -195,7 +190,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | Error | Error | ValidationError
+        Any | Error | ValidationError
     """
 
     return (

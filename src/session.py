@@ -1,3 +1,5 @@
+from arch_agent.models.create_session_response_200 import CreateSessionResponse200
+from arch_agent.models.error import Error
 import logging
 import threading
 import time
@@ -76,7 +78,7 @@ class SessionService:
             instruction=self._instruction,
         )
 
-        resp = create_session.sync(
+        resp: CreateSessionResponse200 | Error | None = create_session.sync(
             self._agent_id,
             client=self._agent_client,
             body=create_session_request,

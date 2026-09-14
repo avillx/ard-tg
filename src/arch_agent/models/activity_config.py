@@ -6,43 +6,63 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="DeleteTaskResponse404")
+T = TypeVar("T", bound="ActivityConfig")
 
 
 @_attrs_define
-class DeleteTaskResponse404:
-    """
+class ActivityConfig:
+    """Activity reporting configuration.
+
+    Example:
+        {'enabled': True, 'interval': 120, 'model': 'gpt-4'}
+
     Attributes:
-        message (str | Unset):
+        enabled (bool):
+        interval (int): Flush interval in seconds.
+        model (str): Model name used to generate activity summaries.
     """
 
-    message: str | Unset = UNSET
+    enabled: bool
+    interval: int
+    model: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        message = self.message
+        enabled = self.enabled
+
+        interval = self.interval
+
+        model = self.model
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if message is not UNSET:
-            field_dict["message"] = message
+        field_dict.update(
+            {
+                "enabled": enabled,
+                "interval": interval,
+                "model": model,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        message = d.pop("message", UNSET)
+        enabled = d.pop("enabled")
 
-        delete_task_response_404 = cls(
-            message=message,
+        interval = d.pop("interval")
+
+        model = d.pop("model")
+
+        activity_config = cls(
+            enabled=enabled,
+            interval=interval,
+            model=model,
         )
 
-        delete_task_response_404.additional_properties = d
-        return delete_task_response_404
+        activity_config.additional_properties = d
+        return activity_config
 
     @property
     def additional_keys(self) -> list[str]:

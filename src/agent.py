@@ -113,13 +113,13 @@ class AgentService:
         self,
         request: str,
         *,
-        provided_tools: list[tools.AgentTool] = None,
-        on_loop_exit: Callable[[models.LoopExitEvent], None] = None,
-        on_completion: Callable[[models.CompletionEvent], None] = None,
-        on_compltion_mistake: Callable[[models.CompletionMistakeEvent], None] = None,
-        on_compaction: Callable[[models.CompactionEvent], None] = None,
-        on_tool_result: Callable[[models.ToolResultEvent], None] = None,
-        on_tool_error: Callable[[models.ToolErrorEvent], None] = None,
+        provided_tools: list[tools.AgentTool] | None = None,
+        on_loop_exit: Callable[[models.LoopExitEvent], None] | None = None,
+        on_completion: Callable[[models.CompletionEvent], None] | None = None,
+        on_compltion_mistake: Callable[[models.CompletionMistakeEvent], None] | None = None,
+        on_compaction: Callable[[models.CompactionEvent], None] | None = None,
+        on_tool_result: Callable[[models.ToolResultEvent], None] | None = None,
+        on_tool_error: Callable[[models.ToolErrorEvent], None] | None = None,
     ):
 
         tool_servers = []

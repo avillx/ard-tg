@@ -9,7 +9,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .content_part import ContentPart
+    from ..models.content_part import ContentPart
 
 
 T = TypeVar("T", bound="ToolResultPayload")
@@ -20,7 +20,7 @@ class ToolResultPayload:
     """Payload for resolving a client-provided tool call result.
 
     Example:
-        {'result': [{'text': 'Operation completed successfully'}]}
+        {'result': [{'text': 'Operation completed successfully', 'image_url': ''}], 'error_message': ''}
 
     Attributes:
         result (list[ContentPart] | Unset): Tool call result content.
@@ -53,7 +53,7 @@ class ToolResultPayload:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .content_part import ContentPart
+        from ..models.content_part import ContentPart
 
         d = dict(src_dict)
         _result = d.pop("result", UNSET)

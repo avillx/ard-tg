@@ -13,15 +13,15 @@ T = TypeVar("T", bound="ContentPart")
 
 @_attrs_define
 class ContentPart:
-    """A part of message content. At least one of `text` or `image_url` is present.
+    """A part of message content. Both fields are always present (empty when unused).
 
     Example:
-        {'text': 'Hello, how are you?'}
+        {'text': 'Hello, how are you?', 'image_url': ''}
 
     Attributes:
         text (str | Unset): Plain text content.
         image_url (str | Unset): Base64-encoded image data URL (e.g. `data:image/png;base64,...`).
-            Supported formats: PNG, JPEG, WebP, GIF.
+            Supported formats: PNG, JPEG, WebP, BMP.
     """
 
     text: str | Unset = UNSET

@@ -12,14 +12,14 @@ from ...types import Response
 
 def _get_kwargs(
     agent: str,
-    session_id: str,
+    session: str,
 ) -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": "/session/{agent}/{session_id}".format(
+        "url": "/session/{agent}/{session}".format(
             agent=quote(str(agent), safe=""),
-            session_id=quote(str(session_id), safe=""),
+            session=quote(str(session), safe=""),
         ),
     }
 
@@ -31,10 +31,10 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         response_200 = cast(Any, None)
         return response_200
 
-    if response.status_code == 500:
-        response_500 = Error.from_dict(response.json())
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
 
-        return response_500
+        return response_400
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -53,7 +53,7 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 def sync_detailed(
     agent: str,
-    session_id: str,
+    session: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any | Error]:
@@ -63,7 +63,7 @@ def sync_detailed(
 
     Args:
         agent (str):
-        session_id (str):
+        session (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -75,7 +75,7 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         agent=agent,
-        session_id=session_id,
+        session=session,
     )
 
     response = client.get_httpx_client().request(
@@ -87,7 +87,7 @@ def sync_detailed(
 
 def sync(
     agent: str,
-    session_id: str,
+    session: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Any | Error | None:
@@ -97,7 +97,7 @@ def sync(
 
     Args:
         agent (str):
-        session_id (str):
+        session (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -109,14 +109,14 @@ def sync(
 
     return sync_detailed(
         agent=agent,
-        session_id=session_id,
+        session=session,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
     agent: str,
-    session_id: str,
+    session: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any | Error]:
@@ -126,7 +126,7 @@ async def asyncio_detailed(
 
     Args:
         agent (str):
-        session_id (str):
+        session (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -138,7 +138,7 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         agent=agent,
-        session_id=session_id,
+        session=session,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -148,7 +148,7 @@ async def asyncio_detailed(
 
 async def asyncio(
     agent: str,
-    session_id: str,
+    session: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Any | Error | None:
@@ -158,7 +158,7 @@ async def asyncio(
 
     Args:
         agent (str):
-        session_id (str):
+        session (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -171,7 +171,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             agent=agent,
-            session_id=session_id,
+            session=session,
             client=client,
         )
     ).parsed

@@ -16,17 +16,17 @@ class AgentConfig:
     """Configuration for an agent. At minimum, a model must be specified.
 
     Example:
-        {'model': 'gpt-4', 'memory': True, 'description': 'General assistant', 'tool_servers': ['filesystem', 'search']}
+        {'model': 'gpt-4', 'memory': True, 'description': 'General assistant', 'tool_servers': ['filesystem']}
 
     Attributes:
-        model (str | Unset): Model identifier (e.g. `gpt-4`, `claude-3-opus`).
+        model (str): Model identifier.
         memory (bool | Unset): Whether memory is enabled.
         description (str | Unset):
         tool_servers (list[str] | Unset): Allowed tool server names.
-        system_prompt (str | Unset): Custom system prompt override.
+        system_prompt (str | Unset): Custom system prompt.
     """
 
-    model: str | Unset = UNSET
+    model: str
     memory: bool | Unset = UNSET
     description: str | Unset = UNSET
     tool_servers: list[str] | Unset = UNSET
@@ -48,9 +48,11 @@ class AgentConfig:
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if model is not UNSET:
-            field_dict["model"] = model
+        field_dict.update(
+            {
+                "model": model,
+            }
+        )
         if memory is not UNSET:
             field_dict["memory"] = memory
         if description is not UNSET:
@@ -65,7 +67,7 @@ class AgentConfig:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        model = d.pop("model", UNSET)
+        model = d.pop("model")
 
         memory = d.pop("memory", UNSET)
 

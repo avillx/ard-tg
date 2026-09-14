@@ -6,52 +6,29 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="MemoryListResponseMemoryRecordsItem")
+T = TypeVar("T", bound="SessionHeaderExtras")
 
 
 @_attrs_define
-class MemoryListResponseMemoryRecordsItem:
-    """
-    Attributes:
-        name (str | Unset):
-        description (str | Unset):
-    """
+class SessionHeaderExtras:
+    """ """
 
-    name: str | Unset = UNSET
-    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name = self.name
-
-        description = self.description
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if name is not UNSET:
-            field_dict["name"] = name
-        if description is not UNSET:
-            field_dict["description"] = description
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        name = d.pop("name", UNSET)
+        session_header_extras = cls()
 
-        description = d.pop("description", UNSET)
-
-        memory_list_response_memory_records_item = cls(
-            name=name,
-            description=description,
-        )
-
-        memory_list_response_memory_records_item.additional_properties = d
-        return memory_list_response_memory_records_item
+        session_header_extras.additional_properties = d
+        return session_header_extras
 
     @property
     def additional_keys(self) -> list[str]:

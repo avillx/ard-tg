@@ -1,8 +1,8 @@
 from enum import Enum
 
 
-class CompletionDTOType(str, Enum):
-    COMPLETE = "complete"
+class ProviderConfigPatchApiType(str, Enum):
+    OPENAI = "openai"
 
     def __str__(self) -> str:
         return str(self.value)

@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .compaction_event_type import CompactionEventType
+from ..models.compaction_event_type import CompactionEventType
 
 T = TypeVar("T", bound="CompactionEvent")
 
@@ -14,9 +14,6 @@ T = TypeVar("T", bound="CompactionEvent")
 @_attrs_define
 class CompactionEvent:
     """Session context was compacted. Emitted with type `compaction`.
-
-    Example:
-        {'type': 'compaction', 'message': 'compaction has been proceed', 'result': 'summary text'}
 
     Attributes:
         type_ (CompactionEventType):

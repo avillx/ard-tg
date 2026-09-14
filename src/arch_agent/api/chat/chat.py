@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 from urllib.parse import quote
 
 import httpx
@@ -44,7 +44,8 @@ def _get_kwargs(
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> (
-    CompactionEvent
+    Any
+    | CompactionEvent
     | CompletionEvent
     | CompletionMistakeEvent
     | LoopExitEvent
@@ -124,6 +125,10 @@ def _parse_response(
 
         return response_200
 
+    if response.status_code == 400:
+        response_400 = cast(Any, None)
+        return response_400
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -133,7 +138,8 @@ def _parse_response(
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
-    CompactionEvent
+    Any
+    | CompactionEvent
     | CompletionEvent
     | CompletionMistakeEvent
     | LoopExitEvent
@@ -156,7 +162,8 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> Response[
-    CompactionEvent
+    Any
+    | CompactionEvent
     | CompletionEvent
     | CompletionMistakeEvent
     | LoopExitEvent
@@ -167,8 +174,9 @@ def sync_detailed(
     """Start a chat completion
 
      Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    The response is a stream of JSON envelopes, one per line, prefixed with `data: `.
-    The stream ends with `data: [DONE]`.
+    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
+    On failure before the stream starts (bad request) or during the run, the server
+    emits an SSE `error: <json>` frame with a `400` status when possible.
 
     Args:
         agent (str):
@@ -180,7 +188,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent]
+        Response[Any | CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent]
     """
 
     kwargs = _get_kwargs(
@@ -203,7 +211,8 @@ def sync(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> (
-    CompactionEvent
+    Any
+    | CompactionEvent
     | CompletionEvent
     | CompletionMistakeEvent
     | LoopExitEvent
@@ -215,8 +224,9 @@ def sync(
     """Start a chat completion
 
      Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    The response is a stream of JSON envelopes, one per line, prefixed with `data: `.
-    The stream ends with `data: [DONE]`.
+    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
+    On failure before the stream starts (bad request) or during the run, the server
+    emits an SSE `error: <json>` frame with a `400` status when possible.
 
     Args:
         agent (str):
@@ -228,7 +238,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent
+        Any | CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent
     """
 
     return sync_detailed(
@@ -246,7 +256,8 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> Response[
-    CompactionEvent
+    Any
+    | CompactionEvent
     | CompletionEvent
     | CompletionMistakeEvent
     | LoopExitEvent
@@ -257,8 +268,9 @@ async def asyncio_detailed(
     """Start a chat completion
 
      Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    The response is a stream of JSON envelopes, one per line, prefixed with `data: `.
-    The stream ends with `data: [DONE]`.
+    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
+    On failure before the stream starts (bad request) or during the run, the server
+    emits an SSE `error: <json>` frame with a `400` status when possible.
 
     Args:
         agent (str):
@@ -270,7 +282,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent]
+        Response[Any | CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent]
     """
 
     kwargs = _get_kwargs(
@@ -291,7 +303,8 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: ChatBody,
 ) -> (
-    CompactionEvent
+    Any
+    | CompactionEvent
     | CompletionEvent
     | CompletionMistakeEvent
     | LoopExitEvent
@@ -303,8 +316,9 @@ async def asyncio(
     """Start a chat completion
 
      Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    The response is a stream of JSON envelopes, one per line, prefixed with `data: `.
-    The stream ends with `data: [DONE]`.
+    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
+    On failure before the stream starts (bad request) or during the run, the server
+    emits an SSE `error: <json>` frame with a `400` status when possible.
 
     Args:
         agent (str):
@@ -316,7 +330,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent
+        Any | CompactionEvent | CompletionEvent | CompletionMistakeEvent | LoopExitEvent | ProvidedToolCallEvent | ToolErrorEvent | ToolResultEvent
     """
 
     return (

@@ -13,7 +13,7 @@ T = TypeVar("T", bound="ServerGatewayConfigHttpGateway")
 
 @_attrs_define
 class ServerGatewayConfigHttpGateway:
-    """Connect to a remote SSE-based MCP server via URL.
+    """Connect to a remote MCP server via URL.
 
     Attributes:
         url (str):

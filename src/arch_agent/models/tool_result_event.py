@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .tool_result_event_type import ToolResultEventType
+from ..models.tool_result_event_type import ToolResultEventType
 
 if TYPE_CHECKING:
-    from .content_part import ContentPart
+    from ..models.content_part import ContentPart
 
 
 T = TypeVar("T", bound="ToolResultEvent")
@@ -18,9 +18,6 @@ T = TypeVar("T", bound="ToolResultEvent")
 @_attrs_define
 class ToolResultEvent:
     """Result of a tool call. Emitted with type `tool_result`.
-
-    Example:
-        {'type': 'tool_result', 'id': 'call_abc', 'result': [{'text': 'File contents'}]}
 
     Attributes:
         type_ (ToolResultEventType):
@@ -57,7 +54,7 @@ class ToolResultEvent:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .content_part import ContentPart
+        from ..models.content_part import ContentPart
 
         d = dict(src_dict)
         type_ = ToolResultEventType(d.pop("type"))

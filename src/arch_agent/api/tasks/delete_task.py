@@ -6,7 +6,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.delete_task_response_404 import DeleteTaskResponse404
+from ...models.error import Error
 from ...types import Response
 
 
@@ -24,15 +24,13 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | DeleteTaskResponse404 | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | Error | None:
     if response.status_code == 200:
         response_200 = cast(Any, None)
         return response_200
 
     if response.status_code == 404:
-        response_404 = DeleteTaskResponse404.from_dict(response.json())
+        response_404 = Error.from_dict(response.json())
 
         return response_404
 
@@ -42,9 +40,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | DeleteTaskResponse404]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | Error]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -57,7 +53,7 @@ def sync_detailed(
     name: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | DeleteTaskResponse404]:
+) -> Response[Any | Error]:
     """Delete a task
 
      Deletes a task and stops its cron schedule.
@@ -70,7 +66,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | DeleteTaskResponse404]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -88,7 +84,7 @@ def sync(
     name: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Any | DeleteTaskResponse404 | None:
+) -> Any | Error | None:
     """Delete a task
 
      Deletes a task and stops its cron schedule.
@@ -101,7 +97,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | DeleteTaskResponse404
+        Any | Error
     """
 
     return sync_detailed(
@@ -114,7 +110,7 @@ async def asyncio_detailed(
     name: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | DeleteTaskResponse404]:
+) -> Response[Any | Error]:
     """Delete a task
 
      Deletes a task and stops its cron schedule.
@@ -127,7 +123,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | DeleteTaskResponse404]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -143,7 +139,7 @@ async def asyncio(
     name: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Any | DeleteTaskResponse404 | None:
+) -> Any | Error | None:
     """Delete a task
 
      Deletes a task and stops its cron schedule.
@@ -156,7 +152,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | DeleteTaskResponse404
+        Any | Error
     """
 
     return (

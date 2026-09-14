@@ -8,6 +8,7 @@ from ...client import AuthenticatedClient, Client
 from ...models.activity_record import ActivityRecord
 from ...models.error import Error
 from ...models.get_activity_body import GetActivityBody
+from ...models.validation_error import ValidationError
 from ...types import Response
 
 
@@ -32,7 +33,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Error | list[ActivityRecord] | None:
+) -> Error | ValidationError | list[ActivityRecord] | None:
     if response.status_code == 200:
         response_200 = []
         _response_200 = response.json()
@@ -43,10 +44,15 @@ def _parse_response(
 
         return response_200
 
-    if response.status_code == 500:
-        response_500 = Error.from_dict(response.json())
+    if response.status_code == 400:
+        response_400 = ValidationError.from_dict(response.json())
 
-        return response_500
+        return response_400
+
+    if response.status_code == 404:
+        response_404 = Error.from_dict(response.json())
+
+        return response_404
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -56,7 +62,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Error | list[ActivityRecord]]:
+) -> Response[Error | ValidationError | list[ActivityRecord]]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -69,7 +75,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: GetActivityBody,
-) -> Response[Error | list[ActivityRecord]]:
+) -> Response[Error | ValidationError | list[ActivityRecord]]:
     """Get activity logs for a period
 
      Retrieves activity logs for the specified agent and time range.
@@ -82,7 +88,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | list[ActivityRecord]]
+        Response[Error | ValidationError | list[ActivityRecord]]
     """
 
     kwargs = _get_kwargs(
@@ -100,7 +106,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: GetActivityBody,
-) -> Error | list[ActivityRecord] | None:
+) -> Error | ValidationError | list[ActivityRecord] | None:
     """Get activity logs for a period
 
      Retrieves activity logs for the specified agent and time range.
@@ -113,7 +119,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | list[ActivityRecord]
+        Error | ValidationError | list[ActivityRecord]
     """
 
     return sync_detailed(
@@ -126,7 +132,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: GetActivityBody,
-) -> Response[Error | list[ActivityRecord]]:
+) -> Response[Error | ValidationError | list[ActivityRecord]]:
     """Get activity logs for a period
 
      Retrieves activity logs for the specified agent and time range.
@@ -139,7 +145,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Error | list[ActivityRecord]]
+        Response[Error | ValidationError | list[ActivityRecord]]
     """
 
     kwargs = _get_kwargs(
@@ -155,7 +161,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: GetActivityBody,
-) -> Error | list[ActivityRecord] | None:
+) -> Error | ValidationError | list[ActivityRecord] | None:
     """Get activity logs for a period
 
      Retrieves activity logs for the specified agent and time range.
@@ -168,7 +174,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Error | list[ActivityRecord]
+        Error | ValidationError | list[ActivityRecord]
     """
 
     return (

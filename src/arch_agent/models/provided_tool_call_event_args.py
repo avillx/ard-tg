@@ -11,7 +11,7 @@ T = TypeVar("T", bound="ProvidedToolCallEventArgs")
 
 @_attrs_define
 class ProvidedToolCallEventArgs:
-    """Tool arguments."""
+    """Tool arguments (omitted when empty)."""
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

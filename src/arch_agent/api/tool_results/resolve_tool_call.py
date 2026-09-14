@@ -72,7 +72,8 @@ def sync_detailed(
     Args:
         id (str):
         body (ToolResultPayload): Payload for resolving a client-provided tool call result.
-            Example: {'result': [{'text': 'Operation completed successfully'}]}.
+            Example: {'result': [{'text': 'Operation completed successfully', 'image_url': ''}],
+            'error_message': ''}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -108,7 +109,8 @@ def sync(
     Args:
         id (str):
         body (ToolResultPayload): Payload for resolving a client-provided tool call result.
-            Example: {'result': [{'text': 'Operation completed successfully'}]}.
+            Example: {'result': [{'text': 'Operation completed successfully', 'image_url': ''}],
+            'error_message': ''}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -139,7 +141,8 @@ async def asyncio_detailed(
     Args:
         id (str):
         body (ToolResultPayload): Payload for resolving a client-provided tool call result.
-            Example: {'result': [{'text': 'Operation completed successfully'}]}.
+            Example: {'result': [{'text': 'Operation completed successfully', 'image_url': ''}],
+            'error_message': ''}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -173,7 +176,8 @@ async def asyncio(
     Args:
         id (str):
         body (ToolResultPayload): Payload for resolving a client-provided tool call result.
-            Example: {'result': [{'text': 'Operation completed successfully'}]}.
+            Example: {'result': [{'text': 'Operation completed successfully', 'image_url': ''}],
+            'error_message': ''}.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

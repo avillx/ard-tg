@@ -6,7 +6,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.patch_task_response_404 import PatchTaskResponse404
+from ...models.error import Error
 from ...models.task_patch import TaskPatch
 from ...models.validation_error import ValidationError
 from ...types import Response
@@ -36,7 +36,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | PatchTaskResponse404 | ValidationError | None:
+) -> Any | Error | ValidationError | None:
     if response.status_code == 200:
         response_200 = cast(Any, None)
         return response_200
@@ -47,7 +47,7 @@ def _parse_response(
         return response_400
 
     if response.status_code == 404:
-        response_404 = PatchTaskResponse404.from_dict(response.json())
+        response_404 = Error.from_dict(response.json())
 
         return response_404
 
@@ -59,7 +59,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | PatchTaskResponse404 | ValidationError]:
+) -> Response[Any | Error | ValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,23 +73,22 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: TaskPatch,
-) -> Response[Any | PatchTaskResponse404 | ValidationError]:
+) -> Response[Any | Error | ValidationError]:
     """Patch a task
 
      Partially updates a task. Only the supplied fields are updated.
-    Fields set to `null` are ignored. To deactivate a task, set `active` to `false`.
+    To deactivate a task, set `active` to `false`.
 
     Args:
         name (str):
-        body (TaskPatch): Partial update for a task. Only supplied fields are updated. Fields set
-            to `null` are ignored. Example: {'active': False}.
+        body (TaskPatch): Partial update for a task. Only supplied fields are updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | PatchTaskResponse404 | ValidationError]
+        Response[Any | Error | ValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -109,23 +108,22 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: TaskPatch,
-) -> Any | PatchTaskResponse404 | ValidationError | None:
+) -> Any | Error | ValidationError | None:
     """Patch a task
 
      Partially updates a task. Only the supplied fields are updated.
-    Fields set to `null` are ignored. To deactivate a task, set `active` to `false`.
+    To deactivate a task, set `active` to `false`.
 
     Args:
         name (str):
-        body (TaskPatch): Partial update for a task. Only supplied fields are updated. Fields set
-            to `null` are ignored. Example: {'active': False}.
+        body (TaskPatch): Partial update for a task. Only supplied fields are updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | PatchTaskResponse404 | ValidationError
+        Any | Error | ValidationError
     """
 
     return sync_detailed(
@@ -140,23 +138,22 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: TaskPatch,
-) -> Response[Any | PatchTaskResponse404 | ValidationError]:
+) -> Response[Any | Error | ValidationError]:
     """Patch a task
 
      Partially updates a task. Only the supplied fields are updated.
-    Fields set to `null` are ignored. To deactivate a task, set `active` to `false`.
+    To deactivate a task, set `active` to `false`.
 
     Args:
         name (str):
-        body (TaskPatch): Partial update for a task. Only supplied fields are updated. Fields set
-            to `null` are ignored. Example: {'active': False}.
+        body (TaskPatch): Partial update for a task. Only supplied fields are updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | PatchTaskResponse404 | ValidationError]
+        Response[Any | Error | ValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -174,23 +171,22 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: TaskPatch,
-) -> Any | PatchTaskResponse404 | ValidationError | None:
+) -> Any | Error | ValidationError | None:
     """Patch a task
 
      Partially updates a task. Only the supplied fields are updated.
-    Fields set to `null` are ignored. To deactivate a task, set `active` to `false`.
+    To deactivate a task, set `active` to `false`.
 
     Args:
         name (str):
-        body (TaskPatch): Partial update for a task. Only supplied fields are updated. Fields set
-            to `null` are ignored. Example: {'active': False}.
+        body (TaskPatch): Partial update for a task. Only supplied fields are updated.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | PatchTaskResponse404 | ValidationError
+        Any | Error | ValidationError
     """
 
     return (

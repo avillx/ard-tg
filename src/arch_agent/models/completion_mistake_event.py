@@ -6,17 +6,14 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .completion_mistake_event_type import CompletionMistakeEventType
+from ..models.completion_mistake_event_type import CompletionMistakeEventType
 
 T = TypeVar("T", bound="CompletionMistakeEvent")
 
 
 @_attrs_define
 class CompletionMistakeEvent:
-    """A completion failure. Emitted with type `complete`.
-
-    Example:
-        {'type': 'complete', 'error': 'completion failed'}
+    """A completion failure. Emitted with type `complete_mistake`.
 
     Attributes:
         type_ (CompletionMistakeEventType):

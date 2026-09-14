@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .message_dto_role import MessageDTORole
+from ..models.message_dto_role import MessageDTORole
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .content_part import ContentPart
-    from .tool_call import ToolCall
+    from ..models.content_part import ContentPart
+    from ..models.tool_call import ToolCall
 
 
 T = TypeVar("T", bound="MessageDTO")
@@ -21,32 +21,24 @@ T = TypeVar("T", bound="MessageDTO")
 class MessageDTO:
     """A single message in a session conversation.
 
-    Example:
-        {'role': 'user', 'content': [{'text': 'Read the report'}]}
-
     Attributes:
-        role (MessageDTORole | Unset): Message role: `agent` (assistant response), `user`, `tool` (tool result), or
-            `system`.
-        content (list[ContentPart] | Unset):
-        tool_calls (list[ToolCall] | Unset):
+        role (MessageDTORole): Message role: `agent` (assistant response), `user`, `tool` (tool result), or `system`.
+        content (list[ContentPart]):
+        tool_calls (list[ToolCall] | Unset): Present only on `agent` messages.
     """
 
-    role: MessageDTORole | Unset = UNSET
-    content: list[ContentPart] | Unset = UNSET
+    role: MessageDTORole
+    content: list[ContentPart]
     tool_calls: list[ToolCall] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        role: str | Unset = UNSET
-        if not isinstance(self.role, Unset):
-            role = self.role.value
+        role = self.role.value
 
-        content: list[dict[str, Any]] | Unset = UNSET
-        if not isinstance(self.content, Unset):
-            content = []
-            for content_item_data in self.content:
-                content_item = content_item_data.to_dict()
-                content.append(content_item)
+        content = []
+        for content_item_data in self.content:
+            content_item = content_item_data.to_dict()
+            content.append(content_item)
 
         tool_calls: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.tool_calls, Unset):
@@ -57,11 +49,12 @@ class MessageDTO:
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if role is not UNSET:
-            field_dict["role"] = role
-        if content is not UNSET:
-            field_dict["content"] = content
+        field_dict.update(
+            {
+                "role": role,
+                "content": content,
+            }
+        )
         if tool_calls is not UNSET:
             field_dict["tool_calls"] = tool_calls
 
@@ -69,25 +62,18 @@ class MessageDTO:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .content_part import ContentPart
-        from .tool_call import ToolCall
+        from ..models.content_part import ContentPart
+        from ..models.tool_call import ToolCall
 
         d = dict(src_dict)
-        _role = d.pop("role", UNSET)
-        role: MessageDTORole | Unset
-        if isinstance(_role, Unset):
-            role = UNSET
-        else:
-            role = MessageDTORole(_role)
+        role = MessageDTORole(d.pop("role"))
 
-        _content = d.pop("content", UNSET)
-        content: list[ContentPart] | Unset = UNSET
-        if _content is not UNSET:
-            content = []
-            for content_item_data in _content:
-                content_item = ContentPart.from_dict(content_item_data)
+        content = []
+        _content = d.pop("content")
+        for content_item_data in _content:
+            content_item = ContentPart.from_dict(content_item_data)
 
-                content.append(content_item)
+            content.append(content_item)
 
         _tool_calls = d.pop("tool_calls", UNSET)
         tool_calls: list[ToolCall] | Unset = UNSET

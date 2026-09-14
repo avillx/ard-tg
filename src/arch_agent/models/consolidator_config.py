@@ -6,43 +6,63 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="DeleteAgentResponse400")
+T = TypeVar("T", bound="ConsolidatorConfig")
 
 
 @_attrs_define
-class DeleteAgentResponse400:
-    """
+class ConsolidatorConfig:
+    """Memory consolidation configuration.
+
+    Example:
+        {'Model': 'gpt-4', 'Enabled': True, 'Instruction': "Summarize the day's activity"}
+
     Attributes:
-        message (str | Unset):
+        model (str): Model name used for consolidation.
+        enabled (bool): Whether automatic consolidation is enabled.
+        instruction (str): Instruction passed to the consolidation agent.
     """
 
-    message: str | Unset = UNSET
+    model: str
+    enabled: bool
+    instruction: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        message = self.message
+        model = self.model
+
+        enabled = self.enabled
+
+        instruction = self.instruction
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if message is not UNSET:
-            field_dict["message"] = message
+        field_dict.update(
+            {
+                "Model": model,
+                "Enabled": enabled,
+                "Instruction": instruction,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        message = d.pop("message", UNSET)
+        model = d.pop("Model")
 
-        delete_agent_response_400 = cls(
-            message=message,
+        enabled = d.pop("Enabled")
+
+        instruction = d.pop("Instruction")
+
+        consolidator_config = cls(
+            model=model,
+            enabled=enabled,
+            instruction=instruction,
         )
 
-        delete_agent_response_400.additional_properties = d
-        return delete_agent_response_400
+        consolidator_config.additional_properties = d
+        return consolidator_config
 
     @property
     def additional_keys(self) -> list[str]:

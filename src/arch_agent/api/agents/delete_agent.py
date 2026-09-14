@@ -6,7 +6,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.delete_agent_response_400 import DeleteAgentResponse400
+from ...models.error import Error
 from ...types import Response
 
 
@@ -24,15 +24,13 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | DeleteAgentResponse400 | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | Error | None:
     if response.status_code == 200:
         response_200 = cast(Any, None)
         return response_200
 
     if response.status_code == 400:
-        response_400 = DeleteAgentResponse400.from_dict(response.json())
+        response_400 = Error.from_dict(response.json())
 
         return response_400
 
@@ -42,9 +40,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | DeleteAgentResponse400]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | Error]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -57,7 +53,7 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | DeleteAgentResponse400]:
+) -> Response[Any | Error]:
     """Delete an agent
 
      Deletes an agent and all its associated sessions and memory records.
@@ -70,7 +66,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | DeleteAgentResponse400]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -88,7 +84,7 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Any | DeleteAgentResponse400 | None:
+) -> Any | Error | None:
     """Delete an agent
 
      Deletes an agent and all its associated sessions and memory records.
@@ -101,7 +97,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | DeleteAgentResponse400
+        Any | Error
     """
 
     return sync_detailed(
@@ -114,7 +110,7 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | DeleteAgentResponse400]:
+) -> Response[Any | Error]:
     """Delete an agent
 
      Deletes an agent and all its associated sessions and memory records.
@@ -127,7 +123,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | DeleteAgentResponse400]
+        Response[Any | Error]
     """
 
     kwargs = _get_kwargs(
@@ -143,7 +139,7 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Any | DeleteAgentResponse400 | None:
+) -> Any | Error | None:
     """Delete an agent
 
      Deletes an agent and all its associated sessions and memory records.
@@ -156,7 +152,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | DeleteAgentResponse400
+        Any | Error
     """
 
     return (

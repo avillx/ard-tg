@@ -6,8 +6,6 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
 T = TypeVar("T", bound="MemoryDetail")
 
 
@@ -19,14 +17,14 @@ class MemoryDetail:
         {'agent': 'agent_main', 'memory_name': 'week_25', 'content': 'The agent processed 15 tasks...'}
 
     Attributes:
-        agent (str | Unset):
-        memory_name (str | Unset):
-        content (str | Unset):
+        agent (str):
+        memory_name (str):
+        content (str):
     """
 
-    agent: str | Unset = UNSET
-    memory_name: str | Unset = UNSET
-    content: str | Unset = UNSET
+    agent: str
+    memory_name: str
+    content: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -38,24 +36,24 @@ class MemoryDetail:
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if agent is not UNSET:
-            field_dict["agent"] = agent
-        if memory_name is not UNSET:
-            field_dict["memory_name"] = memory_name
-        if content is not UNSET:
-            field_dict["content"] = content
+        field_dict.update(
+            {
+                "agent": agent,
+                "memory_name": memory_name,
+                "content": content,
+            }
+        )
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        agent = d.pop("agent", UNSET)
+        agent = d.pop("agent")
 
-        memory_name = d.pop("memory_name", UNSET)
+        memory_name = d.pop("memory_name")
 
-        content = d.pop("content", UNSET)
+        content = d.pop("content")
 
         memory_detail = cls(
             agent=agent,

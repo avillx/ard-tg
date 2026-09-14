@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from .provided_tool_call_event_type import ProvidedToolCallEventType
+from ..models.provided_tool_call_event_type import ProvidedToolCallEventType
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .provided_tool_call_event_args import ProvidedToolCallEventArgs
+    from ..models.provided_tool_call_event_args import ProvidedToolCallEventArgs
 
 
 T = TypeVar("T", bound="ProvidedToolCallEvent")
@@ -20,16 +20,12 @@ T = TypeVar("T", bound="ProvidedToolCallEvent")
 class ProvidedToolCallEvent:
     """The agent called a client-provided tool. Emitted with type `provided_toolcall`.
 
-    Example:
-        {'type': 'provided_toolcall', 'tool': 'my_tool', 'args': {}, 'result_id': 'fg1ds12sg3d3f3fg342234d', 'agent_id':
-            'agent_1', 'session_id': 'sess_1'}
-
     Attributes:
         type_ (ProvidedToolCallEventType):
         tool (str): Tool name.
         agent_id (str): Agent identifier.
         session_id (str): Session identifier.
-        args (ProvidedToolCallEventArgs | Unset): Tool arguments.
+        args (ProvidedToolCallEventArgs | Unset): Tool arguments (omitted when empty).
         result_id (str | Unset): URL-safe id for calling the /toolresult/{id} endpoint to resolve this call.
     """
 
@@ -75,7 +71,7 @@ class ProvidedToolCallEvent:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .provided_tool_call_event_args import ProvidedToolCallEventArgs
+        from ..models.provided_tool_call_event_args import ProvidedToolCallEventArgs
 
         d = dict(src_dict)
         type_ = ProvidedToolCallEventType(d.pop("type"))

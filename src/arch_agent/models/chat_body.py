@@ -9,8 +9,8 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from .content_part import ContentPart
-    from .provided_tool_server import ProvidedToolServer
+    from ..models.content_part import ContentPart
+    from ..models.provided_tool_server import ProvidedToolServer
 
 
 T = TypeVar("T", bound="ChatBody")
@@ -69,8 +69,8 @@ class ChatBody:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from .content_part import ContentPart
-        from .provided_tool_server import ProvidedToolServer
+        from ..models.content_part import ContentPart
+        from ..models.provided_tool_server import ProvidedToolServer
 
         d = dict(src_dict)
         user_request = []

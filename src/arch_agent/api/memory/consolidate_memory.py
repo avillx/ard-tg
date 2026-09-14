@@ -1,13 +1,12 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.completion_dto import CompletionDTO
-from ...models.error import Error
+from ...models.consolidation_completion_event import ConsolidationCompletionEvent
 from ...types import Response
 
 
@@ -25,20 +24,24 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> CompletionDTO | Error | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | ConsolidationCompletionEvent | None:
     if response.status_code == 200:
-        response_200 = CompletionDTO.from_dict(response.text)
+        response_200 = ConsolidationCompletionEvent.from_dict(response.text)
 
         return response_200
 
-    if response.status_code == 404:
-        response_404 = Error.from_dict(response.json())
+    if response.status_code == 400:
+        response_400 = cast(Any, None)
+        return response_400
 
+    if response.status_code == 404:
+        response_404 = cast(Any, None)
         return response_404
 
     if response.status_code == 500:
-        response_500 = Error.from_dict(response.json())
-
+        response_500 = cast(Any, None)
         return response_500
 
     if client.raise_on_unexpected_status:
@@ -49,7 +52,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[CompletionDTO | Error]:
+) -> Response[Any | ConsolidationCompletionEvent]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -62,7 +65,7 @@ def sync_detailed(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[CompletionDTO | Error]:
+) -> Response[Any | ConsolidationCompletionEvent]:
     """Consolidate memory for an agent
 
      Triggers memory consolidation as an SSE stream.
@@ -76,7 +79,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CompletionDTO | Error]
+        Response[Any | ConsolidationCompletionEvent]
     """
 
     kwargs = _get_kwargs(
@@ -94,7 +97,7 @@ def sync(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> CompletionDTO | Error | None:
+) -> Any | ConsolidationCompletionEvent | None:
     """Consolidate memory for an agent
 
      Triggers memory consolidation as an SSE stream.
@@ -108,7 +111,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CompletionDTO | Error
+        Any | ConsolidationCompletionEvent
     """
 
     return sync_detailed(
@@ -121,7 +124,7 @@ async def asyncio_detailed(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[CompletionDTO | Error]:
+) -> Response[Any | ConsolidationCompletionEvent]:
     """Consolidate memory for an agent
 
      Triggers memory consolidation as an SSE stream.
@@ -135,7 +138,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CompletionDTO | Error]
+        Response[Any | ConsolidationCompletionEvent]
     """
 
     kwargs = _get_kwargs(
@@ -151,7 +154,7 @@ async def asyncio(
     agent: str,
     *,
     client: AuthenticatedClient | Client,
-) -> CompletionDTO | Error | None:
+) -> Any | ConsolidationCompletionEvent | None:
     """Consolidate memory for an agent
 
      Triggers memory consolidation as an SSE stream.
@@ -165,7 +168,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CompletionDTO | Error
+        Any | ConsolidationCompletionEvent
     """
 
     return (

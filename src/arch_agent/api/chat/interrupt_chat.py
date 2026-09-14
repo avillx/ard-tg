@@ -1,12 +1,11 @@
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any
 from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error import Error
 from ...types import Response
 
 
@@ -26,15 +25,9 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | Error | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | None:
     if response.status_code == 202:
-        response_202 = cast(Any, None)
-        return response_202
-
-    if response.status_code == 400:
-        response_400 = Error.from_dict(response.json())
-
-        return response_400
+        return None
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -42,7 +35,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | Error]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -56,7 +49,7 @@ def sync_detailed(
     session: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | Error]:
+) -> Response[Any]:
     """Interrupt a running chat completion
 
      Interrupts the current chat completion for the given agent and session.
@@ -70,7 +63,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | Error]
+        Response[Any]
     """
 
     kwargs = _get_kwargs(
@@ -85,41 +78,12 @@ def sync_detailed(
     return _build_response(client=client, response=response)
 
 
-def sync(
-    agent: str,
-    session: str,
-    *,
-    client: AuthenticatedClient | Client,
-) -> Any | Error | None:
-    """Interrupt a running chat completion
-
-     Interrupts the current chat completion for the given agent and session.
-
-    Args:
-        agent (str):
-        session (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | Error
-    """
-
-    return sync_detailed(
-        agent=agent,
-        session=session,
-        client=client,
-    ).parsed
-
-
 async def asyncio_detailed(
     agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[Any | Error]:
+) -> Response[Any]:
     """Interrupt a running chat completion
 
      Interrupts the current chat completion for the given agent and session.
@@ -133,7 +97,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | Error]
+        Response[Any]
     """
 
     kwargs = _get_kwargs(
@@ -144,34 +108,3 @@ async def asyncio_detailed(
     response = await client.get_async_httpx_client().request(**kwargs)
 
     return _build_response(client=client, response=response)
-
-
-async def asyncio(
-    agent: str,
-    session: str,
-    *,
-    client: AuthenticatedClient | Client,
-) -> Any | Error | None:
-    """Interrupt a running chat completion
-
-     Interrupts the current chat completion for the given agent and session.
-
-    Args:
-        agent (str):
-        session (str):
-
-    Raises:
-        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
-
-    Returns:
-        Any | Error
-    """
-
-    return (
-        await asyncio_detailed(
-            agent=agent,
-            session=session,
-            client=client,
-        )
-    ).parsed
