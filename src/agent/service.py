@@ -127,12 +127,22 @@ class Service:
         a on_completion callback
         """
         self._logger.info("Consolidation requested")
+
+        # assemble url adress
+        url = "/".join(
+            [
+                self._agent_url.rstrip("/"),
+                "memory",
+                self._agent_id,
+                "consolidate",
+            ]
+        )
+
         try:
             with httpx.stream(
                 method="POST",
                 timeout=10000,
-                # assemble url adress
-                url="/".join([self._agent_url, "memory", self._agent_id, "consolidate"]),
+                url=url,
             ) as response:
                 for line in response.iter_lines():
                     if line == "" or "data: [DONE]" in line:
