@@ -7,6 +7,15 @@ dependencies = [
     "pytelegrambotapi>=4.36"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
