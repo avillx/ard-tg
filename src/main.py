@@ -107,7 +107,7 @@ def main():
     telegram_service = telegram.Service(
         agent_service   = agent_service,
         sticker_pack    = sticker_pack,
-        storage         = user_attachments_storage,
+        storage_        = user_attachments_storage,
         sticker_cache   = telegram.StickerCache(bot,logger),
         session_service = session_service,
         logger          = logger,

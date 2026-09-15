@@ -19,6 +19,8 @@ pythonpath = ["src"]
 [tool.basedpyright]
 include = ["src", "tests"]
 extraPaths = ["src", "tests"]
+venvPath = "."
+venv = "venv"
 typeCheckingMode = "basic"
 
 [tool.ruff]
