@@ -79,7 +79,8 @@ def main():
         agent_client = agent_client,
         life_time    = float(session_life_time),
         logger       = logger,
-        instruction  = telegram._TELEGRAM_GUIDE
+        instruction  = telegram._TELEGRAM_GUIDE,
+        time         = agent.SystemTime(),
     )
 
     agent_service = agent.Service(

@@ -1,10 +1,22 @@
 import logging
 import threading
 import time
+from abc import ABC, abstractmethod
 
 import arch_agent.api.sessions.create_session as create_session
 import arch_agent.client as agent_client
 import arch_agent.models as models
+
+
+class TimeProvider(ABC):
+    @abstractmethod
+    def now(self) -> float:
+        pass
+
+
+class SystemTime(TimeProvider):
+    def now(self) -> float:
+        return time.monotonic()
 
 
 class SessionService:
@@ -21,6 +33,7 @@ class SessionService:
     _logger: logging.Logger
     _mutex = threading.Lock()
     _additional_time: float
+    _time: TimeProvider
 
     def __init__(
         self,
@@ -29,6 +42,7 @@ class SessionService:
         life_time: float,
         instruction: str,
         logger: logging.Logger,
+        time: TimeProvider,
     ):
         self._logger = logger.getChild("Sessions")
         self._agent_client = agent_client
@@ -39,6 +53,7 @@ class SessionService:
         self._mutex = threading.Lock()
         self._instruction = instruction
         self._additional_time = 0.0
+        self._time = time
 
     def drop(self):
         """
@@ -53,7 +68,7 @@ class SessionService:
         """
         with self._mutex:
             self._additional_time = additional_time
-            self._last_update = time.monotonic()
+            self._last_update = self._time.now()
             self._actual_session = session_id
 
     def get(self) -> str:
@@ -68,7 +83,7 @@ class SessionService:
         Get session, if session expires or is None then creates a new
         """
         with self._mutex:
-            now = time.monotonic()
+            now = self._time.now()
 
             # is expired or empty
 
