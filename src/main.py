@@ -10,6 +10,7 @@ import arch_agent.client as client
 import attach
 import contacts
 import server
+import storage
 import telegram
 
 
@@ -25,6 +26,8 @@ def main():
     allowed_chats_raw : str = os.getenv("ALLOWED_CHATS","")
     webhook_url       : str = os.getenv("WEBHOOK_URL","")
     storage_path      : str = os.getenv("STORAGE_PATH","")
+
+    tg_dir = os.path.join(storage_path,"telegram")
 
     logger = logging.getLogger("App")
     logging.basicConfig(
@@ -55,9 +58,14 @@ def main():
     ))
 
 
+    contacts_storage = storage.FileStorage(
+        logger       = logger,
+        storage_path = tg_dir,
+    )
+
     contact_service = contacts.ContactService(
         logger       = logger,
-        storage_path = storage_path
+        storage      = contacts_storage,
     )
 
     bot.setup_middleware(telegram.UserContactKeeper(
@@ -91,10 +99,15 @@ def main():
         logger          = logger,
     )
 
+    user_attachments_storage = storage.FileStorage(
+        logger       = logger,
+        storage_path = os.path.join(tg_dir,"downloads"),
+    )
+
     telegram_service = telegram.Service(
         agent_service   = agent_service,
         sticker_pack    = sticker_pack,
-        file_storage    = storage_path,
+        storage         = user_attachments_storage,
         sticker_cache   = telegram.StickerCache(bot,logger),
         session_service = session_service,
         logger          = logger,

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 import telebot
 import telebot.formatting as fmt
@@ -6,7 +7,8 @@ import telebot.types as telebot_types
 
 import agent
 import arch_agent.models as models
-import telegram.message_flusher as message_flusher
+import storage
+import telegram.attachments as attachments
 import telegram.tools as tools
 from telegram import rich_message, sticker_cache
 from telegram.typing_action import TypingAction
@@ -15,6 +17,8 @@ _TELEGRAM_GUIDE = """
 # Gateway
 
 You recieve user messages from messanger `Telegram`. markdown has fully support.
+
+all attachments sended by user stores in `telegram/downloads/*`
 """
 
 
@@ -22,7 +26,7 @@ class Service:
     _agent_service: agent.Service
     _session_service: agent.SessionService
     _sticker_cache: sticker_cache.StickerCache
-    _file_storage: str
+    _storage: storage.Storage
     _logger: logging.Logger
 
     def __init__(
@@ -31,13 +35,13 @@ class Service:
         session_service: agent.SessionService,
         sticker_cache: sticker_cache.StickerCache,
         sticker_pack: str,
-        file_storage: str,
+        storage_: storage.Storage,
         logger: logging.Logger,
     ):
         self._logger = logger.getChild("Telegram.Hanlders")
         self._agent_service = agent_service
         self._sticker_cache = sticker_cache
-        self._file_storage = file_storage
+        self._storage = storage_
         self._sticker_pack = sticker_pack
         self._session_service = session_service
 
@@ -237,16 +241,30 @@ class Service:
                 typing=typing_action,
             )
 
-            flusher = message_flusher.MessageFlusher(
+            atts = attachments.extract_attachments(
                 bot=bot,
-                message=message,
-                storage_path=self._file_storage,
+                msg=message,
+            )
+
+            attachments_info: list[str] = []
+            for att in atts:
+                try:
+                    self._storage.save(att.get_file_name(), att.get_bytes())
+                    attachments_info.append(f"attachment {att.get_file_name()} saved")
+
+                except Exception as e:
+                    self._logger.error(f"cant save attachment {e}")
+                    attachments_info.append("can't save attachment, gateway problem")
+
+            text_message = represent_message(
+                msg=message,
+                additional_lines=attachments_info,
             )
 
             # send request to agent
             try:
                 self._agent_service.agent_request(
-                    request=flusher.text(),
+                    request=text_message,
                     event_handler=ev_handler,
                     provided_tools=provided_tools,
                 )
@@ -348,3 +366,22 @@ class ChatEventHandler(agent.EventHandler):
 
     def process_error(self, err: models.Error):
         pass
+
+
+def represent_message(msg: telebot_types.Message, additional_lines: list[str]) -> str:
+    current_time = datetime.now().strftime("%y.%m.%d %H:%M")
+    text = f"# From {msg.chat.first_name} ({current_time}):"
+
+    if msg.text is not None:
+        text += f"\n{msg.text}"
+
+    if msg.caption is not None:
+        text += f"\n{msg.caption}"
+
+    if msg.sticker is not None:
+        text += f"\nSticker: {msg.sticker.emoji}"
+
+    for line in additional_lines:
+        text += f"\n{line}"
+
+    return text

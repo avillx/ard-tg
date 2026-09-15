@@ -1,17 +1,19 @@
 import json
 import logging
-import os
-import pathlib
+
+import storage
+
+_CONTACTS_FILE = "contacts.json"
 
 
 class ContactService:
     def __init__(
         self,
-        storage_path: str,
+        storage: storage.Storage,
         logger: logging.Logger,
     ):
 
-        self._file_path: str = os.path.join(storage_path, "telegram", "contacts.json")
+        self._storage = storage
         self._logger: logging.Logger = logger.getChild("Contacts")
         self._contacts: dict[str, str] = self._load_contacts()
 
@@ -25,19 +27,20 @@ class ContactService:
 
     def _load_contacts(self) -> dict[str, str]:
         try:
-            with open(self._file_path, "rb") as f:
-                data = f.read()
-                contacts = json.loads(data)
+            data = self._storage.get(_CONTACTS_FILE)
+            contacts = json.loads(data)
 
-                if not isinstance(contacts, dict) or not contacts:
-                    raise (Exception("broken contact file"))
-                return contacts
+            if not isinstance(contacts, dict) or not contacts:
+                raise (Exception("broken contact file"))
+
+            return contacts
 
         except FileNotFoundError:
             return {}
 
     def _flush_contacts(self):
-        path = pathlib.Path(self._file_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("w", encoding="utf-8") as f:
-            json.dump(self._contacts, f, ensure_ascii=False)
+        encoded_contacts = json.dumps(self._contacts, ensure_ascii=False).encode("utf-8")
+        try:
+            self._storage.save(_CONTACTS_FILE, encoded_contacts)
+        except Exception as e:
+            self._logger.error(f"can't flush contacts {e}")
