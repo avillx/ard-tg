@@ -91,7 +91,7 @@ def main():
         logger          = logger,
     )
 
-    telegram_svc = telegram.Service(
+    telegram_service = telegram.Service(
         agent_service   = agent_service,
         sticker_pack    = sticker_pack,
         file_storage    = storage_path,
@@ -99,8 +99,8 @@ def main():
         session_service = session_service,
         logger          = logger,
     )
-    telegram_svc.set_commands_prompt(bot)
-    telegram_svc.register_on(bot)
+    telegram_service.set_commands_prompt(bot)
+    telegram_service.register_on(bot)
 
     attachment_service  = attach.AttachService(
         bot             = bot,
