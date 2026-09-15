@@ -7,11 +7,11 @@ import pathlib
 class ContactService:
     def __init__(
         self,
-        file_path: str,
+        storage_path: str,
         logger: logging.Logger,
     ):
 
-        self._file_path: str = os.path.join(file_path, "contacts.json")
+        self._file_path: str = os.path.join(storage_path, "telegram", "contacts.json")
         self._logger: logging.Logger = logger.getChild("Contacts")
         self._contacts: dict[str, str] = self._load_contacts()
 

@@ -56,8 +56,8 @@ def main():
 
 
     contact_service = contacts.ContactService(
-        logger    = logger,
-        file_path = storage_path
+        logger       = logger,
+        storage_path = storage_path
     )
 
     bot.setup_middleware(telegram.UserContactKeeper(
@@ -93,8 +93,8 @@ def main():
     telegram_svc = telegram.Service(
         agent_service   = agent_service,
         sticker_pack    = sticker_pack,
-        file_storage    = os.path.join(storage_path,"uploads"),
-        sticker_cache  = telegram.StickerCache(bot,logger),
+        file_storage    = storage_path,
+        sticker_cache   = telegram.StickerCache(bot,logger),
         session_service = session_service,
         logger          = logger,
     )

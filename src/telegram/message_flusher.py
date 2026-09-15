@@ -94,18 +94,19 @@ class MessageFlusher:
             file_name += "." + ext
 
             # make path
-            path_string = os.path.join(self._storage_path, file_name)
+            relative_path = os.path.join("telegram", "uploads", file_name)
+            absolute_string = os.path.join(self._storage_path, relative_path)
 
             # get file
             file_data = self._bot.download_file(file_info.file_path)
 
             # save file
-            path = Path(path_string)
+            path = Path(absolute_string)
             path.parent.mkdir(parents=True, exist_ok=True)
             with path.open("wb") as f:
                 f.write(file_data)
 
-            return path_string
+            return relative_path
 
         except Exception as _:
             # TODO: log this shit
