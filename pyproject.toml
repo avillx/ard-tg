@@ -19,11 +19,7 @@ pythonpath = ["src"]
 [tool.basedpyright]
 include = ["src", "tests"]
 extraPaths = ["src", "tests"]
-
-[[tool.basedpyright.executionEnvironments]]
-root = "tests"
-typeCheckingMode = "off"
-extraPaths = ["src", "tests"]
+typeCheckingMode = "basic"
 
 [tool.ruff]
 line-length = 100
