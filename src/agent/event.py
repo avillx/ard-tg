@@ -15,13 +15,13 @@ class EventType(Protocol):
 
 
 _EVENT_TYPE_MAP: dict[str, type[EventType]] = {
-    "loop_exit": models.LoopExitEvent,
-    "complete": models.CompletionEvent,
-    "complete_mistake": models.CompletionMistakeEvent,
-    "compaction": models.CompactionEvent,
-    "tool_error": models.ToolErrorEvent,
-    "provided_toolcall": models.ProvidedToolCallEvent,
-    "tool_result": models.ToolResultEvent,
+    models.LoopExitEventType.LOOP_EXIT: models.LoopExitEvent,
+    models.CompletionEventType.COMPLETE: models.CompletionEvent,
+    models.CompletionMistakeEventType.COMPLETE_MISTAKE: models.CompletionMistakeEvent,
+    models.CompactionEventType.COMPACTION: models.CompactionEvent,
+    models.ToolErrorEventType.TOOL_ERROR: models.ToolErrorEvent,
+    models.ProvidedToolCallEventType.PROVIDED_TOOLCALL: models.ProvidedToolCallEvent,
+    models.ToolResultEventType.TOOL_RESULT: models.ToolResultEvent,
 }
 
 
