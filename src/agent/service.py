@@ -138,26 +138,28 @@ class Service:
             ]
         )
 
-        try:
-            with httpx.stream(
-                method="POST",
-                timeout=10000,
-                url=url,
-            ) as response:
-                for line in response.iter_lines():
-                    if line == "" or "data: [DONE]" in line:
-                        continue
+        httpx_client = self._agent_client.get_httpx_client()
 
+        with httpx_client.stream(
+            method="POST",
+            timeout=10000,
+            url=url,
+        ) as response:
+            for line in response.iter_lines():
+                if line == "" or "data: [DONE]" in line:
+                    continue
+
+                try:
                     event_dict = json.loads(line.removeprefix("data: "))
                     completion_event = models.CompletionEvent.from_dict(event_dict)
+                except Exception as e:
+                    self._logger.error(f"consolidation: api respond bad json: {e}")
+                    continue
 
-                    try:
-                        on_completion(completion_event.completion)
-                    except Exception as e:
-                        self._logger.error(f"consolidation process: {e}")
-
-        except Exception as e:
-            self._logger.error(f"consolidation interrupted with exception: {e}")
+                try:
+                    on_completion(completion_event.completion)
+                except Exception as e:
+                    self._logger.error(f"consolidation process: {e}")
 
     def agent_request(
         self,
@@ -196,25 +198,28 @@ class Service:
 
         self._logger.info(f"Agentic loop requested, session: {session_id}")
 
-        # run request
-        try:
-            with httpx.stream(
-                method="POST",
-                url=url,
-                json=chat_body.to_dict(),
-                timeout=_DEFAULT_STREAM_TIMEOUT,
-            ) as response:
-                for line in response.iter_lines():
-                    if line == "":
-                        continue
+        httpx_client = self._agent_client.get_httpx_client()
 
+        with httpx_client.stream(
+            method="POST",
+            url=url,
+            json=chat_body.to_dict(),
+            timeout=_DEFAULT_STREAM_TIMEOUT,
+        ) as response:
+            for line in response.iter_lines():
+                if line == "":
+                    continue
+
+                try:
                     ev = event.determine_response(line)
                     if ev is None:
-                        # TODO: fix placeholder
-                        return
+                        raise Exception("empty api response")
+                except Exception as e:
+                    self._logger.error(f"agent api, session {session_id}: {e}")
+                    continue
 
+                try:
                     agent_event_handler.process_event(ev)
-
-        except Exception as e:
-            self._logger.error(f"chat declined cause: {e}")
-            self.interrupt()
+                except Exception as e:
+                    self._logger.error(f"chat declined cause: {e}")
+                    self.interrupt()
