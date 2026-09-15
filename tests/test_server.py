@@ -44,6 +44,7 @@ class RecordingSink(ResponseSink):
     """Records what the handlers write into a ResponseSink."""
 
     def __init__(self) -> None:
+        super().__init__(cast(BaseHTTPRequestHandler, cast(object, FakeHandler())))
         self.calls: list[tuple[object, ...]] = []
 
     def send_code(self, code: int) -> None:
@@ -54,6 +55,10 @@ class RecordingSink(ResponseSink):
 
     def send_json(self, code: int, data: Any) -> None:
         self.calls.append(("json", code, data))
+
+
+def _make_sink(handler: FakeHandler) -> ResponseSink:
+    return ResponseSink(cast(BaseHTTPRequestHandler, cast(object, handler)))
 
 
 def make_headers(secret_token: str) -> Message[str, str]:
@@ -75,7 +80,7 @@ def attach_body(**overrides: object) -> bytes:
 
 def test_response_sink_send_json() -> None:
     h = FakeHandler()
-    sink = ResponseSink(cast(BaseHTTPRequestHandler, h))
+    sink = _make_sink(h)
 
     sink.send_json(200, {"a": 1})
 
@@ -88,7 +93,7 @@ def test_response_sink_send_json() -> None:
 
 def test_response_sink_send_code() -> None:
     h = FakeHandler()
-    sink = ResponseSink(cast(BaseHTTPRequestHandler, h))
+    sink = _make_sink(h)
 
     sink.send_code(403)
 
@@ -97,7 +102,7 @@ def test_response_sink_send_code() -> None:
 
 def test_response_sink_send_error() -> None:
     h = FakeHandler()
-    sink = ResponseSink(cast(BaseHTTPRequestHandler, h))
+    sink = _make_sink(h)
 
     sink.send_error(400, "boom")
 

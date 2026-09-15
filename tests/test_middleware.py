@@ -23,8 +23,10 @@ class _FromUser:
 
 
 class _Message:
-    chat: _Chat
-    from_user: _FromUser
+    # chat/from_user deliberately absent on some messages: the middleware tests
+    # exercise hasattr() paths, so they are only set in mkmessage().
+    chat: _Chat  # pyright: ignore[reportUninitializedInstanceVariable]
+    from_user: _FromUser  # pyright: ignore[reportUninitializedInstanceVariable]
 
 
 def mkmessage(

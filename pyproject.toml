@@ -16,6 +16,15 @@ dev = [
 testpaths = ["tests"]
 pythonpath = ["src"]
 
+[tool.basedpyright]
+include = ["src", "tests"]
+extraPaths = ["src", "tests"]
+
+[[tool.basedpyright.executionEnvironments]]
+root = "tests"
+typeCheckingMode = "off"
+extraPaths = ["src", "tests"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

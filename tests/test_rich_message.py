@@ -13,7 +13,7 @@ def _tool_call(tool: str | None, args: dict[str, Any]) -> models.ToolCall:
 
 def test_tool_call_repr_none() -> None:
     # signature says ToolCall, but tool_call_repr defensively handles None
-    assert tool_call_repr(cast(models.ToolCall, None)) == ""
+    assert tool_call_repr(cast(models.ToolCall, cast(object, None))) == ""
 
 
 def test_tool_call_repr_no_tool() -> None:
@@ -130,7 +130,7 @@ def test_append_tool_calls_ignores_empty() -> None:
 
     rm.append_tool_calls([])
     # append_tool_calls defensively treats None as an empty list
-    rm.append_tool_calls(cast(list[models.ToolCall], None))
+    rm.append_tool_calls(cast(list[models.ToolCall], cast(object, None)))
     rm.send_finale()
 
     bot.send_rich_message.assert_not_called()

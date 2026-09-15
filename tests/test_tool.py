@@ -9,8 +9,9 @@ from telebot import types as telebot_types
 import agent.tool
 import arch_agent.models as models
 import telegram.tools as tg_tools
+from agent.tool import SafeTool
 
-MediaToolFactory = Callable[..., agent.SafeTool]
+MediaToolFactory = Callable[..., SafeTool]
 
 MEDIA_TOOLS: list[tuple[MediaToolFactory, str, str, str]] = [
     (tg_tools.SendPhotoTool, "send_photo", "photo", "photo sended"),

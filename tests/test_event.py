@@ -165,7 +165,7 @@ def test_process_event_unknown_raises() -> None:
         pass
 
     with pytest.raises(Exception, match="unexpected event"):
-        aeh.process_event(cast(event.EventType, Weird()))
+        aeh.process_event(cast(event.EventType, cast(object, Weird())))
 
 
 def test_allowed_tool_servers() -> None:
