@@ -1,3 +1,4 @@
+import logging
 import unittest.mock
 
 import pytest
@@ -6,7 +7,7 @@ from telebot import types as telebot_types
 from telegram.sticker_cache import StickerCache
 
 
-def _sticker(emoji, file_id):
+def _sticker(emoji: str | None, file_id: str) -> telebot_types.Sticker:
     return telebot_types.Sticker(
         file_id=file_id,
         file_unique_id="u" + file_id,
@@ -19,11 +20,13 @@ def _sticker(emoji, file_id):
     )
 
 
-def _sticker_set(*stickers):
-    return telebot_types.StickerSet(name="pack", title="P", sticker_type="regular", stickers=list(stickers))
+def _sticker_set(*stickers: telebot_types.Sticker) -> telebot_types.StickerSet:
+    return telebot_types.StickerSet(
+        name="pack", title="P", sticker_type="regular", stickers=list(stickers)
+    )
 
 
-def test_get_pack_from_bot(logger):
+def test_get_pack_from_bot(logger: logging.Logger) -> None:
     bot = unittest.mock.Mock()
     bot.get_sticker_set.return_value = _sticker_set(_sticker("😀", "f1"), _sticker("🐱", "f2"))
     cache = StickerCache(bot=bot, logger=logger)
@@ -32,7 +35,7 @@ def test_get_pack_from_bot(logger):
     bot.get_sticker_set.assert_called_once_with("pack")
 
 
-def test_get_pack_is_cached(logger):
+def test_get_pack_is_cached(logger: logging.Logger) -> None:
     bot = unittest.mock.Mock()
     bot.get_sticker_set.return_value = _sticker_set(_sticker("😀", "f1"))
     cache = StickerCache(bot=bot, logger=logger)
@@ -43,7 +46,7 @@ def test_get_pack_is_cached(logger):
     assert bot.get_sticker_set.call_count == 1
 
 
-def test_get_pack_skips_stickers_without_emoji(logger):
+def test_get_pack_skips_stickers_without_emoji(logger: logging.Logger) -> None:
     bot = unittest.mock.Mock()
     bot.get_sticker_set.return_value = _sticker_set(_sticker(None, "f1"), _sticker("😀", "f2"))
     cache = StickerCache(bot=bot, logger=logger)
@@ -51,7 +54,7 @@ def test_get_pack_skips_stickers_without_emoji(logger):
     assert cache.get_pack("pack") == {"😀": "f2"}
 
 
-def test_get_pack_missing_raises(logger):
+def test_get_pack_missing_raises(logger: logging.Logger) -> None:
     bot = unittest.mock.Mock()
     bot.get_sticker_set.return_value = None
     cache = StickerCache(bot=bot, logger=logger)

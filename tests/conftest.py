@@ -4,5 +4,5 @@ import pytest
 
 
 @pytest.fixture
-def logger():
+def logger() -> logging.Logger:
     return logging.getLogger("test")

@@ -1,5 +1,10 @@
+from __future__ import annotations
+
 import json
 import unittest.mock
+from email.message import Message
+from http.server import BaseHTTPRequestHandler
+from typing import Any, cast
 
 import pytest
 
@@ -7,68 +12,70 @@ from server import AttachSessionHandler, ContactsHandler, ResponseSink, WebhookH
 
 
 class BytesWriter:
-    def __init__(self):
-        self.data = b""
+    def __init__(self) -> None:
+        self.data: bytes = b""
 
-    def write(self, b):
+    def write(self, b: bytes) -> None:
         self.data += b
 
 
 class FakeHandler:
     """Duck-typed stand-in for BaseHTTPRequestHandler used by ResponseSink."""
 
-    def __init__(self):
-        self.statuses = []
-        self.headers = []
+    def __init__(self) -> None:
+        self.statuses: list[object] = []
+        self.headers: list[tuple[str, str]] = []
         self.wfile = BytesWriter()
 
-    def send_response(self, code):
+    def send_response(self, code: int) -> None:
         self.statuses.append(code)
 
-    def send_header(self, key, value):
+    def send_header(self, key: str, value: str) -> None:
         self.headers.append((key, value))
 
-    def end_headers(self):
+    def end_headers(self) -> None:
         pass
 
-    def send_error(self, code, explain):
+    def send_error(self, code: int, explain: str) -> None:
         self.statuses.append(("error", code, explain))
 
 
-class RecordingSink:
+class RecordingSink(ResponseSink):
     """Records what the handlers write into a ResponseSink."""
 
-    def __init__(self):
-        self.calls = []
+    def __init__(self) -> None:
+        self.calls: list[tuple[object, ...]] = []
 
-    def send_code(self, code):
+    def send_code(self, code: int) -> None:
         self.calls.append(("code", code))
 
-    def send_error(self, code, explain=None):
+    def send_error(self, code: int, explain: str | None = None) -> None:
         self.calls.append(("error", code, explain))
 
-    def send_json(self, code, data):
+    def send_json(self, code: int, data: Any) -> None:
         self.calls.append(("json", code, data))
 
 
-def make_headers(secret_token):
-    return {"X-Telegram-Bot-Api-Secret-Token": secret_token}
+def make_headers(secret_token: str) -> Message[str, str]:
+    headers = Message()
+    headers["X-Telegram-Bot-Api-Secret-Token"] = secret_token
+    return headers
 
 
-def attach_body(**overrides):
-    body = {"session_id": "s1", "chat_id": 123, "message": "hi", "await_time": 60}
+def attach_body(**overrides: object) -> bytes:
+    body: dict[str, object] = {
+        "session_id": "s1",
+        "chat_id": 123,
+        "message": "hi",
+        "await_time": 60,
+    }
     body.update(overrides)
     return json.dumps(body).encode()
 
 
-# ---------------------------------------------------------------------------
-# ResponseSink
-# ---------------------------------------------------------------------------
-
-
-def test_response_sink_send_json():
+def test_response_sink_send_json() -> None:
     h = FakeHandler()
-    sink = ResponseSink(h)
+    sink = ResponseSink(cast(BaseHTTPRequestHandler, h))
 
     sink.send_json(200, {"a": 1})
 
@@ -79,30 +86,25 @@ def test_response_sink_send_json():
     assert h.wfile.data == body
 
 
-def test_response_sink_send_code():
+def test_response_sink_send_code() -> None:
     h = FakeHandler()
-    sink = ResponseSink(h)
+    sink = ResponseSink(cast(BaseHTTPRequestHandler, h))
 
     sink.send_code(403)
 
     assert h.statuses == [403]
 
 
-def test_response_sink_send_error():
+def test_response_sink_send_error() -> None:
     h = FakeHandler()
-    sink = ResponseSink(h)
+    sink = ResponseSink(cast(BaseHTTPRequestHandler, h))
 
     sink.send_error(400, "boom")
 
     assert h.statuses == [("error", 400, "boom")]
 
 
-# ---------------------------------------------------------------------------
-# WebhookHandler
-# ---------------------------------------------------------------------------
-
-
-def test_webhook_wrong_token():
+def test_webhook_wrong_token() -> None:
     bot = unittest.mock.Mock()
     handler = WebhookHandler(bot=bot, secret_token="secret")
     sink = RecordingSink()
@@ -113,7 +115,7 @@ def test_webhook_wrong_token():
     bot.process_new_updates.assert_not_called()
 
 
-def test_webhook_valid_update():
+def test_webhook_valid_update() -> None:
     bot = unittest.mock.Mock()
     handler = WebhookHandler(bot=bot, secret_token="secret")
     sink = RecordingSink()
@@ -126,7 +128,7 @@ def test_webhook_valid_update():
     assert updates[0].update_id == 1
 
 
-def test_webhook_invalid_json_returns_500():
+def test_webhook_invalid_json_returns_500() -> None:
     bot = unittest.mock.Mock()
     handler = WebhookHandler(bot=bot, secret_token="secret")
     sink = RecordingSink()
@@ -137,27 +139,24 @@ def test_webhook_invalid_json_returns_500():
     bot.process_new_updates.assert_not_called()
 
 
-# ---------------------------------------------------------------------------
-# AttachSessionHandler
-# ---------------------------------------------------------------------------
-
-
-def test_attach_valid():
+def test_attach_valid() -> None:
     attach_svc = unittest.mock.Mock()
     handler = AttachSessionHandler(attach_svc)
     sink = RecordingSink()
 
-    handler.handle(headers={}, body=attach_body(), response_sink=sink)
+    handler.handle(headers=Message(), body=attach_body(), response_sink=sink)
 
-    attach_svc.attach.assert_called_once_with(session_id="s1", chat_id=123, message="hi", await_time=60.0)
+    attach_svc.attach.assert_called_once_with(
+        session_id="s1", chat_id=123, message="hi", await_time=60.0
+    )
     assert sink.calls == [("code", 200)]
 
 
-def test_attach_invalid_json():
+def test_attach_invalid_json() -> None:
     handler = AttachSessionHandler(unittest.mock.Mock())
     sink = RecordingSink()
 
-    handler.handle(headers={}, body=b"{bad", response_sink=sink)
+    handler.handle(headers=Message(), body=b"{bad", response_sink=sink)
 
     assert sink.calls == [("code", 400)]
 
@@ -173,11 +172,11 @@ def test_attach_invalid_json():
         ("message", None),
     ],
 )
-def test_attach_validation_errors(field, value):
+def test_attach_validation_errors(field: str, value: object) -> None:
     handler = AttachSessionHandler(unittest.mock.Mock())
     sink = RecordingSink()
 
-    handler.handle(headers={}, body=attach_body(**{field: value}), response_sink=sink)
+    handler.handle(headers=Message(), body=attach_body(**{field: value}), response_sink=sink)
 
     assert sink.calls[0][0] == "error"
     assert sink.calls[0][1] == 400
@@ -188,53 +187,51 @@ def test_attach_validation_errors(field, value):
     reason="code bug: `not isinstance(await_time, int) or not int` — `not int` is always False; "
     "intended `not await_time` would reject await_time=0 like chat_id=0",
 )
-def test_attach_await_time_zero_bug():
+def test_attach_await_time_zero_bug() -> None:
     attach_svc = unittest.mock.Mock()
     handler = AttachSessionHandler(attach_svc)
     sink = RecordingSink()
 
-    handler.handle(headers={}, body=attach_body(await_time=0), response_sink=sink)
+    handler.handle(headers=Message(), body=attach_body(await_time=0), response_sink=sink)
 
     assert sink.calls == [("error", 400, "bad await time field")]
 
 
 @pytest.mark.xfail(
     strict=True,
-    reason="code bug: on attach error the handler sends 400 but then also 200 (missing return after except)",
+    reason=(
+        "code bug: on attach error the handler sends 400 but then also 200 "
+        "(missing return after except)"
+    ),
 )
-def test_attach_service_raises_no_trailing_200():
+def test_attach_service_raises_no_trailing_200() -> None:
     attach_svc = unittest.mock.Mock()
     attach_svc.attach.side_effect = Exception("boom")
     handler = AttachSessionHandler(attach_svc)
     sink = RecordingSink()
 
-    handler.handle(headers={}, body=attach_body(), response_sink=sink)
+    handler.handle(headers=Message(), body=attach_body(), response_sink=sink)
 
     assert sink.calls == [("error", 400, "attach boom")]
 
 
-# ---------------------------------------------------------------------------
-# ContactsHandler
-# ---------------------------------------------------------------------------
-
-
-def test_contacts_ok():
+def test_contacts_ok() -> None:
     contact_svc = unittest.mock.Mock()
     contact_svc.contacts.return_value = {"1": "A"}
     handler = ContactsHandler(contact_svc)
     sink = RecordingSink()
 
-    handler.handle(headers={}, body=b"", response_sink=sink)
+    handler.handle(headers=Message(), body=b"", response_sink=sink)
 
     assert sink.calls == [("json", 200, {"contacts": {"1": "A"}})]
 
 
-def test_contacts_error():
+def test_contacts_error() -> None:
     contact_svc = unittest.mock.Mock()
     contact_svc.contacts.side_effect = Exception("boom")
     handler = ContactsHandler(contact_svc)
     sink = RecordingSink()
 
-    handler.handle(headers={}, body=b"", response_sink=sink)
+    handler.handle(headers=Message(), body=b"", response_sink=sink)
 
     assert sink.calls == [("code", 400)]

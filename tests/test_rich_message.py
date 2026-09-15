@@ -1,4 +1,5 @@
 import unittest.mock
+from typing import Any, cast
 
 import telebot.formatting as fmt
 
@@ -6,24 +7,20 @@ import arch_agent.models as models
 from telegram.rich_message import RichMessage, tool_call_repr
 
 
-def _tool_call(tool: str | None, args: dict) -> models.ToolCall:
-    return models.ToolCall(id="i", tool=tool, args=models.ToolCallArgs.from_dict(args))
+def _tool_call(tool: str | None, args: dict[str, Any]) -> models.ToolCall:
+    return models.ToolCall(id="i", tool=cast(str, tool), args=models.ToolCallArgs.from_dict(args))
 
 
-# ---------------------------------------------------------------------------
-# tool_call_repr
-# ---------------------------------------------------------------------------
+def test_tool_call_repr_none() -> None:
+    # signature says ToolCall, but tool_call_repr defensively handles None
+    assert tool_call_repr(cast(models.ToolCall, None)) == ""
 
 
-def test_tool_call_repr_none():
-    assert tool_call_repr(None) == ""
-
-
-def test_tool_call_repr_no_tool():
+def test_tool_call_repr_no_tool() -> None:
     assert tool_call_repr(_tool_call(None, {})) == ""
 
 
-def test_tool_call_repr_basic():
+def test_tool_call_repr_basic() -> None:
     r = tool_call_repr(_tool_call("read", {"path": "/x"}))
 
     assert "read" in r
@@ -31,7 +28,7 @@ def test_tool_call_repr_basic():
     assert fmt.escape_markdown("path = /x") in r
 
 
-def test_tool_call_repr_truncates_long_value():
+def test_tool_call_repr_truncates_long_value() -> None:
     long_value = "a" * 50
     r = tool_call_repr(_tool_call("read", {"path": long_value}))
 
@@ -41,18 +38,13 @@ def test_tool_call_repr_truncates_long_value():
     assert long_value not in r
 
 
-def test_tool_call_repr_empty_args():
+def test_tool_call_repr_empty_args() -> None:
     r = tool_call_repr(_tool_call("read", {}))
 
     assert r.startswith("read:\n")
 
 
-# ---------------------------------------------------------------------------
-# RichMessage
-# ---------------------------------------------------------------------------
-
-
-def test_append_text_ignores_empty():
+def test_append_text_ignores_empty() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
 
@@ -63,7 +55,7 @@ def test_append_text_ignores_empty():
     bot.send_rich_message_draft.assert_not_called()
 
 
-def test_send_draft():
+def test_send_draft() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=7)
 
@@ -77,7 +69,7 @@ def test_send_draft():
     assert kwargs["rich_message"].markdown == "hello"
 
 
-def test_send_draft_joins_multiple_texts():
+def test_send_draft_joins_multiple_texts() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
 
@@ -88,7 +80,7 @@ def test_send_draft_joins_multiple_texts():
     assert bot.send_rich_message_draft.call_args.kwargs["rich_message"].markdown == "a\n\nb"
 
 
-def test_send_finale_uses_last_text_as_candidate():
+def test_send_finale_uses_last_text_as_candidate() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
 
@@ -100,7 +92,7 @@ def test_send_finale_uses_last_text_as_candidate():
     assert bot.send_rich_message.call_args.kwargs["rich_message"].markdown == "b"
 
 
-def test_send_finale_is_idempotent():
+def test_send_finale_is_idempotent() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
 
@@ -111,7 +103,7 @@ def test_send_finale_is_idempotent():
     assert bot.send_rich_message.call_count == 1
 
 
-def test_send_finale_nothing_to_send():
+def test_send_finale_nothing_to_send() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
 
@@ -121,7 +113,7 @@ def test_send_finale_nothing_to_send():
     bot.send_message.assert_not_called()
 
 
-def test_send_finale_tool_calls_only():
+def test_send_finale_tool_calls_only() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
 
@@ -132,18 +124,19 @@ def test_send_finale_tool_calls_only():
     assert "read" in bot.send_rich_message.call_args.kwargs["rich_message"].markdown
 
 
-def test_append_tool_calls_ignores_empty():
+def test_append_tool_calls_ignores_empty() -> None:
     bot = unittest.mock.Mock()
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
 
     rm.append_tool_calls([])
-    rm.append_tool_calls(None)
+    # append_tool_calls defensively treats None as an empty list
+    rm.append_tool_calls(cast(list[models.ToolCall], None))
     rm.send_finale()
 
     bot.send_rich_message.assert_not_called()
 
 
-def test_send_finale_falls_back_to_plain_message_on_error():
+def test_send_finale_falls_back_to_plain_message_on_error() -> None:
     bot = unittest.mock.Mock()
     bot.send_rich_message.side_effect = Exception("boom")
     rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
