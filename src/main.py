@@ -27,7 +27,6 @@ def main():
     webhook_url       : str = os.getenv("WEBHOOK_URL","")
     storage_path      : str = os.getenv("STORAGE_PATH","")
 
-    tg_dir = os.path.join(storage_path,"telegram")
 
     logger = logging.getLogger("App")
     logging.basicConfig(
@@ -60,7 +59,7 @@ def main():
 
     contacts_storage = storage.FileStorage(
         logger       = logger,
-        storage_path = tg_dir,
+        storage_path = storage_path,
     )
 
     contact_service = contacts.ContactService(
@@ -101,7 +100,7 @@ def main():
 
     user_attachments_storage = storage.FileStorage(
         logger       = logger,
-        storage_path = os.path.join(tg_dir,"downloads"),
+        storage_path = os.path.join(storage_path,"downloads"),
     )
 
     telegram_service = telegram.Service(
