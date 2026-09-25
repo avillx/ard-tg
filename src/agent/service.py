@@ -213,7 +213,7 @@ class Service:
                 try:
                     ev = event.determine_response(line)
                     if ev is None:
-                        raise Exception("empty api response")
+                        continue
                 except Exception as e:
                     self._logger.error(f"agent api, session {session_id}: {e}")
                     continue
