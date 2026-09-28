@@ -3,8 +3,6 @@ import json
 import logging
 from collections.abc import Callable
 
-import httpx
-
 import agent.event as event
 import agent.session as session
 import agent.tool as tool
