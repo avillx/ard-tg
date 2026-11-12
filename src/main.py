@@ -18,14 +18,14 @@ def main():
     # fmt: off
 
     # envirement variables
-    telegram_token    : str = os.getenv("TELEGRAM_TOKEN","")
-    agent_url         : str = os.getenv("AGENT_URL","")
-    agent_id          : str = os.getenv("AGENT_ID","default")
-    session_life_time : str = os.getenv("SESSION_LIFE_TIME","600")
-    sticker_pack      : str = os.getenv("STICKER_PACK","")
-    allowed_chats_raw : str = os.getenv("ALLOWED_CHATS","")
-    webhook_url       : str = os.getenv("WEBHOOK_URL","")
-    storage_path      : str = os.getenv("STORAGE_PATH","")
+    telegram_token    : str = os.getenv("ARDTG_TELEGRAM_TOKEN","")
+    agent_url         : str = os.getenv("ARDTG_AGENT_URL","")
+    agent_id          : str = os.getenv("ARDTG_AGENT_ID","default")
+    session_life_time : str = os.getenv("ARDTG_SESSION_LIFE_TIME","600")
+    sticker_pack      : str = os.getenv("ARDTG_STICKER_PACK","")
+    allowed_chats_raw : str = os.getenv("ARDTG_ALLOWED_CHATS","")
+    webhook_url       : str = os.getenv("ARDTG_WEBHOOK_URL","")
+    storage_path      : str = os.getenv("ARDTG_STORAGE_PATH","")
 
 
     logger = logging.getLogger("App")
@@ -36,11 +36,11 @@ def main():
     )
 
     if telegram_token == "":
-        logger.fatal("'TELEGRAM_TOKEN' is required")
+        logger.fatal("'ARDTG_TELEGRAM_TOKEN' is required")
         sys.exit(1)
 
     if agent_url == "":
-        logger.fatal("'AGENT_URL' is required")
+        logger.fatal("'ARDTG_AGENT_URL' is required")
         sys.exit(1)
 
     # app building

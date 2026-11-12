@@ -13,12 +13,16 @@ This means the gateway will never provide all agent capabilities, since a messen
 
 > Session has limited lifetime, drops session on expiry.
 
+
 ## Messages
+
 All messages sended to bot will directed to agent, agent responses returned as bot messages. 
 Bot has `typing...` status while agent processing request. 
 Can be interrupted by command.
 
+
 ## Commands
+
 - `/interrupt` Interrupt agentic loop
 - `/new` Starts a new session
 - `/activity` Return recent agent activity log.
@@ -27,44 +31,54 @@ Can be interrupted by command.
 - `/mcp` Fetch list of mcp servers with transport type (process/http)
 - `/consolidate` immidiate starts memory consolidation, stream colsolidatior completions as messages
 
+
 ## Tools
+
 Agent recieve additional tools for telegram. 
 - `send_photo` agent can send photo in current chat by absolute path to file.
 - `send_document` agent can attach file to current chat as a document. 
 - `send_voice` agent can send file as a voice message (`.ogg`, `.mp3`).
 - `send_sticker` agent can use telegram stickers in chats. 
-  To enable feature add telegram sticker pack name in `STICKER_PACK` variable. 
+  To enable feature add telegram sticker pack name in `ARDTG_STICKER_PACK` variable. 
   Agent has no `send_sticker` tool if sticker pack is not defined.
 
+
 ## Skills
+
 Special skill for arch-agent for this gateway
 - [contact user](skills/contact-user) the agent can contact you outside of autonomous 
   operation and initiate messaging first.
 
+
 ## Files
-Folder with files specifies via `STORAGE_PATH` environment variable. 
+
+Folder with files specifies via `ARDTG_STORAGE_PATH` environment variable. 
 Folder structure:
 - `contacts.json` stores user contacts (all users whenever sent message to agent add to contacts)
 - `uploads/` folder for files that was sent by user to agent 
   (photos, audio, video, video notes, documents, voice messages, etc...)
   All messages sent to agent goes to this path, path to saved file passed to agent in message text.
 
+
 ## Configuration
+
 All configs provides via this envirement variables:
-- `TELEGRAM_TOKEN` *required* - Telegram bot token
-- `AGENT_URL` *required* - address of agent server
-- `AGENT_ID` *required* - id of agent recipient
-- `SESSION_LIFE_TIME` *optional* - time in seconds before dropping session. `default - 600 (10min)`
-- `STICKER_PACK` *optional* - name of sticker pack for agent usage
+- `ARDTG_TELEGRAM_TOKEN` *required* - Telegram bot token
+- `ARDTG_AGENT_URL` *required* - address of agent server
+- `ARDTG_AGENT_ID` *required* - id of agent recipient
+- `ARDTG_SESSION_LIFE_TIME` *optional* - time in seconds before dropping session. `default - 600 (10min)`
+- `ARDTG_STICKER_PACK` *optional* - name of sticker pack for agent usage
   Agent has no `send_sticker` tool if sticker pack is not defined
-- `WEBHOOK_URL` *optional* - if not empty bot starts with webhook (port is `8443`)
+- `ARDTG_WEBHOOK_URL` *optional* - if not empty bot starts with webhook (port is `8443`)
   webhook has no ssl, for webhook you must use reverse proxy with ssl (nginx,traefic etc...)
-- `ALLOWED_CHATS` *optional* - if not empty, updates works only on allowed chats (whitelist-like)
-  is a telegram chat ids enumirated via comma (e.g `ALLOWED_CHATS=666666,777777` )
-- `STORAGE_PATH` *optional* - path to folder for store message attachments. 
+- `ARDTG_ALLOWED_CHATS` *optional* - if not empty, updates works only on allowed chats (whitelist-like)
+  is a telegram chat ids enumirated via comma (e.g `ARDTG_ALLOWED_CHATS=666666,777777` )
+- `ARDTG_STORAGE_PATH` *optional* - path to folder for store message attachments. 
   (videos, photos, voice, docs, etc...) 
 
+
 ## Set session
+
 Current agent session can be set from external source
 Also it sends notify message in selected chat
 
@@ -88,7 +102,9 @@ Example:
 }
 ```
 
+
 ## Contacts
+
 All users whenever sent message to agents add to contacts
 Contacts stores in `contacts.json` in selected storage path
 It can be taken by `GET /contacts` endpoint
@@ -97,16 +113,22 @@ Return:
 - `200` on success
 - `500` if something goes wrong
 
+
 ## Agent API
+
 API generated with `openapi-python-client` from this [Specification](./agent-api.yml)
 
+
 ## Stack
+
 - Python
 - httpx
 - pytelegrambotapi
 - Pydantic
 
+
 ## License
+
 This program is licensed under the GNU General Public License v3.0 (GPLv3). See the full license: `https://www.gnu.org/licenses/gpl-3.0.txt`
 
 Source: `https://github.com/avillx/aa-gtw-tg`
