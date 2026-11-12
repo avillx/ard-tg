@@ -1,4 +1,4 @@
-FROM python:3.13.14-alpine3.23
+FROM python:3.15.2-alpine3.23
 
 WORKDIR /opt/ard-tg
 
