@@ -170,12 +170,17 @@ def main():
         "/attach" : server.AttachSessionHandler(attachment_service)
     }
 
+    get_routes = {
+        "/contacts" : server.ContactsHandler(contact_service),
+        "/health": server.HealthHandler(),
+    }
+
     if webhook_url != "":
         webhook_path = f"/bot/{secrets.token_hex(16)}"
         post_routes[webhook_path] = server.bot_webhook_handler(bot,webhook_url,webhook_path)
 
     srv = server.build_server(
-        get_routes  = {"/contacts" : server.ContactsHandler(contact_service)},
+        get_routes  = get_routes,
         post_routes = post_routes,
         logger      = logger,
     )
