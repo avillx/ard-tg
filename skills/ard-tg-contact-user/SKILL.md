@@ -2,7 +2,7 @@
 name: ard-tg-contact-user
 description:
   Use this skill when the agent is running autonomously and needs to reach a human user — to report progress, ask a question. Autonomous output otherwise has no recipient. This skill sends a message to the user through the Telegram, so any reply the user sends back is routed to agent.
-version: 1.1.0
+version: 1.1.1
 author: Avillx
 ---
 
@@ -17,12 +17,12 @@ To contact the user, use this [script](./scripts/send_message.py),
 it sends a message to the user.
 
 - `chat_id` *required* — chat id the message will be sent to
-- `message` *required* — message the user will receive
 - `await_time` *required* — integer in seconds
+- `message` *required* — message the user will receive
 
 Example:
 ```shell
-python ./scripts/send_message.py --await_time 6000 --chat_id 000000 --message "hi! i found some problems on the server"
+python ./scripts/send_message.py --chat_id 000000 --await_time 6000 --message "hi! i found some problems on the server"
 ```
 
 Use it only once and stop reasoning. When the user sends a reply, you wake up automatically.
