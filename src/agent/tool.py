@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-import arch_agent.models as models
+import ard.models as models
 
 
 class AgentTool(ABC):

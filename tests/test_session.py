@@ -4,7 +4,7 @@ import unittest.mock
 import pytest
 
 import agent.session as session_mod
-import arch_agent.models as models
+import ard.models as models
 from agent.session import SessionService, SystemTime, TimeProvider
 
 

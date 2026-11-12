@@ -6,7 +6,7 @@ import telebot.formatting as fmt
 import telebot.types as telebot_types
 
 import agent
-import arch_agent.models as models
+import ard.models as models
 import storage
 import telegram.attachments as attachments
 import telegram.tools as tools
