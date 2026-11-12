@@ -202,13 +202,6 @@ def test_attach_await_time_zero_bug() -> None:
     assert sink.calls == [("error", 400, "bad await time field")]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "code bug: on attach error the handler sends 400 but then also 200 "
-        "(missing return after except)"
-    ),
-)
 def test_attach_service_raises_no_trailing_200() -> None:
     attach_svc = unittest.mock.Mock()
     attach_svc.attach.side_effect = Exception("boom")
