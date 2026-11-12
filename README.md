@@ -1,10 +1,10 @@
-# Arch-Agent Telegram Gateway
+# Agent Runtime Daemon Telegram
 
 ![Python](https://img.shields.io/badge/python-%233670A0.svg?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![Pydantic](https://img.shields.io/badge/pydantic-%23E92063.svg?style=for-the-badge&logo=pydantic&logoColor=white)
 ![Telegram](https://img.shields.io/badge/Telegram-%232CA5E0.svg?style=for-the-badge&logo=telegram&logoColor=white)
 
-Gateway for arch-agent integration with Telegram.
+Telegram Gateway for [Agent Runtime Daemon](https://github.com/avillx/ard).
 
 It is intended as an additional channel, not a primary one, for contacting the agent when other
   channels are unavailable or inconvenient.
@@ -45,7 +45,7 @@ Agent recieve additional tools for telegram.
 
 ## Skills
 
-Special skill for arch-agent for this gateway
+Special skill for _ARD_ for this gateway
 - [contact user](skills/contact-user) the agent can contact you outside of autonomous 
   operation and initiate messaging first.
 
