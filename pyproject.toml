@@ -38,4 +38,4 @@ strict = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["agent*", "telegram*", "arch_agent*"]
+include = ["agent*", "telegram*", "ard*"]
