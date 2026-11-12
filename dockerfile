@@ -9,8 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     ARDTG_AGENT_DATAPATH=/opt/ard-tg/agent-data
 
 COPY --chmod=555 ./LICENSE ./README.md ./pyproject.toml ./
-COPY --chmod=555 ./src ./
-COPY --chmod=555 ./skills ./
+COPY --chmod=555 ./src ./src
+COPY --chmod=555 ./skills ./skills
 COPY --chmod=555 ./scripts/entrypoint.sh ./
 
 RUN adduser -D -H $USER

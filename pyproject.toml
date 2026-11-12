@@ -36,5 +36,6 @@ python = "venv"
 [tool.mypy]
 strict = true
 
-[tool.setuptools]
-packages = ["agent", "telegram", "arch_agent"]
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["agent*", "telegram*", "arch_agent*"]
