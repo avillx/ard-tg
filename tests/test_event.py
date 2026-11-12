@@ -5,7 +5,7 @@ import pytest
 from helpers import FailingTool, FakeTool
 
 import agent.event as event
-import arch_agent.models as models
+import ard.models as models
 
 CLIENT = unittest.mock.Mock()
 

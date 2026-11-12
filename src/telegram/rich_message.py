@@ -2,7 +2,7 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-import arch_agent.models as models
+import ard.models as models
 
 
 class RichMessage:

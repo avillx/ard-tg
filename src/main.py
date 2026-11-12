@@ -9,7 +9,7 @@ import urllib.parse as urlparse
 import telebot
 
 import agent
-import arch_agent.client as client
+import ard.client as client
 import attach
 import contacts
 import server

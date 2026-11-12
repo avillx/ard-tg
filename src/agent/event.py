@@ -4,9 +4,9 @@ from collections.abc import Mapping
 from typing import Any, Protocol, Self
 
 import agent.tool as tool
-import arch_agent.api.tool_results.resolve_tool_call as tool_result
-import arch_agent.client as agent_client
-import arch_agent.models as models
+import ard.api.tool_results.resolve_tool_call as tool_result
+import ard.client as agent_client
+import ard.models as models
 
 
 class EventType(Protocol):

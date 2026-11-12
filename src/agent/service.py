@@ -6,14 +6,14 @@ from collections.abc import Callable
 import agent.event as event
 import agent.session as session
 import agent.tool as tool
-import arch_agent.api.activity.get_activity as get_activity
-import arch_agent.api.chat.interrupt_chat as interrupt_chat
-import arch_agent.api.mcp.list_mcp_servers as list_mcp_servers
-import arch_agent.api.tasks.list_tasks as list_tasks
-import arch_agent.api.tools.list_tools as list_tools
-import arch_agent.client as agent_client
-import arch_agent.models as models
-from arch_agent.models.content_part import ContentPart
+import ard.api.activity.get_activity as get_activity
+import ard.api.chat.interrupt_chat as interrupt_chat
+import ard.api.mcp.list_mcp_servers as list_mcp_servers
+import ard.api.tasks.list_tasks as list_tasks
+import ard.api.tools.list_tools as list_tools
+import ard.client as agent_client
+import ard.models as models
+from ard.models.content_part import ContentPart
 
 _DEFAULT_STREAM_TIMEOUT = 10000
 

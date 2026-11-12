@@ -3,9 +3,9 @@ import threading
 import time
 from abc import ABC, abstractmethod
 
-import arch_agent.api.sessions.create_session as create_session
-import arch_agent.client as agent_client
-import arch_agent.models as models
+import ard.api.sessions.create_session as create_session
+import ard.client as agent_client
+import ard.models as models
 
 
 class SuperfluousSetSessionError(Exception):

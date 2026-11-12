@@ -3,7 +3,7 @@ from typing import Any, cast
 
 import telebot.formatting as fmt
 
-import arch_agent.models as models
+import ard.models as models
 from telegram.rich_message import RichMessage, tool_call_repr
 
 
