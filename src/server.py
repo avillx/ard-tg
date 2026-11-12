@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from email.message import Message
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any
+from typing import Any, override
 
 import telebot
 from telebot import types as telebot_types
@@ -58,6 +58,7 @@ class WebhookHandler(EndpointHandler):
         self._bot = bot
         self._secret_token = secret_token
 
+    @override
     def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
 
         # virefy header token
@@ -86,6 +87,7 @@ class AttachSessionHandler(EndpointHandler):
     def __init__(self, attach_service: attach.AttachService):
         self._attach_service = attach_service
 
+    @override
     def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
 
         try:
@@ -138,6 +140,7 @@ class ContactsHandler(EndpointHandler):
         super().__init__()
         self._contact_service = contact_service
 
+    @override
     def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
         try:
             contacts = self._contact_service.contacts()
@@ -147,6 +150,7 @@ class ContactsHandler(EndpointHandler):
 
 
 class HealthHandler(EndpointHandler):
+    @override
     def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
         response_sink.send_code(200)
 
@@ -154,8 +158,8 @@ class HealthHandler(EndpointHandler):
 def bot_webhook_handler(bot: telebot.TeleBot, url: str, webhook_path: str) -> WebhookHandler:
     secret_token = secrets.token_hex(32)
 
-    bot.remove_webhook()
-    bot.set_webhook(
+    _ = bot.remove_webhook()
+    _ = bot.set_webhook(
         url=url + webhook_path,
         secret_token=secret_token,
     )
@@ -204,6 +208,7 @@ def build_server(
 
             handler.handle(headers=self.headers, body=self.rfile.read(length), response_sink=sink)
 
+        @override
         def log_message(self, format, *args):
             logger.info(f"{format % args}")
 
