@@ -146,6 +146,11 @@ class ContactsHandler(EndpointHandler):
             response_sink.send_code(400)
 
 
+class HealthHandler(EndpointHandler):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
+        response_sink.send_code(200)
+
+
 def bot_webhook_handler(bot: telebot.TeleBot, url: str, webhook_path: str) -> WebhookHandler:
     secret_token = secrets.token_hex(32)
 
