@@ -1,10 +1,11 @@
----
-name: ard-tg-contact-user
-description:
-  Use this skill when the agent is running autonomously and needs to reach a human user — to report progress, ask a question. Autonomous output otherwise has no recipient. This skill sends a message to the user through the Telegram, so any reply the user sends back is routed to agent.
-version: 1.1.1
-author: Avillx
----
++++
+name = 'ard-tg-contact-user'
+version = "1.1.1"
+author = "Avillx"
+description = """
+Use this skill when the agent is running autonomously and needs to reach a human user — to report progress, ask a question. Autonomous output otherwise has no recipient. This skill sends a message to the user through the Telegram, so any reply the user sends back is routed to agent.
+"""
++++
 
 # Contact-user
 
