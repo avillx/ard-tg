@@ -5,6 +5,7 @@ import secrets
 import sys
 import threading
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from email.message import Message
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
@@ -214,3 +215,14 @@ def serve_with_polling(bot: telebot.TeleBot, srv: ThreadingHTTPServer, logger: l
 
     threading.Thread(target=run_server, daemon=True).start()
     bot.infinity_polling(none_stop=True)
+
+
+def serve_forever(
+    webhook_url: str | None, bot: telebot.TeleBot, srv: ThreadingHTTPServer, logger: logging.Logger
+):
+    if webhook_url is None:
+        logger.info("run with polling")
+        serve_with_polling(bot, srv, logger)
+    else:
+        logger.info("run with webhook")
+        srv.serve_forever()

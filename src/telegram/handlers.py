@@ -28,6 +28,7 @@ class Service:
     _sticker_cache: sticker_cache.StickerCache
     _storage: storage.Storage
     _logger: logging.Logger
+    _notify_chat_id: int | None
 
     def __init__(
         self,
@@ -36,6 +37,7 @@ class Service:
         sticker_cache: sticker_cache.StickerCache,
         sticker_pack: str,
         storage_: storage.Storage,
+        notify_chat_id: int | None,
         logger: logging.Logger,
     ):
         self._logger = logger.getChild("Telegram.Hanlders")
@@ -44,6 +46,33 @@ class Service:
         self._storage = storage_
         self._sticker_pack = sticker_pack
         self._session_service = session_service
+        self._notify_chat_id = notify_chat_id
+
+    def _notify(self, bot: telebot.TeleBot, text: str) -> None:
+        """
+        Send notify message to selected chat with text
+        """
+        if self._notify_chat_id is None:
+            return
+        try:
+            bot.send_message(
+                chat_id=self._notify_chat_id,
+                text="🔹 Bot is ready",
+            )
+        except Exception as e:
+            self._logger.error(f"Failed notify about bot up: {e}")
+
+    def notify_about_up(self, bot: telebot.TeleBot) -> None:
+        """
+        Send notify message to selected chat about bot has been connected to telegram
+        """
+        self._notify(bot, "🔹 Bot is ready")
+
+    def notify_about_down(self, bot: telebot.TeleBot) -> None:
+        """
+        Send notify message to selected chat about bot has been disconnected from telegram
+        """
+        self._notify(bot, "🔻 Bot is shutdown")
 
     def set_commands_prompt(self, bot: telebot.TeleBot):
         """
