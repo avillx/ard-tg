@@ -170,7 +170,7 @@ def main():
         "/attach" : server.AttachSessionHandler(attachment_service)
     }
 
-    get_routes = {
+    get_routes: dict[str, server.EndpointHandler] = {
         "/contacts" : server.ContactsHandler(contact_service),
         "/health": server.HealthHandler(),
     }
@@ -193,12 +193,12 @@ def main():
         notified = True
         telegram_service.notify_about_down(bot)
 
-    def _on_terminate(signum: int, frame: types.FrameType | None):
+    def _on_terminate(_signum: int, _frame: types.FrameType | None):
         logger.info("got SIGTERM, shutting down")
         notify_about_down()
         raise SystemExit(0)
 
-    signal.signal(signal.SIGTERM, _on_terminate)
+    _ = signal.signal(signal.SIGTERM, _on_terminate)
 
     try:
         telegram_service.notify_about_up(bot)

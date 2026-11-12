@@ -11,7 +11,6 @@ class RichMessage:
     _chat_id: int
     _candidate: str
     _text_drafts: list[str]
-    _tool_calls_repr: str
     _is_finally_sended: bool
 
     def __init__(self, bot: telebot.TeleBot, chat_id: int, draft_id: int):
