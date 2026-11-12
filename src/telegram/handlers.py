@@ -57,7 +57,7 @@ class Service:
         try:
             bot.send_message(
                 chat_id=self._notify_chat_id,
-                text="🔹 Bot is ready",
+                text=text,
             )
         except Exception as e:
             self._logger.error(f"Failed notify about bot up: {e}")
