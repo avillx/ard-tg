@@ -4,6 +4,7 @@ import secrets
 import signal
 import sys
 import types
+import urllib.parse as urlparse
 
 import telebot
 
@@ -20,16 +21,16 @@ def main():
     # fmt: off
 
     # envirement variables
-    telegram_token    : str = os.getenv("ARDTG_TELEGRAM_TOKEN","")
-    agent_url         : str = os.getenv("ARDTG_AGENT_URL","")
-    agent_id          : str = os.getenv("ARDTG_AGENT_ID","default")
-    session_life_time : str = os.getenv("ARDTG_SESSION_LIFE_TIME","600")
-    sticker_pack      : str = os.getenv("ARDTG_STICKER_PACK","")
-    allowed_chats_raw : str = os.getenv("ARDTG_ALLOWED_CHATS","")
-    webhook_url       : str = os.getenv("ARDTG_WEBHOOK_URL","")
-    agent_datapath    : str = os.getenv("ARDTG_AGENT_DATAPATH","")
-    file_storage_path : str = os.getenv("ARDTG_FILESTORAGE_PATH","")
-    notify_chat_id_raw    : str = os.getenv("ARDTG_NOTIFY_CHAT_ID","")
+    telegram_token     : str = os.getenv("ARDTG_TELEGRAM_TOKEN","")
+    agent_url          : str = os.getenv("ARDTG_AGENT_URL","")
+    agent_id           : str = os.getenv("ARDTG_AGENT_ID","default")
+    session_life_time  : str = os.getenv("ARDTG_SESSION_LIFE_TIME","600")
+    sticker_pack       : str = os.getenv("ARDTG_STICKER_PACK","")
+    allowed_chats_raw  : str = os.getenv("ARDTG_ALLOWED_CHATS","")
+    webhook_url        : str = os.getenv("ARDTG_WEBHOOK_URL","")
+    agent_datapath     : str = os.getenv("ARDTG_AGENT_DATAPATH","")
+    file_storage_path  : str = os.getenv("ARDTG_FILESTORAGE_PATH","")
+    notify_chat_id_raw : str = os.getenv("ARDTG_NOTIFY_CHAT_ID","")
 
 
     logger = logging.getLogger("App")
@@ -55,7 +56,29 @@ def main():
         logger.fatal("'ARDTG_AGENT_URL' is required")
         sys.exit(1)
 
-    # Validate notify ChatID
+    # validate url
+    try:
+        parsed = urlparse.urlparse(agent_url)
+        _ = parsed.port  # raise ValueError on invalid port
+    except ValueError:
+        logger.fatal("'ARDTG_AGENT_URL' is invalid")
+        sys.exit(1)
+
+    if parsed.scheme not in ("http", "https"):
+        logger.fatal("'ARDTG_AGENT_URL' must start with http or https scheme")
+        sys.exit(1)
+
+    # cast and validate allowed chats
+    allowed_chats: list[int] = []
+    if allowed_chats_raw != "":
+        for allowed_chat_id in allowed_chats_raw.split(","):
+            try:
+                allowed_chats.append(int(allowed_chat_id))
+            except ValueError:
+                logger.fatal("'ARDTG_NOTIFY_CHAT_ID' must be a chat id")
+                sys.exit(1)
+
+    # cast and validate notify ChatID
     notify_chat_id: int | None = None
     if notify_chat_id_raw != "":
         try:
@@ -94,7 +117,7 @@ def main():
 
     if allowed_chats_raw != "":
         bot.setup_middleware(telegram.UserWhitelistMiddleware(
-            allowed_chats = [int(x) for x in allowed_chats_raw.split(",")],
+            allowed_chats = allowed_chats,
             logger        = logger,
         ))
 
