@@ -1,7 +1,9 @@
 import logging
 import os
 import secrets
+import signal
 import sys
+import types
 
 import telebot
 
@@ -27,6 +29,7 @@ def main():
     webhook_url       : str = os.getenv("ARDTG_WEBHOOK_URL","")
     agent_datapath    : str = os.getenv("ARDTG_AGENT_DATAPATH","")
     file_storage_path : str = os.getenv("ARDTG_FILESTORAGE_PATH","")
+    notify_chat_id_raw    : str = os.getenv("ARDTG_NOTIFY_CHAT_ID","")
 
 
     logger = logging.getLogger("App")
@@ -51,6 +54,15 @@ def main():
     if agent_url == "":
         logger.fatal("'ARDTG_AGENT_URL' is required")
         sys.exit(1)
+
+    # Validate notify ChatID
+    notify_chat_id: int | None = None
+    if notify_chat_id_raw != "":
+        try:
+            notify_chat_id = int(notify_chat_id_raw)
+        except ValueError:
+            logger.fatal("'ARDTG_NOTIFY_CHAT_ID' must be a chat id")
+            sys.exit(1)
 
     # app building
     bot = telebot.TeleBot(
@@ -118,6 +130,7 @@ def main():
         storage_        = user_attachments_storage,
         sticker_cache   = telegram.StickerCache(bot,logger),
         session_service = session_service,
+        notify_chat_id  = notify_chat_id,
         logger          = logger,
     )
     telegram_service.set_commands_prompt(bot)
@@ -144,12 +157,31 @@ def main():
         logger      = logger,
     )
 
-    if webhook_url != "":
-        logger.info("run with webhook")
-        srv.serve_forever()
-    else:
-        logger.info("run with polling")
-        server.serve_with_polling(bot,srv,logger)
+    notified: bool = False
+    def notify_about_down():
+        nonlocal notified
+        if notified:
+            return
+        notified = True
+        telegram_service.notify_about_down(bot)
+
+    def _on_terminate(signum: int, frame: types.FrameType | None):
+        logger.info("got SIGTERM, shutting down")
+        notify_about_down()
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, _on_terminate)
+
+    try:
+        telegram_service.notify_about_up(bot)
+        server.serve_forever(
+            bot         = bot,
+            logger      = logger,
+            srv         = srv,
+            webhook_url = webhook_url if webhook_url != "" else None,
+        )
+    finally:
+        notify_about_down()
 
 
 if __name__ == "__main__":
