@@ -21,12 +21,12 @@ def parse_args(argv: list[str]):
         help="chat id is a user't telegram chat id",
     )
     parser.add_argument(
-        "message",
-        help="text message to user",
-    )
-    parser.add_argument(
         "await_time",
         help="time in sconds that you message still relevant",
+    )
+    parser.add_argument(
+        "message",
+        help="text message to user",
     )
     return parser.parse_args(argv)
 
@@ -36,7 +36,7 @@ def main(argv: list[str]):
 
     session_id: str = os.getenv("ARD_AGENT_SESSION_ID", "")
     if session_id == "":
-        print("You can't use this script, because env AGENT_SESSION_ID is empty")
+        print("You can't use this script, because env ARD_AGENT_SESSION_ID is empty")
         sys.exit(1)
 
     telegram_gateway_url: str = os.getenv("ARDTG_URL", "")
@@ -73,15 +73,14 @@ def main(argv: list[str]):
             body=json_data,
         )
         response = conn.getresponse()
-
+        data = response.read(4096).decode("utf-8", errors="replace")
     except Exception as e:
         print(f"Error: telegram gateway: {e}")
         sys.exit(1)
 
-    data = response.read(4096).decode("utf-8", errors="replace")
-
     if response.status != http.HTTPStatus.OK:
-        raise Exception(f"Gateway return error: {data}")
+        print(f"Gateway return error: {data}")
+        sys.exit(1)
 
     print(f"Current session attached succecceful: {data}")
 
