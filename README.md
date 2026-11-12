@@ -73,7 +73,7 @@ All configs provides via this envirement variables:
   webhook has no ssl, for webhook you must use reverse proxy with ssl (nginx,traefic etc...)
 - `ARDTG_ALLOWED_CHATS` *optional* - if not empty, updates works only on allowed chats (whitelist-like)
   is a telegram chat ids enumirated via comma (e.g `ARDTG_ALLOWED_CHATS=666666,777777` )
-- `ARDTG_STORAGE_PATH` *optional* - path to folder for store message attachments. 
+- `ARDTG_AGENT_DATAPATH` *optional* - path to folder for store message attachments. 
   (videos, photos, voice, docs, etc...) 
 
 

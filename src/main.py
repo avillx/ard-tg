@@ -25,7 +25,8 @@ def main():
     sticker_pack      : str = os.getenv("ARDTG_STICKER_PACK","")
     allowed_chats_raw : str = os.getenv("ARDTG_ALLOWED_CHATS","")
     webhook_url       : str = os.getenv("ARDTG_WEBHOOK_URL","")
-    storage_path      : str = os.getenv("ARDTG_STORAGE_PATH","")
+    agent_datapath    : str = os.getenv("ARDTG_AGENT_DATAPATH","")
+    file_storage_path : str = os.getenv("ARDTG_FILESTORAGE_PATH","")
 
 
     logger = logging.getLogger("App")
@@ -34,6 +35,14 @@ def main():
         format  = "[%(levelname)s] %(asctime)s %(name)s: %(message)s",
         datefmt = "%Y-%m-%d %H:%M:%S",
     )
+
+    if agent_datapath == "":
+        logger.fatal("'ARDTG_AGENT_DATAPATH' is required")
+        sys.exit(1)
+
+    if file_storage_path == "":
+        logger.fatal("'ARDTG_FILESTORAGE_PATH' is required")
+        sys.exit(1)
 
     if telegram_token == "":
         logger.fatal("'ARDTG_TELEGRAM_TOKEN' is required")
@@ -59,7 +68,7 @@ def main():
 
     contacts_storage = storage.FileStorage(
         logger       = logger,
-        storage_path = storage_path,
+        storage_path = file_storage_path,
     )
 
     contact_service = contacts.ContactService(
@@ -100,7 +109,7 @@ def main():
 
     user_attachments_storage = storage.FileStorage(
         logger       = logger,
-        storage_path = os.path.join(storage_path,"downloads"),
+        storage_path = os.path.join(agent_datapath,"tmp"),
     )
 
     telegram_service = telegram.Service(
