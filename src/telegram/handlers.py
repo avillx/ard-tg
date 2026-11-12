@@ -18,7 +18,7 @@ _TELEGRAM_GUIDE = """
 
 You recieve user messages from messanger `Telegram`. markdown has fully support.
 
-all attachments sended by user stores in `telegram/downloads/*`
+all attachments sended by user stores in `tmp/*` of your default cwd
 """
 
 
@@ -279,7 +279,7 @@ class Service:
             for att in atts:
                 try:
                     self._storage.save(att.get_file_name(), att.get_bytes())
-                    attachments_info.append(f"attachment {att.get_file_name()} saved")
+                    attachments_info.append(f"attachment tmp/{att.get_file_name()} saved")
 
                 except Exception as e:
                     self._logger.error(f"cant save attachment {e}")
