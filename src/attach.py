@@ -24,7 +24,10 @@ class AttachService:
 
     def attach(self, session_id: str, chat_id: int, message: str, await_time: float) -> None:
 
-        self._session_service.set(session_id=session_id, additional_time=await_time)
+        try:
+            self._session_service.set(session_id=session_id, additional_time=await_time)
+        except agent.SuperfluousSetSessionError as err:
+            raise Exception("Session attach is superfluous. Messages already received") from err
 
         input = telebot_types.InputRichMessage(markdown=message)
 

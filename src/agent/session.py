@@ -8,6 +8,10 @@ import arch_agent.client as agent_client
 import arch_agent.models as models
 
 
+class SuperfluousSetSessionError(Exception):
+    pass
+
+
 class TimeProvider(ABC):
     @abstractmethod
     def now(self) -> float:
@@ -66,6 +70,9 @@ class SessionService:
         """
         Set session id as actual session. addiational time to live for setted session
         """
+        if self._is_actual() and session_id == self.get():
+            raise SuperfluousSetSessionError()
+
         with self._mutex:
             self._additional_time = additional_time
             self._last_update = self._time.now()
@@ -83,20 +90,22 @@ class SessionService:
         Get session, if session expires or is None then creates a new
         """
         with self._mutex:
-            now = self._time.now()
-
             # is expired or empty
 
             actual_session_is_unset = self._actual_session == ""
-            idle_time = now - (self._additional_time + self._last_update)
-            session_lifetime_is_expires = idle_time > self._life_time
+            actual_session_is_expires = not self._is_actual()
 
-            if actual_session_is_unset or session_lifetime_is_expires:
+            if actual_session_is_unset or actual_session_is_expires:
                 self._actual_session = self._create_new_session()
 
-            self._last_update = now
+            self._last_update = self._time.now()
             self._additional_time = 0.0  # set zero cause last_time is upddated.
             return self._actual_session
+
+    def _is_actual(self) -> bool:
+        now = self._time.now()
+        idle_time = now - (self._additional_time + self._last_update)
+        return idle_time <= self._life_time
 
     def _create_new_session(self, additional_time: float = 0.0) -> str:
         """

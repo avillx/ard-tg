@@ -125,6 +125,7 @@ class AttachSessionHandler(EndpointHandler):
             )
         except Exception as e:
             response_sink.send_error(400, f"attach {e}")
+            return
 
         response_sink.send_code(200)
 
