@@ -13,7 +13,7 @@ COPY --chmod=555 ./src ./
 COPY --chmod=555 ./skills ./
 COPY --chmod=555 ./scripts/entrypoint.sh ./
 
-RUN adduser $USER
+RUN adduser -D -H $USER
 
 RUN mkdir -p $ARDTG_FILESTORAGE_PATH && chown -R $USER:$USER $ARDTG_FILESTORAGE_PATH
 RUN mkdir -p $ARDTG_AGENT_DATAPATH  && chown -R $USER:$USER $ARDTG_AGENT_DATAPATH
