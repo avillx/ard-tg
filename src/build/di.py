@@ -87,7 +87,7 @@ def bot_server(cfg: Config) -> server.BotServer:
         telegram.TasksHandler(
             agent_service=agent_service,
         ),
-        telegram.McpHandler(
+        telegram.MCPHandler(
             agent_service=agent_service,
         ),
         telegram.ActivityHandler(
