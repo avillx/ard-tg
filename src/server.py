@@ -55,10 +55,15 @@ class WebhookHandler(EndpointHandler):
     _bot: telebot.TeleBot
     _secret_token: str
 
-    def __init__(self, bot: telebot.TeleBot, secret_token: str):
+    def __init__(self, bot: telebot.TeleBot, url: str, webhook_path: str):
         super().__init__()
+        self._secret_token = secrets.token_hex(32)
         self._bot = bot
-        self._secret_token = secret_token
+        _ = bot.remove_webhook()
+        _ = bot.set_webhook(
+            url=url + webhook_path,
+            secret_token=self._secret_token,
+        )
 
     @override
     def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):  # noqa
@@ -157,21 +162,6 @@ class HealthHandler(EndpointHandler):
         response_sink.send_code(200)
 
 
-def bot_webhook_handler(bot: telebot.TeleBot, url: str, webhook_path: str) -> WebhookHandler:
-    secret_token = secrets.token_hex(32)
-
-    _ = bot.remove_webhook()
-    _ = bot.set_webhook(
-        url=url + webhook_path,
-        secret_token=secret_token,
-    )
-
-    return WebhookHandler(
-        bot=bot,
-        secret_token=secret_token,
-    )
-
-
 def build_server(
     *,
     post_routes: dict[str, EndpointHandler],
@@ -179,7 +169,7 @@ def build_server(
     logger: logging.Logger,
 ):
 
-    logger = logger.getChild("Server")
+    logger = logger.getChild("http_server")
 
     class Server(BaseHTTPRequestHandler):
         def __init__(self, request, client_address, server):
@@ -219,19 +209,23 @@ def build_server(
 
 class BotServer:
     _bot: TeleBot
-    _httpServer: ThreadingHTTPServer
+    _http_server: ThreadingHTTPServer
     _logger: logging.Logger
     _notifier: notifications.Notifier
     _use_webhook: bool
 
     def __init__(
         self,
-        logger: logging.Logger,
         attachment_service: attach.AttachService,
         contact_service: contacts.ContactService,
         notifier: notifications.Notifier,
         webhook_url: str,
+        bot: TeleBot,
+        logger: logging.Logger,
     ) -> None:
+        self._logger = logger.getChild("server")
+        self._notifier = notifier
+        self._bot = bot
         self._use_webhook = False
 
         post_routes: dict[str, EndpointHandler] = {
@@ -245,14 +239,21 @@ class BotServer:
 
         if webhook_url != "":
             webhook_path = f"/bot/{secrets.token_hex(16)}"
-            post_routes[webhook_path] = bot_webhook_handler(self._bot, webhook_url, webhook_path)
+            post_routes[webhook_path] = WebhookHandler(bot, webhook_url, webhook_path)
             self._use_webhook = True
 
-        self._httpServer = build_server(
+        self._http_server = build_server(
             get_routes=get_routes,
             post_routes=post_routes,
             logger=logger,
         )
+
+    def serve_http(self):
+        try:
+            self._http_server.serve_forever()
+        except Exception as e:
+            self._logger.error(f"http server if fall {e}")
+            raise e
 
     def run(self):
 
@@ -276,15 +277,16 @@ class BotServer:
         try:
             self._notifier.notify_about_up()
 
-            ## Run with infinity polling
-            if self._use_webhook is None:
+            # Run with only webhook
+            if self._use_webhook:
+                self._logger.info("run with webhook")
+                self._http_server.serve_forever()
+
+            # Run with infinity polling
+            else:
                 self._logger.info("run with polling")
-                threading.Thread(target=self._httpServer.serve_forever, daemon=True).start()
+                threading.Thread(target=self.serve_http, daemon=True).start()
                 self._bot.infinity_polling(none_stop=True)
 
-            ## Run with only webhook
-            else:
-                self._logger.info("run with webhook")
-                self._httpServer.serve_forever()
         finally:
             notify_about_down()

@@ -21,7 +21,7 @@ class Config:
     telegram_token: str
     agent_url: str
     agent_id: str
-    session_life_time: str
+    session_life_time: float
     sticker_pack: str
     allowed_chats: list[int]
     webhook_url: str
@@ -63,7 +63,7 @@ def load_config() -> Config:
             try:
                 allowed_chats.append(int(allowed_chat_id))
             except ValueError as e:
-                raise ValueError("'ARDTG_NOTIFY_CHAT_ID' must be a chat id") from e
+                raise ValueError("'ARDTG_ALLOWED_CHATS' must be a chat id") from e
 
     # cast and validate notify ChatID
     notify_chat_id: int | None = None
@@ -74,15 +74,23 @@ def load_config() -> Config:
         except ValueError as e:
             raise ValueError("'ARDTG_NOTIFY_CHAT_ID' must be a chat id") from e
 
+    session_life_time: float = agent._DEFAULT_SESSION_TTL
+    session_life_time_raw = os.getenv("ARDTG_SESSION_LIFE_TIME", "")
+    if session_life_time_raw == "":
+        try:
+            session_life_time = float(session_life_time_raw)
+        except ValueError as e:
+            raise ValueError("'ARDTG_SESSION_LIFE_TIME' must be a number") from e
+
     return Config(
         telegram_token=os.getenv("ARDTG_TELEGRAM_TOKEN", ""),
         agent_url=os.getenv("ARDTG_AGENT_URL", ""),
         agent_id=os.getenv("ARDTG_AGENT_ID", "default"),
-        session_life_time=os.getenv("ARDTG_SESSION_LIFE_TIME", "600"),
         sticker_pack=os.getenv("ARDTG_STICKER_PACK", ""),
         webhook_url=os.getenv("ARDTG_WEBHOOK_URL", ""),
         agent_datapath=os.getenv("ARDTG_AGENT_DATAPATH", ""),
         file_storage_path=os.getenv("ARDTG_FILESTORAGE_PATH", ""),
+        session_life_time=session_life_time,
         allowed_chats=allowed_chats,
         notify_chat_id=notify_chat_id,
     )
@@ -97,87 +105,89 @@ def get_logger() -> logging.Logger:
     return logging.getLogger("App")
 
 
-# fmt: off
-def build_app(cfg: Config,logger: logging.Logger) -> server.BotServer:
+def build_app(cfg: Config, logger: logging.Logger) -> server.BotServer:
 
     bot = telebot.TeleBot(
-        token                 = cfg.telegram_token,
-        parse_mode            = "MarkdownV2",
-        num_threads           = 4,
-        use_class_middlewares = True,
+        token=cfg.telegram_token,
+        parse_mode="MarkdownV2",
+        num_threads=4,
+        use_class_middlewares=True,
     )
 
     # set up logging
-    bot.setup_middleware(telegram.LoggingMiddleware(
-        logger = logger,
-    ))
+    bot.setup_middleware(
+        telegram.LoggingMiddleware(
+            logger=logger,
+        )
+    )
 
     contacts_storage = storage.FileStorage(
-        logger       = logger,
-        storage_path = cfg.file_storage_path,
+        logger=logger,
+        storage_path=cfg.file_storage_path,
     )
 
     contact_service = contacts.ContactService(
-        logger       = logger,
-        storage      = contacts_storage,
+        logger=logger,
+        storage=contacts_storage,
     )
 
-    bot.setup_middleware(telegram.UserContactKeeper(
-        contact_service = contact_service,
-    ))
-
-    if cfg.allowed_chats != "":
-        bot.setup_middleware(telegram.UserWhitelistMiddleware(
-            allowed_chats = cfg.allowed_chats,
-            logger        = logger,
-        ))
-
-    agent_client = client.Client(
-        base_url = cfg.agent_url
+    bot.setup_middleware(
+        telegram.UserContactKeeper(
+            contact_service=contact_service,
+        )
     )
+
+    if len(cfg.allowed_chats) > 0:
+        bot.setup_middleware(
+            telegram.UserWhitelistMiddleware(
+                allowed_chats=cfg.allowed_chats,
+                logger=logger,
+            )
+        )
+
+    agent_client = client.Client(base_url=cfg.agent_url)
 
     session_service = agent.SessionService(
-        agent_id     = cfg.agent_id,
-        agent_client = agent_client,
-        life_time    = float(cfg.session_life_time),
-        logger       = logger,
-        instruction  = telegram._TELEGRAM_GUIDE,
-        time         = agent.SystemTime(),
+        agent_id=cfg.agent_id,
+        agent_client=agent_client,
+        life_time=float(cfg.session_life_time),
+        logger=logger,
+        instruction=telegram._TELEGRAM_GUIDE,
+        time=agent.SystemTime(),
     )
 
     agent_service = agent.Service(
-        agent_url       = cfg.agent_url,
-        agent_client    = agent_client,
-        agent_id        = cfg.agent_id,
-        session_service = session_service,
-        logger          = logger,
+        agent_url=cfg.agent_url,
+        agent_client=agent_client,
+        agent_id=cfg.agent_id,
+        session_service=session_service,
+        logger=logger,
     )
 
     user_attachments_storage = storage.FileStorage(
-        logger       = logger,
-        storage_path = os.path.join(cfg.agent_datapath,"tmp"),
+        logger=logger,
+        storage_path=os.path.join(cfg.agent_datapath, "tmp"),
     )
 
     telegram_service = telegram.Service(
-        agent_service   = agent_service,
-        sticker_pack    = cfg.sticker_pack,
-        storage_        = user_attachments_storage,
-        sticker_cache   = telegram.StickerCache(bot,logger),
-        session_service = session_service,
-        notify_chat_id  = cfg.notify_chat_id,
-        logger          = logger,
+        agent_service=agent_service,
+        sticker_pack=cfg.sticker_pack,
+        storage_=user_attachments_storage,
+        sticker_cache=telegram.StickerCache(bot, logger),
+        session_service=session_service,
+        logger=logger,
     )
     telegram_service.set_commands_prompt(bot)
     telegram_service.register_on(bot)
 
-    attachment_service  = attach.AttachService(
-        bot             = bot,
-        session_service = session_service,
-        logger          = logger,
+    attachment_service = attach.AttachService(
+        bot=bot,
+        session_service=session_service,
+        logger=logger,
     )
 
     notifier_svc = notifications.PlaceholderNotifier(logger)
-    if isinstance(cfg.notify_chat_id,int):
+    if isinstance(cfg.notify_chat_id, int):
         notifier_svc = notifications.TelegramNotifier(
             bot=bot,
             logger=logger,
@@ -187,10 +197,12 @@ def build_app(cfg: Config,logger: logging.Logger) -> server.BotServer:
     return server.BotServer(
         attachment_service=attachment_service,
         contact_service=contact_service,
-        logger=logger,
         notifier=notifier_svc,
         webhook_url=cfg.webhook_url,
+        bot=bot,
+        logger=logger,
     )
+
 
 def main():
     logger = get_logger()
@@ -201,9 +213,10 @@ def main():
         logger.fatal(f"Bad config: {e}")
         sys.exit(1)
 
-    app = build_app(config,logger)
+    app = build_app(config, logger)
 
     app.run()
+
 
 if __name__ == "__main__":
     main()

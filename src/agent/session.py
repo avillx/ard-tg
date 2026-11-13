@@ -7,6 +7,8 @@ import ard.api.sessions.create_session as create_session
 import ard.client as agent_client
 import ard.models as models
 
+_DEFAULT_SESSION_TTL: float = 600
+
 
 class SuperfluousSetSessionError(Exception):
     pass
