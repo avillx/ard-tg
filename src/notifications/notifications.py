@@ -1,7 +1,7 @@
-import logging
 from abc import ABC, abstractmethod
+lazy import logging
 
-import telebot
+lazy import telebot
 
 
 class Notifier(ABC):
@@ -26,9 +26,7 @@ class TelegramNotifier(Notifier):
         self._logger = logger
 
     def _notify(self, text: str) -> None:
-        """
-        Send notify message to selected chat with text
-        """
+        """Send a notification message with the given text to the selected chat."""
         if self._notify_chat_id is None:
             return
         try:
@@ -36,8 +34,8 @@ class TelegramNotifier(Notifier):
                 chat_id=self._notify_chat_id,
                 text=text,
             )
-        except Exception as e:
-            self._logger.error(f"Failed notify about bot up: {e}")
+        except Exception as e:  # noqa: BLE001 - notification must never break the bot
+            self._logger.error("Failed notify about bot up: %s", e)
 
     def notify_about_up(self) -> None:
         self._notify("🔹 Bot is ready")

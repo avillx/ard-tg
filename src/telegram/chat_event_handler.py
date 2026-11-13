@@ -2,16 +2,13 @@ import telebot
 import telebot.formatting as fmt
 
 import agent
-import ard.models as models
-from telegram import rich_message
-from telegram.typing_action import TypingAction
+lazy import ard.models as models
+lazy from telegram import rich_message
+lazy from telegram.typing_action import TypingAction
 
 
 class ChatEventHandler(agent.EventHandler):
-    """
-    Implementation of event handler to represent agent responses as
-    telegram rich message
-    """
+    """Event handler that renders agent responses as Telegram rich messages."""
 
     _bot: telebot.TeleBot
     _rich_message: rich_message.RichMessage

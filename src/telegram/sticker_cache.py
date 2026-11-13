@@ -1,6 +1,6 @@
-import logging
+lazy import logging
 
-import telebot
+lazy import telebot
 
 
 class StickerCache:
@@ -14,8 +14,8 @@ class StickerCache:
         self._log = logger.getChild("Telegram.StickerCache")
 
     def get_pack(self, name: str) -> dict[str, str]:
-        """
-        Return map of stickers
+        """Return a map of stickers
+
         - key emoji
         - value file_id
 
@@ -23,14 +23,14 @@ class StickerCache:
         """
         sticker_pack = self._sticker_packs.get(name)
         if sticker_pack is None:
-            self._log.info(f"sticker pack {name}: not found, getting from telegram")
+            self._log.info("sticker pack %s: not found, getting from telegram", name)
 
-            set = self._bot.get_sticker_set(name)
-            if set is None:
+            sticker_set = self._bot.get_sticker_set(name)
+            if sticker_set is None:
                 raise Exception(f"sticker pack {name} is not found")
 
             new_sticker_pack: dict[str, str] = {}
-            for s in set.stickers:
+            for s in sticker_set.stickers:
                 if s.emoji is None:
                     continue
 

@@ -1,17 +1,17 @@
-import logging
+lazy import logging
 
-import telebot
-import telebot.types as telebot_types
+lazy import telebot
+lazy import telebot.types as telebot_types
 
-import agent
 from telegram import rich_message
 from telegram.service import Handler
 from telegram.typing_action import TypingAction
+lazy import agent
 
 
 class ConsolidationHandler(Handler):
-    """
-    Handler for process requests on consolidation.
+    """Handle requests for consolidation
+
     Expect call from `/consolidate` command
     """
 
@@ -30,6 +30,7 @@ class ConsolidationHandler(Handler):
             chat_id=message.chat.id,
             bot=bot,
             draft_id=2,
+            logger=self._logger,
         )
 
         rich_msg.append_text("💾 Consolidation started")

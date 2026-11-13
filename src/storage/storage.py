@@ -1,7 +1,6 @@
-import logging
-import os
 from abc import ABC, abstractmethod
 from pathlib import Path
+lazy import logging
 
 
 class Storage(ABC):
@@ -28,22 +27,21 @@ class FileStorage(Storage):
         self._logger = logger.getChild("files")
 
     def save(self, file_path: str, data: bytes):
-        absolute_string = os.path.join(self._storage_path, file_path)
+        path = Path(self._storage_path) / file_path
 
         # save file
-        path = Path(absolute_string)
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as f:
             f.write(data)
 
-        self._logger.info(f"saved {absolute_string}")
+        self._logger.info("saved %s", path)
 
     def get(self, file_path: str) -> bytes:
-        absolute_string = os.path.join(self._storage_path, file_path)
+        path = Path(self._storage_path) / file_path
 
-        with open(absolute_string, "rb") as f:
+        with path.open("rb") as f:
             data = f.read()
 
-        self._logger.info(f"readed {absolute_string}")
+        self._logger.info("readed %s", path)
 
         return data

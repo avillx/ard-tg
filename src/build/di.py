@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 
 import telebot
 
@@ -11,10 +11,10 @@ import notifications
 import server
 import storage
 import telegram
-from build.config import Config
+lazy import build
 
 
-def bot_server(cfg: Config) -> server.BotServer:
+def bot_server(cfg: build.Config) -> server.BotServer:
 
     logger = logging.getLogger("app")
 
@@ -77,7 +77,7 @@ def bot_server(cfg: Config) -> server.BotServer:
 
     user_attachments_storage = storage.FileStorage(
         logger=logger,
-        storage_path=os.path.join(cfg.agent_datapath, "tmp"),
+        storage_path=str(Path(cfg.agent_datapath) / "tmp"),
     )
 
     telegram_handlers: list[telegram.Handler] = [

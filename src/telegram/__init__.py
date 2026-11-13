@@ -10,18 +10,18 @@ from .service import _TELEGRAM_GUIDE, Handler, Service
 from .sticker_cache import StickerCache
 
 __all__ = (
+    "_TELEGRAM_GUIDE",
     "ActivityHandler",
     "ConsolidationHandler",
     "GeneralMessageHandler",
-    "InterruptHandler",
-    "MCPHandler",
-    "TasksHandler",
-    "LoggingMiddleware",
-    "UserContactKeeper",
-    "_TELEGRAM_GUIDE",
     "Handler",
+    "InterruptHandler",
+    "LoggingMiddleware",
+    "MCPHandler",
+    "NewSessionHandler",
     "Service",
     "StickerCache",
-    "NewSessionHandler",
+    "TasksHandler",
+    "UserContactKeeper",
     "UserWhitelistMiddleware",
 )

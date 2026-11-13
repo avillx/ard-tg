@@ -1,7 +1,7 @@
-import logging
 import threading
+lazy import logging
 
-import telebot
+lazy import telebot
 
 
 class TypingAction:
@@ -33,8 +33,8 @@ class TypingAction:
         while not self._stop_typing_ev.is_set():
             try:
                 self._bot.send_chat_action(chat_id=self._chat_id, action="typing")
-            except Exception as e:
-                self._logger.error(f"typing fall with error: {e}")
+            except Exception as e:  # noqa: BLE001 - typing is best effort
+                self._logger.error("typing fall with error: %s", e)
             self._stop_typing_ev.wait(4)
 
     def start_typing(self):

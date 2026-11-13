@@ -2,15 +2,15 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-import agent
 from telegram.service import Handler
+lazy import agent
 
 
 class MCPHandler(Handler):
-    """
-    Handler to fetch actual list of MCP
-    Expect call from `/mcp` command
-    Also allow mcp servers names as arguments e.g. `/mcp some-mcp-server some-other`
+    """Handle fetch of the actual MCP list.
+
+    Expect call from `/mcp` command. Also allow mcp servers names as arguments,
+    e.g. `/mcp some-mcp-server some-other`.
     """
 
     _agent_service: agent.Service

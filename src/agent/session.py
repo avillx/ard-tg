@@ -1,7 +1,7 @@
-import logging
 import threading
 import time
 from abc import ABC, abstractmethod
+lazy import logging
 
 import ard.api.sessions.create_session as create_session
 import ard.client as agent_client
@@ -26,9 +26,7 @@ class SystemTime(TimeProvider):
 
 
 class SessionService:
-    """
-    Sevice with session manage responsobility
-    """
+    """Service with session management responsibility."""
 
     _agent_id: str
     _agent_client: agent_client.Client
@@ -62,15 +60,14 @@ class SessionService:
         self._time = time
 
     def drop(self):
-        """
-        Drops current session and set it to None
-        """
+        """Drop the current session and set it to None."""
         with self._mutex:
             self._actual_session = ""
 
     def set(self, session_id: str, additional_time: float = 0.0):
-        """
-        Set session id as actual session. addiational time to live for setted session
+        """Set the session id as the actual session
+
+        additional_time extends the time to live of the set session
         """
         if self._is_actual() and session_id == self.get():
             raise SuperfluousSetSessionError()
@@ -81,16 +78,12 @@ class SessionService:
             self._actual_session = session_id
 
     def get(self) -> str:
-        """
-        Return current setted session
-        """
+        """Return the currently set session."""
         with self._mutex:
             return self._actual_session
 
     def get_actual(self) -> str:
-        """
-        Get session, if session expires or is None then creates a new
-        """
+        """Get the session, creating a new one when it is unset or expired."""
         with self._mutex:
             # is expired or empty
 
@@ -110,9 +103,7 @@ class SessionService:
         return idle_time <= self._life_time
 
     def _create_new_session(self, additional_time: float = 0.0) -> str:
-        """
-        Make request to agent to create a new system and return id on created session
-        """
+        """Request a new session from the agent and return its id."""
         self._additional_time = additional_time
 
         create_session_request = models.CreateSessionBody(
@@ -136,5 +127,5 @@ class SessionService:
                 raise Exception(f"problem with session: {resp.message}")
 
             case models.CreateSessionResponse200():
-                self._logger.info(f"created new session with id: {resp.id}")
+                self._logger.info("created new session with id: %s", resp.id)
                 return resp.id

@@ -1,23 +1,21 @@
-import logging
 from datetime import datetime
+lazy import logging
 
-import telebot
-import telebot.types as telebot_types
+lazy import telebot
+lazy import telebot.types as telebot_types
 
-import agent
-import storage
 import telegram.attachments as attachments
 import telegram.tools as tools
 from telegram import rich_message, sticker_cache
 from telegram.chat_event_handler import ChatEventHandler
 from telegram.service import Handler
 from telegram.typing_action import TypingAction
+lazy import agent
+lazy import storage
 
 
 class GeneralMessageHandler(Handler):
-    """
-    Handler to process all raw messages to agent
-    """
+    """Handler to process all raw messages to agent."""
 
     _agent_service: agent.Service
     _sticker_cache: sticker_cache.StickerCache
@@ -57,6 +55,7 @@ class GeneralMessageHandler(Handler):
                 chat_id=message.chat.id,
                 bot=bot,
                 draft_id=1,
+                logger=self._logger,
             )
 
             ev_handler = ChatEventHandler(
@@ -76,8 +75,8 @@ class GeneralMessageHandler(Handler):
                     self._storage.save(att.get_file_name(), att.get_bytes())
                     attachments_info.append(f"attachment tmp/{att.get_file_name()} saved")
 
-                except Exception as e:
-                    self._logger.error(f"cant save attachment {e}")
+                except Exception as e:  # noqa: BLE001 - storage backend is pluggable
+                    self._logger.error("cant save attachment %s", e)
                     attachments_info.append("can't save attachment, gateway problem")
 
             text_message = represent_message(
@@ -93,9 +92,9 @@ class GeneralMessageHandler(Handler):
                     provided_tools=provided_tools,
                 )
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - gateway failure must be reported to the user
                 bot.send_message(message.chat.id, "⚠️ gateway problem")
-                self._logger.error(f"gateway exception: {e}")
+                self._logger.error("gateway exception: %s", e)
             finally:
                 rich_msg.send_finale()
 
@@ -134,7 +133,7 @@ class GeneralMessageHandler(Handler):
 
 
 def represent_message(msg: telebot_types.Message, additional_lines: list[str]) -> str:
-    current_time = datetime.now().strftime("%y.%m.%d %H:%M")
+    current_time = datetime.now().astimezone().strftime("%y.%m.%d %H:%M")
     text = f"# From {msg.chat.first_name} ({current_time}):"
 
     if msg.text is not None:

@@ -1,15 +1,15 @@
-import logging
 import secrets
 import signal
 import threading
-import types
+lazy import logging
+lazy import types
 
-import telebot
+lazy import telebot
 
-import attach
-import contacts
-import notifications
 from server import endpoints, http_server
+lazy import attach
+lazy import contacts
+lazy import notifications
 
 
 class BotServer:
@@ -47,10 +47,11 @@ class BotServer:
         self._http_server.get("/health", endpoints.HealthHandler())
 
     def serve_http(self):
+        # A serving failure is fatal, so log it and re-raise.
         try:
             self._http_server.serve_forever()
         except Exception as e:
-            self._logger.error(f"http server if fall {e}")
+            self._logger.error("http server is failed %s", e)
             raise e
 
     def run(self):

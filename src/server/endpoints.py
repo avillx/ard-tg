@@ -1,22 +1,19 @@
 import hmac
 import json
 import secrets
-from email.message import Message
 from typing import Any, override
+lazy from email.message import Message
 
 import telebot
 from telebot import types as telebot_types
 
-import attach
-import contacts
 from server import http_server
+lazy import attach
+lazy import contacts
 
 
 class WebhookHandler(http_server.EndpointHandler):
-    """
-    Assuming for serve endpoint `/bot`
-        Serve telegram Bot requests
-    """
+    """Serve the `/bot` endpoint that receives Telegram bot requests."""
 
     _bot: telebot.TeleBot
     _secret_token: str
@@ -54,14 +51,14 @@ class WebhookHandler(http_server.EndpointHandler):
 
             self._bot.process_new_updates([update])
             response_sink.send_code(200)
-        except Exception:
+        except Exception:  # noqa: BLE001 - any failure must answer 500
             response_sink.send_code(500)
             return
 
 
 class AttachSessionHandler(http_server.EndpointHandler):
-    """
-    Assuming for serve endpoint `/contacts`
+    """Serve the `/attach` endpoint
+
     responses:
         - 200
         - 400 with failed validations explanation
@@ -82,7 +79,7 @@ class AttachSessionHandler(http_server.EndpointHandler):
 
         try:
             request: dict[str, Any] = json.loads(body)
-        except Exception:
+        except Exception:  # noqa: BLE001 - any parse failure means bad request
             response_sink.send_code(400)
             return
 
@@ -116,7 +113,7 @@ class AttachSessionHandler(http_server.EndpointHandler):
                 message=message,
                 await_time=float(await_time),
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - report the attach failure to the caller
             response_sink.send_error(400, f"attach {e}")
             return
 
@@ -124,8 +121,8 @@ class AttachSessionHandler(http_server.EndpointHandler):
 
 
 class ContactsHandler(http_server.EndpointHandler):
-    """
-    Assuming for serve endpoint `/contacts`
+    """Serve the `/contacts` endpoint
+
     responses:
         - 200 + json
         - 400
@@ -147,13 +144,13 @@ class ContactsHandler(http_server.EndpointHandler):
         try:
             contacts = self._contact_service.contacts()
             response_sink.send_json(200, {"contacts": contacts})
-        except Exception:
+        except Exception:  # noqa: BLE001 - storage backend is pluggable
             response_sink.send_code(400)
 
 
 class HealthHandler(http_server.EndpointHandler):
-    """
-    Assuming for serve endpoint `/health`
+    """Serve the `/health` endpoint
+
     responses:
         - 200
     """

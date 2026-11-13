@@ -1,4 +1,4 @@
-import logging
+lazy import logging
 
 import telebot
 import telebot.types as telebot_types
@@ -7,9 +7,9 @@ import agent
 
 
 class AttachService:
-    """
-    Serve to attach agent session to chat with external invoke.
-    e.g. Agent want self initiate contact with user. from autonomus mode
+    """Serve attaching an agent session to a chat from an external invocation
+
+    e.g. an agent wants to initiate contact with the user from autonomous mode
     """
 
     def __init__(
@@ -29,11 +29,11 @@ class AttachService:
         except agent.SuperfluousSetSessionError as err:
             raise Exception("Session attach is superfluous. Messages already received") from err
 
-        input = telebot_types.InputRichMessage(markdown=message)
+        rich_message = telebot_types.InputRichMessage(markdown=message)
 
         self._bot.send_rich_message(
             chat_id=chat_id,
-            rich_message=input,
+            rich_message=rich_message,
         )
 
-        self._logger.info(f"session {session_id} attached to chat {chat_id}")
+        self._logger.info("session %s attached to chat %s", session_id, chat_id)
