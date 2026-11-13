@@ -5,7 +5,6 @@ import secrets
 import sys
 import threading
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from email.message import Message
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, override
@@ -45,7 +44,7 @@ class ResponseSink:
 
 class EndpointHandler(ABC):
     @abstractmethod
-    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):  # noqa
         pass
 
 
@@ -59,7 +58,7 @@ class WebhookHandler(EndpointHandler):
         self._secret_token = secret_token
 
     @override
-    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):  # noqa
 
         # virefy header token
         if not hmac.compare_digest(
@@ -88,7 +87,7 @@ class AttachSessionHandler(EndpointHandler):
         self._attach_service = attach_service
 
     @override
-    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):  # noqa
 
         try:
             request: dict[str, Any] = json.loads(body)
@@ -141,7 +140,7 @@ class ContactsHandler(EndpointHandler):
         self._contact_service = contact_service
 
     @override
-    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):  # noqa
         try:
             contacts = self._contact_service.contacts()
             response_sink.send_json(200, {"contacts": contacts})
@@ -151,7 +150,7 @@ class ContactsHandler(EndpointHandler):
 
 class HealthHandler(EndpointHandler):
     @override
-    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):
+    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):  # noqa
         response_sink.send_code(200)
 
 

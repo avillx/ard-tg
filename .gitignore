@@ -6,3 +6,5 @@ __pycache__
 .vscode
 .pytest_cache
 run_gateway.*
+.venv
+.zed
