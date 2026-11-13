@@ -40,15 +40,9 @@ class TelegramNotifier(Notifier):
             self._logger.error(f"Failed notify about bot up: {e}")
 
     def notify_about_up(self) -> None:
-        """
-        Send notify message to selected chat about bot has been connected to telegram
-        """
         self._notify("🔹 Bot is ready")
 
     def notify_about_down(self) -> None:
-        """
-        Send notify message to selected chat about bot has been disconnected from telegram
-        """
         self._notify("🔻 Bot is shutdown")
 
 
