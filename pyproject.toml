@@ -59,7 +59,10 @@ ignore = [
   "PLW1641", # Object does not implement `__hash__` method
   "SIM103",  # 'Return the condition directly': This is a bit overzealous
   "UP007",   # Use `X | Y` for type annotations
-  "RET504"   # Unnecessary assignment before `return` statement
+  "RET504",  # Unnecessary assignment before `return` statement
+  "TC001",   # Move application import into a type-checking block
+  "TC002",   # Move third-party import into a type-checking block
+  "TC003",   # Move standard library import into a type-checking block
 ]
 
 select = [
