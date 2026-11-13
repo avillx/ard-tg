@@ -60,4 +60,11 @@ class ChatEventHandler(agent.EventHandler):
         pass
 
     def process_error(self, err: models.Error):
-        pass
+        msg = "\n\n⚠️ agent error"
+
+        err_text = err.message
+        if isinstance(err_text, str):
+            msg += f": {fmt.escape_markdown(err_text)}"
+
+        self._rich_message.append_text(msg)
+        self._rich_message.send_draft()
