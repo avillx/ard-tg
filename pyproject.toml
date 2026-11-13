@@ -21,13 +21,15 @@ pythonpath = ["src"]
 [tool.basedpyright]
 include = ["src", "tests"]
 extraPaths = ["src", "tests"]
-venvPath = "."
-venv = ".venv"
 typeCheckingMode = "basic"
+exclude = ["src/ard/**"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py315"
+
+# cause it is a generated code
+extend-exclude = ["src/ard"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
