@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import dataclasses
+import io
 import json
+import logging
+import signal
 import unittest.mock
+from collections.abc import Callable
 from email.message import Message
 from http.server import BaseHTTPRequestHandler
 from typing import Any, cast
 
 import pytest
 
-from server import AttachSessionHandler, ContactsHandler, ResponseSink, WebhookHandler
+import server
+from server import AttachSessionHandler, BotServer, ContactsHandler, ResponseSink, WebhookHandler
 
 
 class BytesWriter:
@@ -78,6 +84,149 @@ def attach_body(**overrides: object) -> bytes:
     return json.dumps(body).encode()
 
 
+def make_webhook_handler(
+    bot: Any,
+    *,
+    secret_token: str = "secret",
+    url: str = "https://example.com",
+    webhook_path: str = "/bot/hook",
+) -> WebhookHandler:
+    """Builds a WebhookHandler with a deterministic secret token."""
+
+    with unittest.mock.patch("server.secrets.token_hex", return_value=secret_token):
+        return WebhookHandler(bot=bot, url=url, webhook_path=webhook_path)
+
+
+@dataclasses.dataclass
+class Exchange:
+    """Result of driving one request through the real route dispatch."""
+
+    status: int | None = None
+    headers: list[tuple[str, str]] = dataclasses.field(default_factory=list)
+    body: bytes = b""
+    error: tuple[int | None, str | None] | None = None
+
+
+class HTTPTestClient:
+    """Drives a BaseHTTPRequestHandler subclass without opening a socket."""
+
+    def __init__(self, handler_cls: type[BaseHTTPRequestHandler]) -> None:
+        self._handler_cls = handler_cls
+
+    def get(self, path: str, headers: dict[str, str] | None = None) -> Exchange:
+        return self._dispatch("GET", path, headers=headers)
+
+    def post(self, path: str, body: bytes = b"", headers: dict[str, str] | None = None) -> Exchange:
+        return self._dispatch("POST", path, body=body, headers=headers)
+
+    def _dispatch(
+        self,
+        method: str,
+        path: str,
+        *,
+        body: bytes = b"",
+        headers: dict[str, str] | None = None,
+    ) -> Exchange:
+        exchange = Exchange()
+        handler: Any = self._handler_cls.__new__(self._handler_cls)
+        handler.path = path
+        handler.headers = Message()
+        handler.headers["Content-Length"] = str(len(body))
+        for key, value in (headers or {}).items():
+            handler.headers[key] = value
+        handler.rfile = io.BytesIO(body)
+        handler.wfile = BytesWriter()
+        handler.log_message = lambda *args: None
+        handler.send_response = lambda code, message=None: setattr(exchange, "status", code)
+        handler.send_header = lambda key, value: exchange.headers.append((key, value))
+        handler.end_headers = lambda: None
+        handler.send_error = lambda code=None, message=None, explain=None: setattr(
+            exchange, "error", (code, explain)
+        )
+
+        getattr(handler, f"do_{method}")()
+        exchange.body = handler.wfile.data
+        return exchange
+
+
+class FakeHTTPServer:
+    """Stand-in for ThreadingHTTPServer that captures the built routes."""
+
+    instances: list[FakeHTTPServer] = []
+
+    def __init__(self, address: tuple[str, int], handler_cls: type[BaseHTTPRequestHandler]) -> None:
+        self.address = address
+        self.handler_cls = handler_cls
+        self.serve_count = 0
+        self.failure: Exception | None = None
+        self.on_serve: Callable[[], None] | None = None
+        FakeHTTPServer.instances.append(self)
+
+    @classmethod
+    def latest(cls) -> FakeHTTPServer:
+        assert cls.instances, "build_server() was not called"
+        return cls.instances[-1]
+
+    def client(self) -> HTTPTestClient:
+        return HTTPTestClient(self.handler_cls)
+
+    def serve_forever(self) -> None:
+        self.serve_count += 1
+        if self.on_serve is not None:
+            self.on_serve()
+        if self.failure is not None:
+            raise self.failure
+
+
+class FakeThread:
+    """Stand-in for threading.Thread that runs its target synchronously on start."""
+
+    instances: list[FakeThread] = []
+
+    def __init__(self, target: Callable[[], None], daemon: bool | None = None, **kwargs: Any):
+        self.target = target
+        self.daemon = daemon
+        self.started = False
+        FakeThread.instances.append(self)
+
+    def start(self) -> None:
+        self.started = True
+        self.target()
+
+
+@pytest.fixture
+def fake_http(monkeypatch: pytest.MonkeyPatch) -> type[FakeHTTPServer]:
+    """Replaces the real HTTP server so BotServer never binds a port."""
+
+    monkeypatch.setattr(server, "ThreadingHTTPServer", FakeHTTPServer)
+    FakeHTTPServer.instances.clear()
+    FakeThread.instances.clear()
+    return FakeHTTPServer
+
+
+def _or_mock(value: Any) -> Any:
+    return unittest.mock.Mock() if value is None else value
+
+
+def make_bot_server(
+    *,
+    webhook_url: str = "",
+    bot: Any = None,
+    notifier: Any = None,
+    attachment_service: Any = None,
+    contact_service: Any = None,
+    logger: logging.Logger | None = None,
+) -> BotServer:
+    return BotServer(
+        attachment_service=_or_mock(attachment_service),
+        contact_service=_or_mock(contact_service),
+        notifier=_or_mock(notifier),
+        webhook_url=webhook_url,
+        bot=_or_mock(bot),
+        logger=logger or logging.getLogger("test"),
+    )
+
+
 def test_response_sink_send_json() -> None:
     h = FakeHandler()
     sink = _make_sink(h)
@@ -109,9 +258,21 @@ def test_response_sink_send_error() -> None:
     assert h.statuses == [("error", 400, "boom")]
 
 
+def test_webhook_registers_itself_on_start() -> None:
+    bot = unittest.mock.Mock()
+
+    _ = make_webhook_handler(bot)
+
+    bot.remove_webhook.assert_called_once_with()
+    bot.set_webhook.assert_called_once_with(
+        url="https://example.com/bot/hook",
+        secret_token="secret",
+    )
+
+
 def test_webhook_wrong_token() -> None:
     bot = unittest.mock.Mock()
-    handler = WebhookHandler(bot=bot, secret_token="secret")
+    handler = make_webhook_handler(bot)
     sink = RecordingSink()
 
     handler.handle(headers=make_headers("wrong"), body=b"{}", response_sink=sink)
@@ -122,7 +283,7 @@ def test_webhook_wrong_token() -> None:
 
 def test_webhook_valid_update() -> None:
     bot = unittest.mock.Mock()
-    handler = WebhookHandler(bot=bot, secret_token="secret")
+    handler = make_webhook_handler(bot)
     sink = RecordingSink()
 
     handler.handle(headers=make_headers("secret"), body=b'{"update_id": 1}', response_sink=sink)
@@ -135,7 +296,7 @@ def test_webhook_valid_update() -> None:
 
 def test_webhook_invalid_json_returns_500() -> None:
     bot = unittest.mock.Mock()
-    handler = WebhookHandler(bot=bot, secret_token="secret")
+    handler = make_webhook_handler(bot)
     sink = RecordingSink()
 
     handler.handle(headers=make_headers("secret"), body=b"{not json", response_sink=sink)
@@ -233,3 +394,175 @@ def test_contacts_error() -> None:
     handler.handle(headers=Message(), body=b"", response_sink=sink)
 
     assert sink.calls == [("code", 400)]
+
+
+def test_http_server_routes(fake_http: type[FakeHTTPServer]) -> None:
+    attach_svc = unittest.mock.Mock()
+    contact_svc = unittest.mock.Mock()
+    contact_svc.contacts.return_value = {"1": "Alice"}
+
+    _ = make_bot_server(attachment_service=attach_svc, contact_service=contact_svc)
+
+    http_server = fake_http.latest()
+    assert http_server.address == ("0.0.0.0", 8443)
+    client = http_server.client()
+
+    assert client.get("/health").status == 200
+
+    contacts = client.get("/contacts")
+    assert contacts.status == 200
+    assert ("Content-type", "application/json") in contacts.headers
+    assert json.loads(contacts.body) == {"contacts": {"1": "Alice"}}
+
+    attach = client.post("/attach", body=attach_body())
+    assert attach.status == 200
+    attach_svc.attach.assert_called_once_with(
+        session_id="s1", chat_id=123, message="hi", await_time=60.0
+    )
+
+    bad_attach = client.post("/attach", body=attach_body(chat_id="nope"))
+    assert bad_attach.status is None
+    assert bad_attach.error == (400, "bad chat_id field")
+    attach_svc.attach.assert_called_once()
+
+    assert client.get("/unknown").status == 404
+    assert client.post("/unknown", body=b"{}").status == 404
+
+
+def test_polling_mode_has_no_webhook_route(fake_http: type[FakeHTTPServer]) -> None:
+    bot = unittest.mock.Mock()
+
+    _ = make_bot_server(bot=bot)
+
+    bot.set_webhook.assert_not_called()
+    assert fake_http.latest().client().post("/bot/any", body=b"{}").status == 404
+
+
+def test_webhook_mode_serves_telegram_updates(fake_http: type[FakeHTTPServer]) -> None:
+    bot = unittest.mock.Mock()
+
+    _ = make_bot_server(webhook_url="https://bot.example.com", bot=bot)
+
+    bot.remove_webhook.assert_called_once_with()
+    bot.set_webhook.assert_called_once()
+    url: str = bot.set_webhook.call_args.kwargs["url"]
+    secret: str = bot.set_webhook.call_args.kwargs["secret_token"]
+    webhook_path = url.removeprefix("https://bot.example.com")
+    assert webhook_path.startswith("/bot/")
+
+    client = fake_http.latest().client()
+
+    accepted = client.post(
+        webhook_path,
+        body=b'{"update_id": 7}',
+        headers={"X-Telegram-Bot-Api-Secret-Token": secret},
+    )
+    assert accepted.status == 200
+    updates = bot.process_new_updates.call_args.args[0]
+    assert updates[0].update_id == 7
+
+    denied = client.post(
+        webhook_path,
+        body=b"{}",
+        headers={"X-Telegram-Bot-Api-Secret-Token": "wrong"},
+    )
+    assert denied.status == 403
+
+
+def test_run_polling_mode(fake_http: type[FakeHTTPServer]) -> None:
+    bot = unittest.mock.Mock()
+    notifier = unittest.mock.Mock()
+    srv = make_bot_server(bot=bot, notifier=notifier)
+    http_server = fake_http.latest()
+
+    with (
+        unittest.mock.patch("server.signal.signal") as signal_mock,
+        unittest.mock.patch("server.threading.Thread", FakeThread),
+    ):
+        srv.run()
+
+    assert signal_mock.call_args.args[0] == signal.SIGTERM
+
+    thread = FakeThread.instances[0]
+    assert thread.daemon is True
+    assert thread.started
+    assert http_server.serve_count == 1
+
+    bot.infinity_polling.assert_called_once_with(none_stop=True)
+    notifier.notify_about_up.assert_called_once_with()
+    notifier.notify_about_down.assert_called_once_with()
+
+
+def test_run_webhook_mode(fake_http: type[FakeHTTPServer]) -> None:
+    bot = unittest.mock.Mock()
+    notifier = unittest.mock.Mock()
+    srv = make_bot_server(webhook_url="https://bot.example.com", bot=bot, notifier=notifier)
+    http_server = fake_http.latest()
+
+    with (
+        unittest.mock.patch("server.signal.signal"),
+        unittest.mock.patch("server.threading.Thread", FakeThread),
+    ):
+        srv.run()
+
+    assert http_server.serve_count == 1
+    assert FakeThread.instances == []
+    bot.infinity_polling.assert_not_called()
+    notifier.notify_about_up.assert_called_once_with()
+    notifier.notify_about_down.assert_called_once_with()
+
+
+def test_run_notifies_down_once_on_sigterm(fake_http: type[FakeHTTPServer]) -> None:
+    notifier = unittest.mock.Mock()
+    srv = make_bot_server(webhook_url="https://bot.example.com", notifier=notifier)
+    http_server = fake_http.latest()
+    handlers: list[Callable[[int, Any], None]] = []
+
+    def remember_handler(_signum: int, handler: Callable[[int, Any], None]):
+        handlers.append(handler)
+
+    def dispatch_sigterm() -> None:
+        handlers[0](signal.SIGTERM, None)
+
+    http_server.on_serve = dispatch_sigterm
+
+    with (
+        unittest.mock.patch("server.signal.signal", side_effect=remember_handler),
+        pytest.raises(SystemExit),
+    ):
+        srv.run()
+
+    notifier.notify_about_down.assert_called_once_with()
+
+
+def test_run_notifies_down_when_polling_fails(fake_http: type[FakeHTTPServer]) -> None:
+    notifier = unittest.mock.Mock()
+    bot = unittest.mock.Mock()
+    bot.infinity_polling.side_effect = RuntimeError("boom")
+    srv = make_bot_server(bot=bot, notifier=notifier)
+
+    with (
+        unittest.mock.patch("server.signal.signal"),
+        unittest.mock.patch("server.threading.Thread", FakeThread),
+        pytest.raises(RuntimeError, match="boom"),
+    ):
+        srv.run()
+
+    notifier.notify_about_up.assert_called_once_with()
+    notifier.notify_about_down.assert_called_once_with()
+
+
+def test_serve_http_logs_and_reraises(
+    fake_http: type[FakeHTTPServer], caplog: pytest.LogCaptureFixture
+) -> None:
+    srv = make_bot_server()
+    fake_http.latest().failure = RuntimeError("socket is gone")
+
+    with (
+        caplog.at_level(logging.ERROR, logger="test"),
+        pytest.raises(RuntimeError, match="socket is gone"),
+    ):
+        srv.serve_http()
+
+    assert "socket is gone" in caplog.text
+    assert any(record.levelno == logging.ERROR for record in caplog.records)
