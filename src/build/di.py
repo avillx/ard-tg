@@ -80,16 +80,45 @@ def bot_server(cfg: Config) -> server.BotServer:
         storage_path=os.path.join(cfg.agent_datapath, "tmp"),
     )
 
+    telegram_handlers: list[telegram.Handler] = [
+        telegram.InterruptHandler(
+            agent_service=agent_service,
+        ),
+        telegram.ToolsHandler(
+            agent_service=agent_service,
+        ),
+        telegram.TasksHandler(
+            agent_service=agent_service,
+        ),
+        telegram.McpHandler(
+            agent_service=agent_service,
+        ),
+        telegram.ActivityHandler(
+            agent_service=agent_service,
+        ),
+        telegram.NewSessionHandler(
+            agent_service=agent_service,
+            session_service=session_service,
+        ),
+        telegram.ConsolidationHandler(
+            agent_service=agent_service,
+            logger=logger,
+        ),
+        # general message handler must be registered last, it captures all the rest
+        telegram.GeneralMessageHandler(
+            agent_service=agent_service,
+            sticker_pack=cfg.sticker_pack,
+            storage_=user_attachments_storage,
+            sticker_cache=telegram.StickerCache(bot, logger),
+            logger=logger,
+        ),
+    ]
+
     telegram_service = telegram.Service(
-        agent_service=agent_service,
-        sticker_pack=cfg.sticker_pack,
-        storage_=user_attachments_storage,
-        sticker_cache=telegram.StickerCache(bot, logger),
-        session_service=session_service,
-        logger=logger,
+        handlers=telegram_handlers,
     )
     telegram_service.set_commands_prompt(bot)
-    telegram_service.register_on(bot)
+    telegram_service.register_handlers(bot)
 
     attachment_service = attach.AttachService(
         bot=bot,

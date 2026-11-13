@@ -2,7 +2,7 @@ from typing import Any
 
 import telebot.types as telebot_types
 
-from telegram.handlers import represent_message
+from telegram.handler_general_message import represent_message
 
 
 def _message(**options: Any) -> telebot_types.Message:
