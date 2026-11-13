@@ -122,6 +122,13 @@ Return:
 - `500` if something goes wrong
 
 
+## Important
+
+All project endpoints except the `/bot` webhook have no protection, to make them
+easy to use by an agent. They assume a trusted network. When exposing the webhook
+endpoint, make sure the reverse proxy exposes only the `/bot` endpoint.
+
+
 ## Agent API
 
 API generated with `openapi-python-client` from this [Specification](./agent-api.yml)
