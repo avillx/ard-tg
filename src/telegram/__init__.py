@@ -8,3 +8,20 @@ from .handler_tasks import TasksHandler
 from .middleware import LoggingMiddleware, UserContactKeeper, UserWhitelistMiddleware
 from .service import _TELEGRAM_GUIDE, Handler, Service
 from .sticker_cache import StickerCache
+
+__all__ = (
+    "ActivityHandler",
+    "ConsolidationHandler",
+    "GeneralMessageHandler",
+    "InterruptHandler",
+    "McpHandler",
+    "TasksHandler",
+    "LoggingMiddleware",
+    "UserContactKeeper",
+    "_TELEGRAM_GUIDE",
+    "Handler",
+    "Service",
+    "StickerCache",
+    "NewSessionHandler",
+    "UserWhitelistMiddleware",
+)

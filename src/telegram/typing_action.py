@@ -48,7 +48,7 @@ class TypingAction:
             self._typing_thread.join()
             self._is_typing = False
 
-    def __enter__(self) -> "TypingAction":
+    def __enter__(self) -> "TypingAction":  # noqa
         self.start_typing()
         return self
 
