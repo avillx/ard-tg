@@ -1,5 +1,5 @@
 [project]
-name = "myapi-client"
+name = "ard-tg"
 version = "1.2.0"
 dependencies = [
     "attrs>=26.1",
