@@ -34,4 +34,14 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["agent*", "telegram*", "ard*"]
+include = [
+    "agent*",
+    "ard*",
+    "attach*",
+    "build*",
+    "contacts*",
+    "notifications*",
+    "server*",
+    "storage*",
+    "telegram*",
+]

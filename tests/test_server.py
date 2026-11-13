@@ -13,7 +13,7 @@ from typing import Any, cast
 
 import pytest
 
-import server
+import server.http_server
 from server import AttachSessionHandler, BotServer, ContactsHandler, ResponseSink, WebhookHandler
 
 
@@ -93,8 +93,8 @@ def make_webhook_handler(
 ) -> WebhookHandler:
     """Builds a WebhookHandler with a deterministic secret token."""
 
-    with unittest.mock.patch("server.secrets.token_hex", return_value=secret_token):
-        return WebhookHandler(bot=bot, url=url, webhook_path=webhook_path)
+    with unittest.mock.patch("server.endpoints.secrets.token_hex", return_value=secret_token):
+        return WebhookHandler(bot=bot, webhook_url=url + webhook_path)
 
 
 @dataclasses.dataclass
@@ -198,7 +198,7 @@ class FakeThread:
 def fake_http(monkeypatch: pytest.MonkeyPatch) -> type[FakeHTTPServer]:
     """Replaces the real HTTP server so BotServer never binds a port."""
 
-    monkeypatch.setattr(server, "ThreadingHTTPServer", FakeHTTPServer)
+    monkeypatch.setattr(server.http_server, "ThreadingHTTPServer", FakeHTTPServer)
     FakeHTTPServer.instances.clear()
     FakeThread.instances.clear()
     return FakeHTTPServer
@@ -476,8 +476,8 @@ def test_run_polling_mode(fake_http: type[FakeHTTPServer]) -> None:
     http_server = fake_http.latest()
 
     with (
-        unittest.mock.patch("server.signal.signal") as signal_mock,
-        unittest.mock.patch("server.threading.Thread", FakeThread),
+        unittest.mock.patch("server.server.signal.signal") as signal_mock,
+        unittest.mock.patch("server.server.threading.Thread", FakeThread),
     ):
         srv.run()
 
@@ -500,8 +500,8 @@ def test_run_webhook_mode(fake_http: type[FakeHTTPServer]) -> None:
     http_server = fake_http.latest()
 
     with (
-        unittest.mock.patch("server.signal.signal"),
-        unittest.mock.patch("server.threading.Thread", FakeThread),
+        unittest.mock.patch("server.server.signal.signal"),
+        unittest.mock.patch("server.server.threading.Thread", FakeThread),
     ):
         srv.run()
 
@@ -527,7 +527,7 @@ def test_run_notifies_down_once_on_sigterm(fake_http: type[FakeHTTPServer]) -> N
     http_server.on_serve = dispatch_sigterm
 
     with (
-        unittest.mock.patch("server.signal.signal", side_effect=remember_handler),
+        unittest.mock.patch("server.server.signal.signal", side_effect=remember_handler),
         pytest.raises(SystemExit),
     ):
         srv.run()
@@ -542,8 +542,8 @@ def test_run_notifies_down_when_polling_fails(fake_http: type[FakeHTTPServer]) -
     srv = make_bot_server(bot=bot, notifier=notifier)
 
     with (
-        unittest.mock.patch("server.signal.signal"),
-        unittest.mock.patch("server.threading.Thread", FakeThread),
+        unittest.mock.patch("server.server.signal.signal"),
+        unittest.mock.patch("server.server.threading.Thread", FakeThread),
         pytest.raises(RuntimeError, match="boom"),
     ):
         srv.run()
