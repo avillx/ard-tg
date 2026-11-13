@@ -22,7 +22,7 @@ pythonpath = ["src"]
 include = ["src", "tests"]
 extraPaths = ["src", "tests"]
 venvPath = "."
-venv = "venv"
+venv = ".venv"
 typeCheckingMode = "basic"
 
 [tool.ruff]
