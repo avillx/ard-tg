@@ -28,7 +28,6 @@ class Service:
     _sticker_cache: sticker_cache.StickerCache
     _storage: storage.Storage
     _logger: logging.Logger
-    _notify_chat_id: int | None
     _bot: telebot.TeleBot
 
     def __init__(
@@ -38,7 +37,6 @@ class Service:
         sticker_cache: sticker_cache.StickerCache,
         sticker_pack: str,
         storage_: storage.Storage,
-        notify_chat_id: int | None,
         logger: logging.Logger,
     ):
         self._logger = logger.getChild("Telegram.Hanlders")
@@ -47,7 +45,6 @@ class Service:
         self._storage = storage_
         self._sticker_pack = sticker_pack
         self._session_service = session_service
-        self._notify_chat_id = notify_chat_id
 
     def set_commands_prompt(self, bot: telebot.TeleBot):
         """

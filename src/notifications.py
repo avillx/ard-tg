@@ -1,6 +1,5 @@
 import logging
 from abc import ABC, abstractmethod
-from cmath import log
 
 import telebot
 
@@ -58,6 +57,7 @@ class PlaceholderNotifier(Notifier):
 
     def __init__(self, logger: logging.Logger) -> None:
         super().__init__()
+        self._logger = logger
 
     def notify_about_up(self) -> None:
         self._logger.info("Server up: no where to notify")
