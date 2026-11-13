@@ -6,7 +6,7 @@ import agent
 from telegram.service import Handler
 
 
-class McpHandler(Handler):
+class MCPHandler(Handler):
     """
     Handler to fetch actual list of MCP
     Expect call from `/mcp` command
