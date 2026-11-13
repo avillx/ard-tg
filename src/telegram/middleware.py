@@ -1,8 +1,8 @@
-import logging
+lazy import logging
 
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
 
-import contacts
+lazy import contacts
 
 
 class LoggingMiddleware(BaseMiddleware):
@@ -14,12 +14,12 @@ class LoggingMiddleware(BaseMiddleware):
 
     def pre_process(self, message, data):
         chat_id = _extract_chat_id(message)
-        self._log.info(f"update in chat: {chat_id}")
+        self._log.info("update in chat: %s", chat_id)
 
     def post_process(self, message, data, exception):
         if exception is not None:
             chat_id = _extract_chat_id(message)
-            self._log.error(f"in chat: {chat_id}, cause {exception}")
+            self._log.error("in chat: %s, cause %s", chat_id, exception)
 
 
 class UserWhitelistMiddleware(BaseMiddleware):
@@ -34,8 +34,9 @@ class UserWhitelistMiddleware(BaseMiddleware):
     def pre_process(self, message, data):
         chat_id = _extract_chat_id(message)
         if chat_id not in self._allowed_chats:
-            self._log.warning(f"update from unallowed chat '{chat_id}' ignored")
+            self._log.warning("update from unallowed chat '%s' ignored", chat_id)
             return CancelUpdate()
+        return None
 
     def post_process(self, message, data, exception):
         pass

@@ -1,13 +1,13 @@
-import telebot
-import telebot.types as telebot_types
+lazy import telebot
+lazy import telebot.types as telebot_types
 
-import agent
 from telegram.service import Handler
+lazy import agent
 
 
 class InterruptHandler(Handler):
-    """
-    Handler for interupt agent stream
+    """Handle interrupt of the agent stream
+
     Expect call from `/interrupt` command
     """
 

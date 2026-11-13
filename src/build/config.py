@@ -1,7 +1,7 @@
 import dataclasses
 import os
 import urllib.parse as urlparse
-from collections.abc import Callable
+lazy from collections.abc import Callable
 
 import agent
 
@@ -37,7 +37,9 @@ class Config:
     agent_datapath: str = os.getenv("ARDTG_AGENT_DATAPATH", "")
     file_storage_path: str = os.getenv("ARDTG_FILESTORAGE_PATH", "")
     notify_chat_id: int | None = _env_value("ARDTG_NOTIFY_CHAT_ID", int, None, "a chat id")
-    allowed_chats: list[int] = _env_value("ARDTG_ALLOWED_CHATS", _parse_chat_ids, [], "a chat id")
+    allowed_chats: list[int] = dataclasses.field(
+        default_factory=lambda: _env_value("ARDTG_ALLOWED_CHATS", _parse_chat_ids, [], "a chat id")
+    )
     session_life_time: float = _env_value_session_ttl()
 
     def __post_init__(self) -> None:

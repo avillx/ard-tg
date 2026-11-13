@@ -1,12 +1,12 @@
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
 from typing import Any, Protocol, Self
+lazy from collections.abc import Mapping
 
-import agent.tool as tool
 import ard.api.tool_results.resolve_tool_call as tool_result
 import ard.client as agent_client
 import ard.models as models
+lazy import agent.tool as tool
 
 
 class EventType(Protocol):
@@ -73,6 +73,8 @@ def determine_response(data: str) -> EventType | None:
         raw_str = data.removeprefix("error: ")
         error_dict = json.loads(raw_str)
         return models.Error.from_dict(error_dict)
+
+    return None
 
 
 class AgentEventHandler:
@@ -150,7 +152,7 @@ class AgentEventHandler:
 
             try:
                 result = tool.execute(args)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - tool code is arbitrary
                 result = f"tool error: {e}"
 
         content_part = models.ContentPart(text=result)

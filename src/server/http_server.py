@@ -1,10 +1,12 @@
 import json
-import logging
 from abc import ABC, abstractmethod
-from email.message import Message
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, override
+lazy import logging
+lazy from email.message import Message
 
+# The bot must accept webhook and attach calls from outside, so listen on every interface.
+_SERVER_HOST = "0.0.0.0"  # noqa: S104
 _SERVER_PORT = 8443
 
 
@@ -101,6 +103,6 @@ class Server:
 
             @override
             def log_message(self, format, *args):
-                logger.info(f"{format % args}")
+                logger.info(format, *args)
 
-        return ThreadingHTTPServer(("0.0.0.0", _SERVER_PORT), Server)
+        return ThreadingHTTPServer((_SERVER_HOST, _SERVER_PORT), Server)

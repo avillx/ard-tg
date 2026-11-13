@@ -1,7 +1,7 @@
 import json
-import logging
+lazy import logging
 
-import storage
+lazy import storage
 
 _CONTACTS_FILE = "contacts.json"
 
@@ -23,7 +23,7 @@ class ContactService:
     def add_contact(self, chat_id: str, name: str):
         self._contacts[chat_id] = name
         self._flush_contacts()
-        self._logger.warning(f"added {name}:{chat_id}")
+        self._logger.warning("added %s:%s", name, chat_id)
 
     def _load_contacts(self) -> dict[str, str]:
         try:
@@ -42,5 +42,5 @@ class ContactService:
         encoded_contacts = json.dumps(self._contacts, ensure_ascii=False).encode("utf-8")
         try:
             self._storage.save(_CONTACTS_FILE, encoded_contacts)
-        except Exception as e:
-            self._logger.error(f"can't flush contacts {e}")
+        except Exception as e:  # noqa: BLE001 - storage backend is pluggable
+            self._logger.error("can't flush contacts %s", e)

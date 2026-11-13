@@ -65,7 +65,7 @@ class SafeTool(AgentTool):
     def execute(self, args: dict[str, Any]) -> str:
         try:
             return self._execute(args)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - tool code is arbitrary
             return f"error: {e}"
 
     @abstractmethod

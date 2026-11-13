@@ -1,5 +1,3 @@
-import sys
-
 import build
 
 if __name__ == "__main__":
@@ -8,8 +6,7 @@ if __name__ == "__main__":
     try:
         config = build.Config()
     except Exception as e:
-        print(f"Bad config: {e}")
-        sys.exit(1)
+        raise SystemExit(f"Bad config: {e}") from e
 
     app = build.bot_server(config)
 

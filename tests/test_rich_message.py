@@ -1,3 +1,4 @@
+import logging
 import unittest.mock
 from typing import Any, cast
 
@@ -46,7 +47,7 @@ def test_tool_call_repr_empty_args() -> None:
 
 def test_append_text_ignores_empty() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.append_text("")
     rm.send_finale()
@@ -57,7 +58,7 @@ def test_append_text_ignores_empty() -> None:
 
 def test_send_draft() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=7)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=7, logger=logging.getLogger("test"))
 
     rm.append_text("hello")
     rm.send_draft()
@@ -71,7 +72,7 @@ def test_send_draft() -> None:
 
 def test_send_draft_joins_multiple_texts() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.append_text("a")
     rm.append_text("b")
@@ -82,7 +83,7 @@ def test_send_draft_joins_multiple_texts() -> None:
 
 def test_send_finale_uses_last_text_as_candidate() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.append_text("a")
     rm.append_text("b")
@@ -94,7 +95,7 @@ def test_send_finale_uses_last_text_as_candidate() -> None:
 
 def test_send_finale_is_idempotent() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.append_text("a")
     rm.send_finale()
@@ -105,7 +106,7 @@ def test_send_finale_is_idempotent() -> None:
 
 def test_send_finale_nothing_to_send() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.send_finale()
 
@@ -115,7 +116,7 @@ def test_send_finale_nothing_to_send() -> None:
 
 def test_send_finale_tool_calls_only() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.append_tool_calls([_tool_call("read", {"path": "/x"})])
     rm.send_finale()
@@ -126,7 +127,7 @@ def test_send_finale_tool_calls_only() -> None:
 
 def test_append_tool_calls_ignores_empty() -> None:
     bot = unittest.mock.Mock()
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.append_tool_calls([])
     # append_tool_calls defensively treats None as an empty list
@@ -139,7 +140,7 @@ def test_append_tool_calls_ignores_empty() -> None:
 def test_send_finale_falls_back_to_plain_message_on_error() -> None:
     bot = unittest.mock.Mock()
     bot.send_rich_message.side_effect = Exception("boom")
-    rm = RichMessage(bot=bot, chat_id=1, draft_id=1)
+    rm = RichMessage(bot=bot, chat_id=1, draft_id=1, logger=logging.getLogger("test"))
 
     rm.append_text("hi_there")
     rm.send_finale()

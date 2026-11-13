@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 import telebot
@@ -76,7 +77,7 @@ class SendPhotoTool(agent.SafeTool):
         if args["path"] is None or "":
             return "path is required"
 
-        with open(args["path"], "rb") as f:
+        with Path(args["path"]).open("rb") as f:
             self._bot.send_photo(chat_id=self._chat_id, photo=telebot_types.InputFile(f))
         return "photo sended"
 
@@ -107,7 +108,7 @@ class SendFileTool(agent.SafeTool):
         if args["path"] is None or "":
             return "path is required"
 
-        with open(args["path"], "rb") as f:
+        with Path(args["path"]).open("rb") as f:
             self._bot.send_document(chat_id=self._chat_id, document=telebot_types.InputFile(f))
         return "file sended"
 
@@ -138,6 +139,6 @@ class SendVoiceTool(agent.SafeTool):
         if args["path"] is None or "":
             return "path is required"
 
-        with open(args["path"], "rb") as f:
+        with Path(args["path"]).open("rb") as f:
             self._bot.send_voice(chat_id=self._chat_id, voice=telebot_types.InputFile(f))
         return "voice sended"

@@ -13,9 +13,10 @@ all attachments sended by user stores in `tmp/*` of your default cwd
 
 
 class Handler(ABC):
-    """
-    Telegram route handler. Owns its update route and knows how to register
-    it on a bot. Dependencies are passed in a constructor
+    """Telegram route handler.
+
+    Owns its update route and knows how to register it on a bot. Dependencies are
+    passed in a constructor.
     """
 
     @abstractmethod
@@ -34,9 +35,7 @@ class Service:
         self._handlers = handlers
 
     def set_commands_prompt(self, bot: telebot.TeleBot):
-        """
-        Register allowed commands prompt for users in a bot
-        """
+        """Register allowed commands prompt for users in a bot."""
         commands: list[telebot_types.BotCommand] = [
             telebot_types.BotCommand("interrupt", "🚧 Interrupt agent response"),
             telebot_types.BotCommand("new", "💠 New session"),
@@ -49,8 +48,6 @@ class Service:
         bot.set_my_commands(commands)
 
     def register_handlers(self, bot: telebot.TeleBot):
-        """
-        Register routes bot handlers
-        """
+        """Register routes bot handlers."""
         for handler in self._handlers:
             handler.register_on(bot)

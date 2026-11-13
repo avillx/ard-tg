@@ -1,4 +1,4 @@
-"""adapter to generated agent api"""
+"""Adapter to generated agent API."""
 
 from .event import ConsolidationEventHandler, EventHandler
 from .service import Service

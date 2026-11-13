@@ -1,7 +1,7 @@
-import datetime
+import datetime as dt
 import json
-import logging
-from collections.abc import Callable
+lazy import logging
+lazy from collections.abc import Callable
 
 import agent.event as event
 import agent.session as session
@@ -40,11 +40,9 @@ class Service:
         self._session_service = session_service
 
     def interrupt(self):
-        """
-        Sends to agent signal to interrupt actual session
-        """
+        """Interrupt the agent session in progress."""
         session_id = self._session_service.get()
-        self._logger.info(f"interrupting agent {self._agent_id}, session: {session_id}")
+        self._logger.info("interrupting agent %s, session: %s", self._agent_id, session_id)
 
         interrupt_chat.sync_detailed(
             agent=self._agent_id,
@@ -53,9 +51,7 @@ class Service:
         )
 
     def mcp_list(self) -> dict[str, models.MCPServerInfo]:
-        """
-        Return list of records of mcp servers in agent system
-        """
+        """Return the MCP servers known to the agent."""
         self._logger.info("MCP servers requested")
 
         mcp_servers = list_mcp_servers.sync(client=self._agent_client)
@@ -65,9 +61,7 @@ class Service:
         return mcp_servers.to_dict()
 
     def task_list(self) -> list[models.TaskConfig]:
-        """
-        Return list of actual tasks in agent system
-        """
+        """Return the tasks configured in the agent."""
         self._logger.info("Tasks requested")
 
         task_list = list_tasks.sync(client=self._agent_client)
@@ -77,8 +71,7 @@ class Service:
         return task_list
 
     def tool_list(self) -> dict[str, models.ToolRepr]:
-        """
-        Return list of all working ToolServers
+        """Return all working tool servers
 
         dict key is a name of tool server
         dict
@@ -92,15 +85,12 @@ class Service:
         return tool_servers_dto.to_dict()
 
     def today_activity(self) -> list[models.ActivityRecord]:
-        """
-        Return note of today agent activity
+        """Return today's agent activity
 
         raise on errors abd bad validations
         """
         self._logger.info("Activity requested")
-        request = models.GetActivityBody(
-            agent=self._agent_id, from_=datetime.datetime.now(datetime.UTC)
-        )
+        request = models.GetActivityBody(agent=self._agent_id, from_=dt.datetime.now(dt.UTC))
 
         resp = get_activity.sync(
             client=self._agent_client,
@@ -120,9 +110,9 @@ class Service:
         return resp
 
     def consolidate(self, on_completion: Callable[[str], None]):
-        """
-        Starts immidiate agent memeory consolidation, all completions flush in
-        a on_completion callback
+        """Start agent memory consolidation immediately
+
+        Completions are flushed into the on_completion callback
         """
         self._logger.info("Consolidation requested")
 
@@ -150,14 +140,14 @@ class Service:
                 try:
                     event_dict = json.loads(line.removeprefix("data: "))
                     completion_event = models.CompletionEvent.from_dict(event_dict)
-                except Exception as e:
-                    self._logger.error(f"consolidation: api respond bad json: {e}")
+                except Exception as e:  # noqa: BLE001 - malformed stream line
+                    self._logger.error("consolidation: api respond bad json: %s", e)
                     continue
 
                 try:
                     on_completion(completion_event.completion)
-                except Exception as e:
-                    self._logger.error(f"consolidation process: {e}")
+                except Exception as e:  # noqa: BLE001 - callback is external code
+                    self._logger.error("consolidation process: %s", e)
 
     def agent_request(
         self,
@@ -166,9 +156,9 @@ class Service:
         event_handler: event.EventHandler,
         provided_tools: list[tool.SafeTool],
     ):
-        """
-        Starts agentic loop with provided tools. all evetns was processed trough
-        intruduced event handler
+        """Run the agentic loop with the provided tools
+
+        All events are processed through the introduced event handler
         """
         session_id = self._session_service.get_actual()
 
@@ -194,7 +184,7 @@ class Service:
             ]
         )
 
-        self._logger.info(f"Agentic loop requested, session: {session_id}")
+        self._logger.info("Agentic loop requested, session: %s", session_id)
 
         httpx_client = self._agent_client.get_httpx_client()
 
@@ -212,12 +202,12 @@ class Service:
                     ev = event.determine_response(line)
                     if ev is None:
                         continue
-                except Exception as e:
-                    self._logger.error(f"agent api, session {session_id}: {e}")
+                except Exception as e:  # noqa: BLE001 - malformed stream line
+                    self._logger.error("agent api, session %s: %s", session_id, e)
                     continue
 
                 try:
                     agent_event_handler.process_event(ev)
-                except Exception as e:
-                    self._logger.error(f"chat declined cause: {e}")
+                except Exception as e:  # noqa: BLE001 - event handlers are external code
+                    self._logger.error("chat declined cause: %s", e)
                     self.interrupt()

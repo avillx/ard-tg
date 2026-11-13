@@ -1,5 +1,5 @@
-import telebot
-import telebot.types as telebot_types
+lazy import telebot
+lazy import telebot.types as telebot_types
 
 
 class Attachment:
@@ -32,8 +32,7 @@ class Attachment:
             self._file_name_base = file_name
 
     def get_bytes(self) -> bytes:
-        """
-        Download file and return raw file bytes. if it already downloaded then
+        """Download file and return raw file bytes. if it already downloaded then
         just return already downloaded bytes
         """
         if self._bytes is None:
@@ -45,9 +44,7 @@ class Attachment:
         return self._bytes
 
     def get_file_name(self) -> str:
-        """
-        Get detailed file info and builds unique file name with file extension
-        """
+        """Get detailed file info and builds unique file name with file extension"""
         file_info = self._get_file_info()
         if file_info.file_path is None:
             raise Exception("file_info has no file_path")
@@ -57,9 +54,7 @@ class Attachment:
         return f"{self._file_name_base}_{file_info.file_unique_id}.{ext}"
 
     def _get_file_info(self) -> telebot_types.File:
-        """
-        Get file info from telegram
-        """
+        """Get file info from telegram"""
         if self._file_info is None:
             file_info = self._bot.get_file(self._file_id)
             if file_info.file_path is None:

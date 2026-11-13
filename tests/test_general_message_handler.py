@@ -18,10 +18,10 @@ def _message(**options: Any) -> telebot_types.Message:
 
 
 def test_represent_text_message() -> None:
-    text = represent_message(_message(text="привет"), [])
+    text = represent_message(_message(text="hello"), [])
 
     assert text.startswith("# From Alice (")
-    assert text.endswith("\nпривет")
+    assert text.endswith("\nhello")
 
 
 def test_represent_empty_message_has_only_header() -> None:
