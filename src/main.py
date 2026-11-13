@@ -1,9 +1,7 @@
+import dataclasses
 import logging
 import os
-import secrets
-import signal
 import sys
-import types
 import urllib.parse as urlparse
 
 import telebot
@@ -12,84 +10,98 @@ import agent
 import ard.client as client
 import attach
 import contacts
+import notifications
 import server
 import storage
 import telegram
 
 
-def main():
-    # fmt: off
+@dataclasses.dataclass(frozen=True, slots=True)
+class Config:
+    telegram_token: str
+    agent_url: str
+    agent_id: str
+    session_life_time: str
+    sticker_pack: str
+    allowed_chats: list[int]
+    webhook_url: str
+    agent_datapath: str
+    file_storage_path: str
+    notify_chat_id: int | None
 
-    # envirement variables
-    telegram_token     : str = os.getenv("ARDTG_TELEGRAM_TOKEN","")
-    agent_url          : str = os.getenv("ARDTG_AGENT_URL","")
-    agent_id           : str = os.getenv("ARDTG_AGENT_ID","default")
-    session_life_time  : str = os.getenv("ARDTG_SESSION_LIFE_TIME","600")
-    sticker_pack       : str = os.getenv("ARDTG_STICKER_PACK","")
-    allowed_chats_raw  : str = os.getenv("ARDTG_ALLOWED_CHATS","")
-    webhook_url        : str = os.getenv("ARDTG_WEBHOOK_URL","")
-    agent_datapath     : str = os.getenv("ARDTG_AGENT_DATAPATH","")
-    file_storage_path  : str = os.getenv("ARDTG_FILESTORAGE_PATH","")
-    notify_chat_id_raw : str = os.getenv("ARDTG_NOTIFY_CHAT_ID","")
+    def __post_init__(self) -> None:
+        if self.agent_datapath == "":
+            raise ValueError("'ARDTG_AGENT_DATAPATH' is required")
+
+        if self.file_storage_path == "":
+            raise ValueError("'ARDTG_FILESTORAGE_PATH' is required")
+
+        if self.telegram_token == "":
+            raise ValueError("'ARDTG_TELEGRAM_TOKEN' is required")
+
+        if self.agent_url == "":
+            raise ValueError("'ARDTG_AGENT_URL' is required")
+
+        # validate url
+        try:
+            parsed = urlparse.urlparse(self.agent_url)
+            _ = parsed.port  # raise ValueError on invalid port
+        except ValueError as e:
+            raise ValueError(f"'ARDTG_AGENT_URL' is invalid: '{self.agent_url}' ") from e
+
+        if parsed.scheme not in ("http", "https"):
+            raise ValueError("'ARDTG_AGENT_URL' must start with http or https scheme")
 
 
-    logger = logging.getLogger("App")
-    logging.basicConfig(
-        level   = logging.INFO,
-        format  = "[%(levelname)s] %(asctime)s %(name)s: %(message)s",
-        datefmt = "%Y-%m-%d %H:%M:%S",
-    )
-
-    if agent_datapath == "":
-        logger.fatal("'ARDTG_AGENT_DATAPATH' is required")
-        sys.exit(1)
-
-    if file_storage_path == "":
-        logger.fatal("'ARDTG_FILESTORAGE_PATH' is required")
-        sys.exit(1)
-
-    if telegram_token == "":
-        logger.fatal("'ARDTG_TELEGRAM_TOKEN' is required")
-        sys.exit(1)
-
-    if agent_url == "":
-        logger.fatal("'ARDTG_AGENT_URL' is required")
-        sys.exit(1)
-
-    # validate url
-    try:
-        parsed = urlparse.urlparse(agent_url)
-        _ = parsed.port  # raise ValueError on invalid port
-    except ValueError:
-        logger.fatal("'ARDTG_AGENT_URL' is invalid")
-        sys.exit(1)
-
-    if parsed.scheme not in ("http", "https"):
-        logger.fatal("'ARDTG_AGENT_URL' must start with http or https scheme")
-        sys.exit(1)
+def load_config() -> Config:
 
     # cast and validate allowed chats
     allowed_chats: list[int] = []
+    allowed_chats_raw: str = os.getenv("ARDTG_ALLOWED_CHATS", "")
     if allowed_chats_raw != "":
         for allowed_chat_id in allowed_chats_raw.split(","):
             try:
                 allowed_chats.append(int(allowed_chat_id))
-            except ValueError:
-                logger.fatal("'ARDTG_NOTIFY_CHAT_ID' must be a chat id")
-                sys.exit(1)
+            except ValueError as e:
+                raise ValueError("'ARDTG_NOTIFY_CHAT_ID' must be a chat id") from e
 
     # cast and validate notify ChatID
     notify_chat_id: int | None = None
+    notify_chat_id_raw: str = os.getenv("ARDTG_NOTIFY_CHAT_ID", "")
     if notify_chat_id_raw != "":
         try:
             notify_chat_id = int(notify_chat_id_raw)
-        except ValueError:
-            logger.fatal("'ARDTG_NOTIFY_CHAT_ID' must be a chat id")
-            sys.exit(1)
+        except ValueError as e:
+            raise ValueError("'ARDTG_NOTIFY_CHAT_ID' must be a chat id") from e
 
-    # app building
+    return Config(
+        telegram_token=os.getenv("ARDTG_TELEGRAM_TOKEN", ""),
+        agent_url=os.getenv("ARDTG_AGENT_URL", ""),
+        agent_id=os.getenv("ARDTG_AGENT_ID", "default"),
+        session_life_time=os.getenv("ARDTG_SESSION_LIFE_TIME", "600"),
+        sticker_pack=os.getenv("ARDTG_STICKER_PACK", ""),
+        webhook_url=os.getenv("ARDTG_WEBHOOK_URL", ""),
+        agent_datapath=os.getenv("ARDTG_AGENT_DATAPATH", ""),
+        file_storage_path=os.getenv("ARDTG_FILESTORAGE_PATH", ""),
+        allowed_chats=allowed_chats,
+        notify_chat_id=notify_chat_id,
+    )
+
+
+def get_logger() -> logging.Logger:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)s] %(asctime)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    return logging.getLogger("App")
+
+
+# fmt: off
+def build_app(cfg: Config,logger: logging.Logger) -> server.BotServer:
+
     bot = telebot.TeleBot(
-        token                 = telegram_token,
+        token                 = cfg.telegram_token,
         parse_mode            = "MarkdownV2",
         num_threads           = 4,
         use_class_middlewares = True,
@@ -100,10 +112,9 @@ def main():
         logger = logger,
     ))
 
-
     contacts_storage = storage.FileStorage(
         logger       = logger,
-        storage_path = file_storage_path,
+        storage_path = cfg.file_storage_path,
     )
 
     contact_service = contacts.ContactService(
@@ -115,45 +126,45 @@ def main():
         contact_service = contact_service,
     ))
 
-    if allowed_chats_raw != "":
+    if cfg.allowed_chats != "":
         bot.setup_middleware(telegram.UserWhitelistMiddleware(
-            allowed_chats = allowed_chats,
+            allowed_chats = cfg.allowed_chats,
             logger        = logger,
         ))
 
     agent_client = client.Client(
-        base_url = agent_url
+        base_url = cfg.agent_url
     )
 
     session_service = agent.SessionService(
-        agent_id     = agent_id,
+        agent_id     = cfg.agent_id,
         agent_client = agent_client,
-        life_time    = float(session_life_time),
+        life_time    = float(cfg.session_life_time),
         logger       = logger,
         instruction  = telegram._TELEGRAM_GUIDE,
         time         = agent.SystemTime(),
     )
 
     agent_service = agent.Service(
-        agent_url       = agent_url,
+        agent_url       = cfg.agent_url,
         agent_client    = agent_client,
-        agent_id        = agent_id,
+        agent_id        = cfg.agent_id,
         session_service = session_service,
         logger          = logger,
     )
 
     user_attachments_storage = storage.FileStorage(
         logger       = logger,
-        storage_path = os.path.join(agent_datapath,"tmp"),
+        storage_path = os.path.join(cfg.agent_datapath,"tmp"),
     )
 
     telegram_service = telegram.Service(
         agent_service   = agent_service,
-        sticker_pack    = sticker_pack,
+        sticker_pack    = cfg.sticker_pack,
         storage_        = user_attachments_storage,
         sticker_cache   = telegram.StickerCache(bot,logger),
         session_service = session_service,
-        notify_chat_id  = notify_chat_id,
+        notify_chat_id  = cfg.notify_chat_id,
         logger          = logger,
     )
     telegram_service.set_commands_prompt(bot)
@@ -165,52 +176,34 @@ def main():
         logger          = logger,
     )
 
-    # build server
-    post_routes : dict[str, server.EndpointHandler] = {
-        "/attach" : server.AttachSessionHandler(attachment_service)
-    }
+    notifier_svc = notifications.PlaceholderNotifier(logger)
+    if isinstance(cfg.notify_chat_id,int):
+        notifier_svc = notifications.TelegramNotifier(
+            bot=bot,
+            logger=logger,
+            notify_chat_id=cfg.notify_chat_id,
+        )
 
-    get_routes: dict[str, server.EndpointHandler] = {
-        "/contacts" : server.ContactsHandler(contact_service),
-        "/health": server.HealthHandler(),
-    }
-
-    if webhook_url != "":
-        webhook_path = f"/bot/{secrets.token_hex(16)}"
-        post_routes[webhook_path] = server.bot_webhook_handler(bot,webhook_url,webhook_path)
-
-    srv = server.build_server(
-        get_routes  = get_routes,
-        post_routes = post_routes,
-        logger      = logger,
+    return server.BotServer(
+        attachment_service=attachment_service,
+        contact_service=contact_service,
+        logger=logger,
+        notifier=notifier_svc,
+        webhook_url=cfg.webhook_url,
     )
 
-    notified: bool = False
-    def notify_about_down():
-        nonlocal notified
-        if notified:
-            return
-        notified = True
-        telegram_service.notify_about_down(bot)
-
-    def _on_terminate(_signum: int, _frame: types.FrameType | None):
-        logger.info("got SIGTERM, shutting down")
-        notify_about_down()
-        raise SystemExit(0)
-
-    _ = signal.signal(signal.SIGTERM, _on_terminate)
+def main():
+    logger = get_logger()
 
     try:
-        telegram_service.notify_about_up(bot)
-        server.serve_forever(
-            bot         = bot,
-            logger      = logger,
-            srv         = srv,
-            webhook_url = webhook_url if webhook_url != "" else None,
-        )
-    finally:
-        notify_about_down()
+        config = load_config()
+    except Exception as e:
+        logger.fatal(f"Bad config: {e}")
+        sys.exit(1)
 
+    app = build_app(config,logger)
+
+    app.run()
 
 if __name__ == "__main__":
     main()

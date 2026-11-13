@@ -2,18 +2,21 @@ import hmac
 import json
 import logging
 import secrets
-import sys
+import signal
 import threading
+import types
 from abc import ABC, abstractmethod
 from email.message import Message
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, override
 
 import telebot
+from telebot import TeleBot
 from telebot import types as telebot_types
 
 import attach
 import contacts
+import notifications
 
 
 class ResponseSink:
@@ -214,24 +217,74 @@ def build_server(
     return ThreadingHTTPServer(("0.0.0.0", 8443), Server)
 
 
-def serve_with_polling(bot: telebot.TeleBot, srv: ThreadingHTTPServer, logger: logging.Logger):
-    def run_server():
+class BotServer:
+    _bot: TeleBot
+    _httpServer: ThreadingHTTPServer
+    _logger: logging.Logger
+    _notifier: notifications.Notifier
+    _use_webhook: bool
+
+    def __init__(
+        self,
+        logger: logging.Logger,
+        attachment_service: attach.AttachService,
+        contact_service: contacts.ContactService,
+        notifier: notifications.Notifier,
+        webhook_url: str,
+    ) -> None:
+        self._use_webhook = False
+
+        post_routes: dict[str, EndpointHandler] = {
+            "/attach": AttachSessionHandler(attachment_service)
+        }
+
+        get_routes: dict[str, EndpointHandler] = {
+            "/contacts": ContactsHandler(contact_service),
+            "/health": HealthHandler(),
+        }
+
+        if webhook_url != "":
+            webhook_path = f"/bot/{secrets.token_hex(16)}"
+            post_routes[webhook_path] = bot_webhook_handler(self._bot, webhook_url, webhook_path)
+            self._use_webhook = True
+
+        self._httpServer = build_server(
+            get_routes=get_routes,
+            post_routes=post_routes,
+            logger=logger,
+        )
+
+    def run(self):
+
+        notified: bool = False
+
+        def notify_about_down():
+            nonlocal notified
+            if notified:
+                return
+            notified = True
+            self._notifier.notify_about_down()
+
+        ## Calls when server is take sigterm
+        def _on_terminate(_signum: int, _frame: types.FrameType | None):
+            self._logger.info("got SIGTERM, shutting down")
+            notify_about_down()
+            raise SystemExit(0)
+
+        _ = signal.signal(signal.SIGTERM, _on_terminate)
+
         try:
-            srv.serve_forever()
-        except Exception as e:
-            logger.error(f"serve {e}")
-            sys.exit(1)
+            self._notifier.notify_about_up()
 
-    threading.Thread(target=run_server, daemon=True).start()
-    bot.infinity_polling(none_stop=True)
+            ## Run with infinity polling
+            if self._use_webhook is None:
+                self._logger.info("run with polling")
+                threading.Thread(target=self._httpServer.serve_forever, daemon=True).start()
+                self._bot.infinity_polling(none_stop=True)
 
-
-def serve_forever(
-    webhook_url: str | None, bot: telebot.TeleBot, srv: ThreadingHTTPServer, logger: logging.Logger
-):
-    if webhook_url is None:
-        logger.info("run with polling")
-        serve_with_polling(bot, srv, logger)
-    else:
-        logger.info("run with webhook")
-        srv.serve_forever()
+            ## Run with only webhook
+            else:
+                self._logger.info("run with webhook")
+                self._httpServer.serve_forever()
+        finally:
+            notify_about_down()
