@@ -46,18 +46,23 @@ Agent recieve additional tools for telegram.
 ## Skills
 
 Special skill for _ARD_ for this gateway
-- [contact user](skills/contact-user) the agent can contact you outside of autonomous 
+- [contact user](skills/ard-tg-contact-user) the agent can contact you outside of autonomous 
   operation and initiate messaging first.
 
 
 ## Files
 
-Folder with files specifies via `ARDTG_STORAGE_PATH` environment variable. 
-Folder structure:
+Gateway keeps its files in two folders, each one is set by its own environment variable.
+
+Gateway storage folder specifies via `ARDTG_FILESTORAGE_PATH` variable:
 - `contacts.json` stores user contacts (all users whenever sent message to agent add to contacts)
-- `uploads/` folder for files that was sent by user to agent 
+
+Agent data folder specifies via `ARDTG_AGENT_DATAPATH` variable. It must match the agent
+  working directory, because the gateway passes relative `tmp/...` paths to the agent:
+- `tmp/` folder for files that was sent by user to agent
   (photos, audio, video, video notes, documents, voice messages, etc...)
   All messages sent to agent goes to this path, path to saved file passed to agent in message text.
+- `skills/` folder with skills of this gateway, copied here on startup so the agent can use them
 
 
 ## Configuration
@@ -65,7 +70,10 @@ Folder structure:
 All configs provides via this envirement variables:
 - `ARDTG_TELEGRAM_TOKEN` *required* - Telegram bot token
 - `ARDTG_AGENT_URL` *required* - address of agent server
-- `ARDTG_AGENT_ID` *required* - id of agent recipient
+- `ARDTG_AGENT_DATAPATH` *required* - path to agent folder for store message attachments
+  (videos, photos, voice, docs, etc...) and gateway skills, must match the agent working directory
+- `ARDTG_FILESTORAGE_PATH` *required* - path to folder for store gateway files (`contacts.json`)
+- `ARDTG_AGENT_ID` *optional* - id of agent recipient. `default - default`
 - `ARDTG_SESSION_LIFE_TIME` *optional* - time in seconds before dropping session. `default - 600 (10min)`
 - `ARDTG_STICKER_PACK` *optional* - name of sticker pack for agent usage
   Agent has no `send_sticker` tool if sticker pack is not defined
@@ -73,8 +81,8 @@ All configs provides via this envirement variables:
   webhook has no ssl, for webhook you must use reverse proxy with ssl (nginx,traefic etc...)
 - `ARDTG_ALLOWED_CHATS` *optional* - if not empty, updates works only on allowed chats (whitelist-like)
   is a telegram chat ids enumirated via comma (e.g `ARDTG_ALLOWED_CHATS=666666,777777` )
-- `ARDTG_AGENT_DATAPATH` *optional* - path to folder for store message attachments. 
-  (videos, photos, voice, docs, etc...) 
+- `ARDTG_NOTIFY_CHAT_ID` *optional* - chat id that receives bot start and shutdown notifications
+  Notifications are disabled if not set
 
 
 ## Set session
@@ -98,7 +106,7 @@ Example:
   "session_id" : "xxxxx-xxxxx-xxxxx-xxxxx",
   "chat_id" : 0000000,
   "message" : "Hi!",
-  "await_time" : 6000,
+  "await_time" : 6000
 }
 ```
 
@@ -131,10 +139,10 @@ API generated with `openapi-python-client` from this [Specification](./agent-api
 
 This program is licensed under the GNU General Public License v3.0 (GPLv3). See the full license: `https://www.gnu.org/licenses/gpl-3.0.txt`
 
-Source: `https://github.com/avillx/aa-gtw-tg`
+Source: `https://github.com/avillx/ard-tg`
 
 ```
-avillx/aa-gtw-tg: Copyright (C) 2026 avillx
+avillx/ard-tg: Copyright (C) 2026 avillx
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
