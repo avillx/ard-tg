@@ -1,43 +1,30 @@
 import dataclasses
 import os
 import urllib.parse as urlparse
+from collections.abc import Callable
 
 import agent
 
 
-def _get_allowed_chats() -> list[int]:
-    allowed_chats: list[int] = []
-    allowed_chats_raw: str = os.getenv("ARDTG_ALLOWED_CHATS", "")
-    if allowed_chats_raw != "":
-        for allowed_chat_id in allowed_chats_raw.split(","):
-            try:
-                allowed_chats.append(int(allowed_chat_id))
-            except ValueError as e:
-                raise ValueError("'ARDTG_ALLOWED_CHATS' must be a chat id") from e
-    return allowed_chats
+def _env_value[ValueT](
+    name: str, parse: Callable[[str], ValueT], default: ValueT, expected: str
+) -> ValueT:
+    """Read `name` from the environment and parse it, or return `default` when it is unset."""
+    raw = os.getenv(name, "")
+    if raw == "":
+        return default
+    try:
+        return parse(raw)
+    except ValueError as e:
+        raise ValueError(f"'{name}' must be {expected}") from e
 
 
-def _get_notify_chat_id() -> int | None:
-    notify_chat_id: int | None = None
-    notify_chat_id_raw: str = os.getenv("ARDTG_NOTIFY_CHAT_ID", "")
-    if notify_chat_id_raw != "":
-        try:
-            notify_chat_id = int(notify_chat_id_raw)
-        except ValueError as e:
-            raise ValueError("'ARDTG_NOTIFY_CHAT_ID' must be a chat id") from e
-
-    return notify_chat_id
+def _parse_chat_ids(raw: str) -> list[int]:
+    return [int(chat_id) for chat_id in raw.split(",")]
 
 
-def _get_session_life_time() -> float:
-    session_life_time: float = agent._DEFAULT_SESSION_TTL
-    session_life_time_raw = os.getenv("ARDTG_SESSION_LIFE_TIME", "")
-    if session_life_time_raw == "":
-        try:
-            session_life_time = float(session_life_time_raw)
-        except ValueError as e:
-            raise ValueError("'ARDTG_SESSION_LIFE_TIME' must be a number") from e
-    return session_life_time
+def _env_value_session_ttl() -> float:
+    return _env_value("ARDTG_SESSION_LIFE_TIME", float, agent._DEFAULT_SESSION_TTL, "a number")
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -49,9 +36,9 @@ class Config:
     webhook_url: str = os.getenv("ARDTG_WEBHOOK_URL", "")
     agent_datapath: str = os.getenv("ARDTG_AGENT_DATAPATH", "")
     file_storage_path: str = os.getenv("ARDTG_FILESTORAGE_PATH", "")
-    notify_chat_id: int | None = _get_notify_chat_id()
-    session_life_time: float = _get_session_life_time()
-    allowed_chats: list[int] = dataclasses.field(default_factory=_get_allowed_chats)
+    notify_chat_id: int | None = _env_value("ARDTG_NOTIFY_CHAT_ID", int, None, "a chat id")
+    allowed_chats: list[int] = _env_value("ARDTG_ALLOWED_CHATS", _parse_chat_ids, [], "a chat id")
+    session_life_time: float = _env_value_session_ttl()
 
     def __post_init__(self) -> None:
         if self.agent_datapath == "":
