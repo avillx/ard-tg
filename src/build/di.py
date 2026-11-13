@@ -114,6 +114,8 @@ def bot_server(cfg: Config) -> server.BotServer:
     telegram_service = telegram.Service(
         handlers=telegram_handlers,
     )
+
+    # TODO: this should be runtime operaions
     telegram_service.set_commands_prompt(bot)
     telegram_service.register_handlers(bot)
 
