@@ -84,9 +84,6 @@ def bot_server(cfg: Config) -> server.BotServer:
         telegram.InterruptHandler(
             agent_service=agent_service,
         ),
-        telegram.ToolsHandler(
-            agent_service=agent_service,
-        ),
         telegram.TasksHandler(
             agent_service=agent_service,
         ),
