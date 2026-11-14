@@ -11,7 +11,7 @@ lazy import agent.tool as tool
 
 class EventType(Protocol):
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any], /) -> Self: ...
+    def from_dict(cls, data: Mapping[str, Any], /) -> Self: ...  # pyright: ignore[reportExplicitAny]
 
 
 _EVENT_TYPE_MAP: dict[str, type[EventType]] = {
@@ -61,18 +61,18 @@ def determine_response(data: str) -> EventType | None:
 
     if data.startswith("data:"):
         raw_str = data.removeprefix("data: ")
-        event_dict = json.loads(raw_str)
-        event_type_name = event_dict.get("type")
+        event_dict = json.loads(raw_str)  # pyright: ignore[reportAny]
+        event_type_name: str = event_dict.get("type")  # pyright: ignore[reportAny]
         event_type = _EVENT_TYPE_MAP.get(event_type_name)
         if event_type is None:
             raise ValueError(f"unknown result type {event_type_name}")
 
-        return event_type.from_dict(event_dict)
+        return event_type.from_dict(event_dict)  # pyright: ignore[reportAny]
 
     if data.startswith("error:"):
         raw_str = data.removeprefix("error: ")
-        error_dict = json.loads(raw_str)
-        return models.Error.from_dict(error_dict)
+        error_dict = json.loads(raw_str)  # pyright: ignore[reportAny]
+        return models.Error.from_dict(error_dict)  # pyright: ignore[reportAny]
 
     return None
 
@@ -145,7 +145,7 @@ class AgentEventHandler:
             result = f"tool '{tool}' is not exist"
 
         else:
-            args: dict[str, Any] = {}
+            args: dict[str, Any] = {}  # pyright: ignore[reportExplicitAny]
 
             if isinstance(event.args, models.ProvidedToolCallEventArgs):
                 args = event.args.to_dict()
@@ -160,7 +160,7 @@ class AgentEventHandler:
 
         result_id: str = event.result_id if isinstance(event.result_id, str) else ""
 
-        tool_result.sync(
+        _ = tool_result.sync(
             id=result_id,
             body=answer,
             client=self._client,

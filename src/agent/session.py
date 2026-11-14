@@ -1,13 +1,14 @@
 import threading
 import time
 from abc import ABC, abstractmethod
+from typing import override
 lazy import logging
 
 import ard.api.sessions.create_session as create_session
 import ard.client as agent_client
 import ard.models as models
 
-_DEFAULT_SESSION_TTL: float = 600
+DEFAULT_SESSION_TTL: float = 600
 
 
 class SuperfluousSetSessionError(Exception):
@@ -21,6 +22,7 @@ class TimeProvider(ABC):
 
 
 class SystemTime(TimeProvider):
+    @override
     def now(self) -> float:
         return time.monotonic()
 
@@ -35,7 +37,7 @@ class SessionService:
     _life_time: float
     _instruction: str
     _logger: logging.Logger
-    _mutex = threading.Lock()
+    _mutex: threading.Lock = threading.Lock()
     _additional_time: float
     _time: TimeProvider
 
