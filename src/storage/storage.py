@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import override
 lazy import logging
 
 
@@ -26,16 +27,17 @@ class FileStorage(Storage):
         self._storage_path = storage_path
         self._logger = logger.getChild("files")
 
+    @override
     def save(self, file_path: str, data: bytes):
         path = Path(self._storage_path) / file_path
 
-        # save file
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("wb") as f:
-            f.write(data)
+            _ = f.write(data)
 
         self._logger.info("saved %s", path)
 
+    @override
     def get(self, file_path: str) -> bytes:
         path = Path(self._storage_path) / file_path
 
