@@ -44,7 +44,7 @@ class Service:
         session_id = self._session_service.get()
         self._logger.info("interrupting agent %s, session: %s", self._agent_id, session_id)
 
-        interrupt_chat.sync_detailed(
+        _ = interrupt_chat.sync_detailed(
             agent=self._agent_id,
             session=session_id,
             client=self._agent_client,
@@ -107,6 +107,9 @@ class Service:
             case models.Error():
                 raise Exception(f"problem: {resp.message}")
 
+            case _:
+                pass
+
         return resp
 
     def consolidate(self, on_completion: Callable[[str], None]):
@@ -138,8 +141,8 @@ class Service:
                     continue
 
                 try:
-                    event_dict = json.loads(line.removeprefix("data: "))
-                    completion_event = models.CompletionEvent.from_dict(event_dict)
+                    event_dict = json.loads(line.removeprefix("data: "))  # pyright: ignore[reportAny]
+                    completion_event = models.CompletionEvent.from_dict(event_dict)  # pyright: ignore[reportAny]
                 except Exception as e:  # noqa: BLE001 - malformed stream line
                     self._logger.error("consolidation: api respond bad json: %s", e)
                     continue

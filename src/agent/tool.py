@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, override
 
 import ard.models as models
 
@@ -14,11 +14,50 @@ class AgentTool(ABC):
         pass
 
     @abstractmethod
-    def schema(self) -> dict[str, Any]:
+    def schema(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
         pass
 
     @abstractmethod
-    def execute(self, args: dict[str, Any]) -> str:
+    def execute(self, args: dict[str, Any]) -> str:  # pyright: ignore[reportExplicitAny]
+        pass
+
+
+class SafeTool(AgentTool, ABC):
+    _name: str
+    _desctiption: str
+    _schema: dict[str, Any]  # pyright: ignore[reportExplicitAny]
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        schema: dict[str, Any],  # pyright: ignore[reportExplicitAny]
+    ):
+        self._name = name
+        self._desctiption = description
+        self._schema = schema
+
+    @override
+    def name(self) -> str:
+        return self._name
+
+    @override
+    def description(self) -> str:
+        return self._desctiption
+
+    @override
+    def schema(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+        return self._schema
+
+    @override
+    def execute(self, args: dict[str, Any]) -> str:  # pyright: ignore[reportExplicitAny]
+        try:
+            return self._execute(args)
+        except Exception as e:  # noqa: BLE001 - tool code is arbitrary
+            return f"error: {e}"
+
+    @abstractmethod
+    def _execute(self, args: dict[str, Any]) -> str:  # pyright: ignore[reportExplicitAny]
         pass
 
 
@@ -36,38 +75,3 @@ def create_provided_tool_server(tools: list[AgentTool]) -> models.ProvidedToolSe
         )
 
     return models.ProvidedToolServer(tools=provided_tools)
-
-
-class SafeTool(AgentTool):
-    _name: str
-    _desctiption: str
-    _schema: dict[str, Any]
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        schema: dict[str, Any],
-    ):
-        self._name = name
-        self._desctiption = description
-        self._schema = schema
-
-    def name(self) -> str:
-        return self._name
-
-    def description(self) -> str:
-        return self._desctiption
-
-    def schema(self) -> dict[str, Any]:
-        return self._schema
-
-    def execute(self, args: dict[str, Any]) -> str:
-        try:
-            return self._execute(args)
-        except Exception as e:  # noqa: BLE001 - tool code is arbitrary
-            return f"error: {e}"
-
-    @abstractmethod
-    def _execute(self, args: dict[str, Any]) -> str:
-        pass

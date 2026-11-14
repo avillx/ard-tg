@@ -24,7 +24,7 @@ def _parse_chat_ids(raw: str) -> list[int]:
 
 
 def _env_value_session_ttl() -> float:
-    return _env_value("ARDTG_SESSION_LIFE_TIME", float, agent._DEFAULT_SESSION_TTL, "a number")
+    return _env_value("ARDTG_SESSION_LIFE_TIME", float, agent.DEFAULT_SESSION_TTL, "a number")
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
