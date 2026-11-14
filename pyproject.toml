@@ -23,7 +23,7 @@ pythonpath = ["src"]
 [tool.basedpyright]
 include = ["src", "tests"]
 extraPaths = ["src", "tests"]
-typeCheckingMode = "basic"
+typeCheckingMode = "recommended"
 exclude = ["src/ard/**"]
 
 [tool.ruff]
