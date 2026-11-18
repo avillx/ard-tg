@@ -1,6 +1,8 @@
 import logging
 import unittest.mock
+from typing import cast
 
+import telebot.types as telebot_types
 from telebot.handler_backends import CancelUpdate
 
 from telegram.middleware import (
@@ -33,13 +35,13 @@ def mkmessage(
     chat_id: int | None = None,
     from_id: int | None = None,
     first_name: str = "",
-) -> _Message:
+) -> telebot_types.Message:
     obj = _Message()
     if chat_id is not None:
         obj.chat = _Chat(chat_id, first_name)
     if from_id is not None:
         obj.from_user = _FromUser(from_id)
-    return obj
+    return cast(telebot_types.Message, cast(object, obj))
 
 
 def test_extract_chat_id_from_chat() -> None:
@@ -55,7 +57,7 @@ def test_extract_chat_id_from_user() -> None:
 
 
 def test_extract_chat_id_empty() -> None:
-    assert _extract_chat_id(_Message()) == 0
+    assert _extract_chat_id(mkmessage()) == 0
 
 
 def test_whitelist_allows_known_chat(logger: logging.Logger) -> None:
@@ -98,7 +100,7 @@ def test_contact_keeper_empty_name_without_chat(logger: logging.Logger) -> None:
     mw = UserContactKeeper(contact_svc)
 
     # no chat attribute on the message, so chat_id becomes "0" and the name stays empty
-    mw.pre_process(_Message(), {})
+    mw.pre_process(mkmessage(), {})
 
     contact_svc.add_contact.assert_called_once_with("0", "")
 

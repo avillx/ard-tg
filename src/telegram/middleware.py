@@ -21,7 +21,7 @@ class LoggingMiddleware(BaseMiddleware):
         self._log.info("update in chat: %s", chat_id)
 
     @override
-    def post_process(self, message: telebot_types.Message, data, exception: Exception):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
+    def post_process(self, message: telebot_types.Message, data, exception: Exception | None):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
         if exception:
             chat_id = _extract_chat_id(message)
             self._log.error("in chat: %s, cause %s", chat_id, exception)
@@ -47,7 +47,7 @@ class UserWhitelistMiddleware(BaseMiddleware):
         return None
 
     @override
-    def post_process(self, message: telebot_types.Message, data, exception: Exception):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
+    def post_process(self, message: telebot_types.Message, data, exception: Exception | None):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
         pass
 
 
@@ -72,7 +72,7 @@ class UserContactKeeper(BaseMiddleware):
         self._contact_service.add_contact(str(chat_id), name)
 
     @override
-    def post_process(self, message: telebot_types.Message, data, exception: Exception):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
+    def post_process(self, message: telebot_types.Message, data, exception: Exception | None):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
         pass
 
 
