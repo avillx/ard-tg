@@ -9,13 +9,13 @@ import telegram.rich_message as rich_message
 import telegram.sticker_cache as sticker_cache
 import telegram.tools as tools
 from telegram.chat_event_handler import ChatEventHandler
-from telegram.service import Handler
+from telegram.service import MessageHandler
 from telegram.typing_action import TypingAction
 lazy import agent
 lazy import storage
 
 
-class GeneralMessageHandler(Handler):
+class GeneralMessageHandler(MessageHandler):
     """Handler to process all raw messages to agent."""
 
     _agent_service: agent.Service

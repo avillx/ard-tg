@@ -4,12 +4,12 @@ lazy import telebot
 lazy import telebot.types as telebot_types
 
 import telegram.rich_message as rich_message
-from telegram.service import Handler
+from telegram.service import MessageHandler
 from telegram.typing_action import TypingAction
 lazy import agent
 
 
-class ConsolidationHandler(Handler):
+class ConsolidationHandler(MessageHandler):
     """Handle requests for consolidation
 
     Expect call from `/consolidate` command

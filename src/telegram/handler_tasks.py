@@ -2,11 +2,11 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from telegram.service import Handler
+from telegram.service import MessageHandler
 lazy import agent
 
 
-class TasksHandler(Handler):
+class TasksHandler(MessageHandler):
     """Handle fetch of the actual tasks config
 
     Expect call from `/tasks` command
