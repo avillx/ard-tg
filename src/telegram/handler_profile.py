@@ -24,9 +24,9 @@ class ShowProfileHandler(MessageHandler):
         bot.register_message_handler(self.handle, commands=["profile"], pass_bot=True)
 
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
-        markup = telebot_types.InlineKeyboardMarkup()
+        markup = telebot_types.InlineKeyboardMarkup(row_width=1)
         btns: list[telebot_types.InlineKeyboardButton] = []
-        msg: str = "### Agent profiles:\n"
+        msg: str = "### 👤 Agent profiles:\n"
         for profile_id, profile_description in self._profile_service.all_profiles().items():
             msg += f"- **{profile_id}**: {profile_description}\n"
             data = ":".join([ButtonPrefix, profile_id])
