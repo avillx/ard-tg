@@ -3,7 +3,7 @@ import telebot.formatting as fmt
 
 import agent
 lazy import ard.models as models
-lazy from telegram import rich_message
+lazy import telegram.rich_message as rich_message
 lazy from telegram.typing_action import TypingAction
 
 

@@ -6,11 +6,11 @@ from .handler_mcp import MCPHandler
 from .handler_new_session import NewSessionHandler
 from .handler_tasks import TasksHandler
 from .middleware import LoggingMiddleware, UserContactKeeper, UserWhitelistMiddleware
-from .service import _TELEGRAM_GUIDE, Handler, Service
+from .service import TELEGRAM_GUIDE, Handler, Service
 from .sticker_cache import StickerCache
 
 __all__ = (
-    "_TELEGRAM_GUIDE",
+    "TELEGRAM_GUIDE",
     "ActivityHandler",
     "ConsolidationHandler",
     "GeneralMessageHandler",

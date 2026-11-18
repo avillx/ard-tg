@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import telebot
 from telebot import types as telebot_types
@@ -37,6 +37,7 @@ class SendStickerTool(agent.SafeTool):
             },
         )
 
+    @override
     def _execute(self, args: dict[str, Any]) -> str:
 
         emoji = args.get("emoji")
@@ -47,7 +48,7 @@ class SendStickerTool(agent.SafeTool):
         if file_id is None:
             return f"has no sticker for {emoji}"
 
-        self._bot.send_sticker(self._chat_id, file_id)
+        _ = self._bot.send_sticker(self._chat_id, file_id)
         return "sticker sended"
 
 
@@ -73,12 +74,14 @@ class SendPhotoTool(agent.SafeTool):
             },
         )
 
+    @override
     def _execute(self, args: dict[str, Any]) -> str:
-        if args["path"] is None or "":
+        p = args.get("path")
+        if not isinstance(p, str) or p == "":
             return "path is required"
 
-        with Path(args["path"]).open("rb") as f:
-            self._bot.send_photo(chat_id=self._chat_id, photo=telebot_types.InputFile(f))
+        with Path(p).open("rb") as f:
+            _ = self._bot.send_photo(chat_id=self._chat_id, photo=telebot_types.InputFile(f))
         return "photo sended"
 
 
@@ -104,12 +107,13 @@ class SendFileTool(agent.SafeTool):
             },
         )
 
+    @override
     def _execute(self, args: dict[str, Any]) -> str:
-        if args["path"] is None or "":
+        p = args.get("path")
+        if not isinstance(p, str) or p == "":
             return "path is required"
-
-        with Path(args["path"]).open("rb") as f:
-            self._bot.send_document(chat_id=self._chat_id, document=telebot_types.InputFile(f))
+        with Path(p).open("rb") as f:
+            _ = self._bot.send_document(chat_id=self._chat_id, document=telebot_types.InputFile(f))
         return "file sended"
 
 
@@ -135,10 +139,12 @@ class SendVoiceTool(agent.SafeTool):
             },
         )
 
+    @override
     def _execute(self, args: dict[str, Any]) -> str:
-        if args["path"] is None or "":
+        p = args.get("path")
+        if not isinstance(p, str) or p == "":
             return "path is required"
 
-        with Path(args["path"]).open("rb") as f:
-            self._bot.send_voice(chat_id=self._chat_id, voice=telebot_types.InputFile(f))
+        with Path(p).open("rb") as f:
+            _ = self._bot.send_voice(chat_id=self._chat_id, voice=telebot_types.InputFile(f))
         return "voice sended"

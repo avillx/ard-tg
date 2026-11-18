@@ -3,7 +3,7 @@ lazy import logging
 lazy import telebot
 lazy import telebot.types as telebot_types
 
-from telegram import rich_message
+import telegram.rich_message as rich_message
 from telegram.service import Handler
 from telegram.typing_action import TypingAction
 lazy import agent

@@ -5,7 +5,7 @@ import pytest
 
 import agent.session as session_mod
 import ard.models as models
-from agent.session import SessionService, SystemTime, TimeProvider
+from agent.session import ProfileSource, SessionService, SystemTime, TimeProvider
 
 
 class FakeTime(TimeProvider):
@@ -18,6 +18,16 @@ class FakeTime(TimeProvider):
         return self._now
 
 
+class FakeProfileSource(ProfileSource):
+    """Controllable profile selection for SessionService tests."""
+
+    def __init__(self, profile_id: str = "") -> None:
+        self.profile_id = profile_id
+
+    def get_profile(self) -> str:
+        return self.profile_id
+
+
 def make_service(
     clock: TimeProvider,
     monkeypatch: pytest.MonkeyPatch,
@@ -26,14 +36,15 @@ def make_service(
     instruction: str = "be nice",
     client: unittest.mock.Mock | None = None,
     sync_result: object = None,
+    profile_source: ProfileSource | None = None,
 ) -> tuple[SessionService, unittest.mock.Mock, unittest.mock.Mock]:
     client = client if client is not None else unittest.mock.Mock()
     fake_sync = unittest.mock.Mock(return_value=sync_result)
     monkeypatch.setattr(session_mod.create_session, "sync", fake_sync)
 
     svc = SessionService(
-        agent_id="agent-1",
         agent_client=client,
+        profile_source=profile_source if profile_source is not None else FakeProfileSource(),
         life_time=life_time,
         instruction=instruction,
         logger=logging.getLogger("test"),
@@ -68,12 +79,28 @@ def test_create_session_passes_agent_client_and_instruction(
 
     svc.get_actual()
 
-    assert sync.call_args.args[0] == "agent-1"
     assert sync.call_args.kwargs["client"] is client
     body = sync.call_args.kwargs["body"]
     assert isinstance(body, models.CreateSessionBody)
     assert body.instruction == "do it"
-    assert body.to_dict() == {"instruction": "do it"}
+    assert body.profile_id == ""
+    assert body.to_dict() == {"profile_id": "", "instruction": "do it"}
+
+
+def test_create_session_uses_selected_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = FakeTime(0.0)
+    svc, sync, _ = make_service(
+        clock,
+        monkeypatch,
+        profile_source=FakeProfileSource("coder"),
+        sync_result=models.CreateSessionResponse200(id="s-new"),
+    )
+
+    svc.get_actual()
+
+    body = sync.call_args.kwargs["body"]
+    assert body.profile_id == "coder"
+    assert body.to_dict() == {"profile_id": "coder", "instruction": "be nice"}
 
 
 def test_get_actual_reuses_session_within_lifetime(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -125,6 +152,68 @@ def test_get_actual_back_to_back_uses_same_session(monkeypatch: pytest.MonkeyPat
     assert svc.get_actual() == "s1"
 
     sync.assert_not_called()
+
+
+def test_get_actual_keeps_session_while_profile_is_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = FakeTime(0.0)
+    profile_source = FakeProfileSource("coder")
+    svc, sync, _ = make_service(
+        clock,
+        monkeypatch,
+        profile_source=profile_source,
+        sync_result=models.CreateSessionResponse200(id="s-new"),
+    )
+
+    assert svc.get_actual() == "s-new"
+
+    clock._now = 3.0
+    assert svc.get_actual() == "s-new"
+    sync.assert_called_once()
+
+
+def test_get_actual_recreates_session_when_profile_changes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = FakeTime(0.0)
+    profile_source = FakeProfileSource("coder")
+    svc, sync, _ = make_service(
+        clock,
+        monkeypatch,
+        profile_source=profile_source,
+        sync_result=models.CreateSessionResponse200(id="s-new"),
+    )
+
+    svc.set("s-old")
+
+    profile_source.profile_id = "writer"
+    clock._now = 1.0
+
+    assert svc.get_actual() == "s-new"
+    sync.assert_called_once()
+    assert sync.call_args.kwargs["body"].profile_id == "writer"
+
+
+def test_get_actual_reuses_new_session_after_profile_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = FakeTime(0.0)
+    profile_source = FakeProfileSource("coder")
+    svc, sync, _ = make_service(
+        clock,
+        monkeypatch,
+        profile_source=profile_source,
+        sync_result=models.CreateSessionResponse200(id="s-new"),
+    )
+
+    profile_source.profile_id = "writer"
+    assert svc.get_actual() == "s-new"
+
+    # the new session is bound to the new profile, so it must be reused
+    clock._now = 1.0
+    assert svc.get_actual() == "s-new"
+    sync.assert_called_once()
 
 
 def test_get_returns_without_creating(monkeypatch: pytest.MonkeyPatch) -> None:
