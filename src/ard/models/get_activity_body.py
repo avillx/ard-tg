@@ -16,19 +16,15 @@ T = TypeVar("T", bound="GetActivityBody")
 class GetActivityBody:
     """
     Attributes:
-        agent (str): Agent identifier.
         from_ (datetime.datetime): Start of the time range.
-        to (datetime.datetime | Unset): End of the time range (optional).
+        to (datetime.datetime | Unset): End of the time range (optional, empty means unbounded).
     """
 
-    agent: str
     from_: datetime.datetime
     to: datetime.datetime | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        agent = self.agent
-
         from_ = self.from_.isoformat()
 
         to: str | Unset = UNSET
@@ -39,7 +35,6 @@ class GetActivityBody:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "agent": agent,
                 "from": from_,
             }
         )
@@ -51,8 +46,6 @@ class GetActivityBody:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        agent = d.pop("agent")
-
         from_ = datetime.datetime.fromisoformat(d.pop("from"))
 
         _to = d.pop("to", UNSET)
@@ -63,7 +56,6 @@ class GetActivityBody:
             to = datetime.datetime.fromisoformat(_to)
 
         get_activity_body = cls(
-            agent=agent,
             from_=from_,
             to=to,
         )

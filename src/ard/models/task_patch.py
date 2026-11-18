@@ -25,29 +25,29 @@ class TaskPatch:
         oneshot (bool | None | Unset):
     """
 
-    name: None | str | Unset = UNSET
-    description: None | str | Unset = UNSET
-    recipients: list[str] | None | Unset = UNSET
-    schedule: None | str | Unset = UNSET
-    request: None | str | Unset = UNSET
-    active: bool | None | Unset = UNSET
-    oneshot: bool | None | Unset = UNSET
+    name: str | Unset | None = UNSET
+    description: str | Unset | None = UNSET
+    recipients: list[str] | Unset | None = UNSET
+    schedule: str | Unset | None = UNSET
+    request: str | Unset | None = UNSET
+    active: bool | Unset | None = UNSET
+    oneshot: bool | Unset | None = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name: None | str | Unset
+        name: str | Unset | None
         if isinstance(self.name, Unset):
             name = UNSET
         else:
             name = self.name
 
-        description: None | str | Unset
+        description: str | Unset | None
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        recipients: list[str] | None | Unset
+        recipients: list[str] | Unset | None
         if isinstance(self.recipients, Unset):
             recipients = UNSET
         elif isinstance(self.recipients, list):
@@ -56,25 +56,25 @@ class TaskPatch:
         else:
             recipients = self.recipients
 
-        schedule: None | str | Unset
+        schedule: str | Unset | None
         if isinstance(self.schedule, Unset):
             schedule = UNSET
         else:
             schedule = self.schedule
 
-        request: None | str | Unset
+        request: str | Unset | None
         if isinstance(self.request, Unset):
             request = UNSET
         else:
             request = self.request
 
-        active: bool | None | Unset
+        active: bool | Unset | None
         if isinstance(self.active, Unset):
             active = UNSET
         else:
             active = self.active
 
-        oneshot: bool | None | Unset
+        oneshot: bool | Unset | None
         if isinstance(self.oneshot, Unset):
             oneshot = UNSET
         else:
@@ -104,25 +104,25 @@ class TaskPatch:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_name(data: object) -> None | str | Unset:
+        def _parse_name(data: object) -> str | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            return cast("None | str | Unset", data)
 
         name = _parse_name(d.pop("name", UNSET))
 
-        def _parse_description(data: object) -> None | str | Unset:
+        def _parse_description(data: object) -> str | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            return cast("None | str | Unset", data)
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_recipients(data: object) -> list[str] | None | Unset:
+        def _parse_recipients(data: object) -> list[str] | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -130,48 +130,48 @@ class TaskPatch:
             try:
                 if not isinstance(data, list):
                     raise TypeError()
-                recipients_type_0 = cast(list[str], data)
+                recipients_type_0 = cast("list[str]", data)
 
                 return recipients_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
-            return cast(list[str] | None | Unset, data)
+            return cast("list[str] | None | Unset", data)
 
         recipients = _parse_recipients(d.pop("recipients", UNSET))
 
-        def _parse_schedule(data: object) -> None | str | Unset:
+        def _parse_schedule(data: object) -> str | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            return cast("None | str | Unset", data)
 
         schedule = _parse_schedule(d.pop("schedule", UNSET))
 
-        def _parse_request(data: object) -> None | str | Unset:
+        def _parse_request(data: object) -> str | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            return cast("None | str | Unset", data)
 
         request = _parse_request(d.pop("request", UNSET))
 
-        def _parse_active(data: object) -> bool | None | Unset:
+        def _parse_active(data: object) -> bool | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(bool | None | Unset, data)
+            return cast("bool | None | Unset", data)
 
         active = _parse_active(d.pop("active", UNSET))
 
-        def _parse_oneshot(data: object) -> bool | None | Unset:
+        def _parse_oneshot(data: object) -> bool | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(bool | None | Unset, data)
+            return cast("bool | None | Unset", data)
 
         oneshot = _parse_oneshot(d.pop("oneshot", UNSET))
 

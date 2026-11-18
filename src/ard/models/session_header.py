@@ -21,7 +21,7 @@ class SessionHeader:
     """Metadata for a single session. The `error` field is only present for
     broken (unreadable) session headers.
 
-        Attributes:
+    Attributes:
             session_id (str):
             input_tokens (int):
             output_tokens (int):

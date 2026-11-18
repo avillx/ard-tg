@@ -18,7 +18,7 @@ class LoopExitEvent:
 
     Attributes:
         type_ (LoopExitEventType):
-        cause (str | Unset): Human-readable error message explaining why the loop exited (empty when no error).
+        cause (str | Unset): Human-readable error message explaining why the loop exited (omitted when no error).
     """
 
     type_: LoopExitEventType

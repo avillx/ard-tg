@@ -63,9 +63,9 @@ class ValidationError:
                 problems_type_0 = ValidationErrorProblemsType0.from_dict(data)
 
                 return problems_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
-            return cast(str | Unset | ValidationErrorProblemsType0, data)
+            return cast("str | Unset | ValidationErrorProblemsType0", data)
 
         problems = _parse_problems(d.pop("problems", UNSET))
 

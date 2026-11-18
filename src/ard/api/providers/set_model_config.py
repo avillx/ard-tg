@@ -8,6 +8,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error import Error
 from ...models.model_config import ModelConfig
+from ...models.validation_error import ValidationError
 from ...types import Response
 
 
@@ -35,23 +36,42 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | Error | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | Error | ValidationError | None:
     if response.status_code == 200:
-        response_200 = cast(Any, None)
+        response_200 = cast("Any", None)
         return response_200
 
     if response.status_code == 400:
-        response_400 = Error.from_dict(response.json())
+
+        def _parse_response_400(data: object) -> Error | ValidationError:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_400_type_0 = Error.from_dict(data)
+
+                return response_400_type_0
+            except TypeError, ValueError, AttributeError, KeyError:
+                pass
+            if not isinstance(data, dict):
+                raise TypeError()
+            response_400_type_1 = ValidationError.from_dict(data)
+
+            return response_400_type_1
+
+        response_400 = _parse_response_400(response.json())
 
         return response_400
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | Error]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Any | Error | ValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -66,7 +86,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ModelConfig,
-) -> Response[Any | Error]:
+) -> Response[Any | Error | ValidationError]:
     """Set model configuration
 
      Sets configuration for a model. The model name in the path is base64url-encoded.
@@ -85,7 +105,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | Error]
+        Response[Any | Error | ValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -107,7 +127,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: ModelConfig,
-) -> Any | Error | None:
+) -> Any | Error | ValidationError | None:
     """Set model configuration
 
      Sets configuration for a model. The model name in the path is base64url-encoded.
@@ -126,7 +146,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | Error
+        Any | Error | ValidationError
     """
 
     return sync_detailed(
@@ -143,7 +163,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ModelConfig,
-) -> Response[Any | Error]:
+) -> Response[Any | Error | ValidationError]:
     """Set model configuration
 
      Sets configuration for a model. The model name in the path is base64url-encoded.
@@ -162,7 +182,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | Error]
+        Response[Any | Error | ValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -182,7 +202,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: ModelConfig,
-) -> Any | Error | None:
+) -> Any | Error | ValidationError | None:
     """Set model configuration
 
      Sets configuration for a model. The model name in the path is base64url-encoded.
@@ -201,7 +221,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | Error
+        Any | Error | ValidationError
     """
 
     return (

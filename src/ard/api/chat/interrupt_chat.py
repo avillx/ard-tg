@@ -10,14 +10,12 @@ from ...types import Response
 
 
 def _get_kwargs(
-    agent: str,
     session: str,
 ) -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/chat/{agent}/{session}/interrupt".format(
-            agent=quote(str(agent), safe=""),
+        "url": "/chat/{session}/interrupt".format(
             session=quote(str(session), safe=""),
         ),
     }
@@ -25,17 +23,20 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | None:
     if response.status_code == 202:
         return None
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Any]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -45,17 +46,15 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 
 def sync_detailed(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any]:
     """Interrupt a running chat completion
 
-     Interrupts the current chat completion for the given agent and session.
+     Interrupts the current chat completion for the given session.
 
     Args:
-        agent (str):
         session (str):
 
     Raises:
@@ -67,7 +66,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         session=session,
     )
 
@@ -79,17 +77,15 @@ def sync_detailed(
 
 
 async def asyncio_detailed(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any]:
     """Interrupt a running chat completion
 
-     Interrupts the current chat completion for the given agent and session.
+     Interrupts the current chat completion for the given session.
 
     Args:
-        agent (str):
         session (str):
 
     Raises:
@@ -101,7 +97,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         session=session,
     )
 

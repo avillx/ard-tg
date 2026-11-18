@@ -1,37 +1,49 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.tool_servers import ToolServers
+from ...models.error import Error
 from ...types import Response
 
 
-def _get_kwargs() -> dict[str, Any]:
+def _get_kwargs(
+    id: str,
+) -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
-        "method": "get",
-        "url": "/tools",
+        "method": "delete",
+        "url": "/profile/{id}".format(
+            id=quote(str(id), safe=""),
+        ),
     }
 
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ToolServers | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | Error | None:
     if response.status_code == 200:
-        response_200 = ToolServers.from_dict(response.json())
-
+        response_200 = cast("Any", None)
         return response_200
+
+    if response.status_code == 400:
+        response_400 = Error.from_dict(response.json())
+
+        return response_400
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ToolServers]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Any | Error]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -41,23 +53,28 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 
 def sync_detailed(
+    id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[ToolServers]:
-    """List all registered tool servers and their tools
+) -> Response[Any | Error]:
+    """Delete a profile
 
-     Returns all tool servers known to the system, keyed by server name.
-    Each server maps tool names to their descriptions.
+     Deletes a profile and all its associated sessions and memory records.
+
+    Args:
+        id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ToolServers]
+        Response[Any | Error]
     """
 
-    kwargs = _get_kwargs()
+    kwargs = _get_kwargs(
+        id=id,
+    )
 
     response = client.get_httpx_client().request(
         **kwargs,
@@ -67,45 +84,54 @@ def sync_detailed(
 
 
 def sync(
+    id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> ToolServers | None:
-    """List all registered tool servers and their tools
+) -> Any | Error | None:
+    """Delete a profile
 
-     Returns all tool servers known to the system, keyed by server name.
-    Each server maps tool names to their descriptions.
+     Deletes a profile and all its associated sessions and memory records.
+
+    Args:
+        id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ToolServers
+        Any | Error
     """
 
     return sync_detailed(
+        id=id,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
+    id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[ToolServers]:
-    """List all registered tool servers and their tools
+) -> Response[Any | Error]:
+    """Delete a profile
 
-     Returns all tool servers known to the system, keyed by server name.
-    Each server maps tool names to their descriptions.
+     Deletes a profile and all its associated sessions and memory records.
+
+    Args:
+        id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ToolServers]
+        Response[Any | Error]
     """
 
-    kwargs = _get_kwargs()
+    kwargs = _get_kwargs(
+        id=id,
+    )
 
     response = await client.get_async_httpx_client().request(**kwargs)
 
@@ -113,24 +139,28 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> ToolServers | None:
-    """List all registered tool servers and their tools
+) -> Any | Error | None:
+    """Delete a profile
 
-     Returns all tool servers known to the system, keyed by server name.
-    Each server maps tool names to their descriptions.
+     Deletes a profile and all its associated sessions and memory records.
+
+    Args:
+        id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ToolServers
+        Any | Error
     """
 
     return (
         await asyncio_detailed(
+            id=id,
             client=client,
         )
     ).parsed

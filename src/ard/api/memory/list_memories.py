@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
@@ -11,15 +10,11 @@ from ...models.list_memories_response_200 import ListMemoriesResponse200
 from ...types import Response
 
 
-def _get_kwargs(
-    agent: str,
-) -> dict[str, Any]:
+def _get_kwargs() -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/memory/{agent}".format(
-            agent=quote(str(agent), safe=""),
-        ),
+        "url": "/memory",
     }
 
     return _kwargs
@@ -40,8 +35,7 @@ def _parse_response(
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
@@ -56,17 +50,14 @@ def _build_response(
 
 
 def sync_detailed(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Error | ListMemoriesResponse200]:
-    """List memory records for an agent
+    """List memory records
 
-     Returns the memory index for the agent — an object mapping memory record names
-    to their descriptions.
-
-    Args:
-        agent (str):
+     Returns the memory index — an object mapping memory record names
+    to their descriptions. The route is registered as `/memory/`;
+    a request to `/memory` is redirected to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -76,9 +67,7 @@ def sync_detailed(
         Response[Error | ListMemoriesResponse200]
     """
 
-    kwargs = _get_kwargs(
-        agent=agent,
-    )
+    kwargs = _get_kwargs()
 
     response = client.get_httpx_client().request(
         **kwargs,
@@ -88,17 +77,14 @@ def sync_detailed(
 
 
 def sync(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Error | ListMemoriesResponse200 | None:
-    """List memory records for an agent
+    """List memory records
 
-     Returns the memory index for the agent — an object mapping memory record names
-    to their descriptions.
-
-    Args:
-        agent (str):
+     Returns the memory index — an object mapping memory record names
+    to their descriptions. The route is registered as `/memory/`;
+    a request to `/memory` is redirected to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -109,23 +95,19 @@ def sync(
     """
 
     return sync_detailed(
-        agent=agent,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Error | ListMemoriesResponse200]:
-    """List memory records for an agent
+    """List memory records
 
-     Returns the memory index for the agent — an object mapping memory record names
-    to their descriptions.
-
-    Args:
-        agent (str):
+     Returns the memory index — an object mapping memory record names
+    to their descriptions. The route is registered as `/memory/`;
+    a request to `/memory` is redirected to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -135,9 +117,7 @@ async def asyncio_detailed(
         Response[Error | ListMemoriesResponse200]
     """
 
-    kwargs = _get_kwargs(
-        agent=agent,
-    )
+    kwargs = _get_kwargs()
 
     response = await client.get_async_httpx_client().request(**kwargs)
 
@@ -145,17 +125,14 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Error | ListMemoriesResponse200 | None:
-    """List memory records for an agent
+    """List memory records
 
-     Returns the memory index for the agent — an object mapping memory record names
-    to their descriptions.
-
-    Args:
-        agent (str):
+     Returns the memory index — an object mapping memory record names
+    to their descriptions. The route is registered as `/memory/`;
+    a request to `/memory` is redirected to it.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -167,7 +144,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            agent=agent,
             client=client,
         )
     ).parsed

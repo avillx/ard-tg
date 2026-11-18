@@ -34,7 +34,7 @@ def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Any | Error | ValidationError | None:
     if response.status_code == 200:
-        response_200 = cast(Any, None)
+        response_200 = cast("Any", None)
         return response_200
 
     if response.status_code == 400:
@@ -46,7 +46,7 @@ def _parse_response(
                 response_400_type_0 = ValidationError.from_dict(data)
 
                 return response_400_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
@@ -60,8 +60,7 @@ def _parse_response(
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(

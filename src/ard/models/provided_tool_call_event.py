@@ -23,9 +23,9 @@ class ProvidedToolCallEvent:
     Attributes:
         type_ (ProvidedToolCallEventType):
         tool (str): Tool name.
-        agent_id (str): Agent identifier.
+        agent_id (str): Profile identifier.
         session_id (str): Session identifier.
-        args (ProvidedToolCallEventArgs | Unset): Tool arguments (omitted when empty).
+        args (ProvidedToolCallEventArgs | Unset): Tool arguments (omitted when the tool was called without arguments).
         result_id (str | Unset): URL-safe id for calling the /toolresult/{id} endpoint to resolve this call.
     """
 

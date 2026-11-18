@@ -14,7 +14,7 @@ class ModelConfig:
     """Model configuration parameters. Provider-specific settings such as
     `temperature`, `max_tokens`, `top_p`, etc.
 
-        Example:
+    Example:
             {'temperature': 0.7, 'max_tokens': 4096, 'top_p': 1.0}
 
     """

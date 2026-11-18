@@ -10,7 +10,7 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.message_dto import MessageDTO
+    from ..models.message import Message
     from ..models.session_extras import SessionExtras
 
 
@@ -19,16 +19,16 @@ T = TypeVar("T", bound="Session")
 
 @_attrs_define
 class Session:
-    """A session represents a conversation with an agent.
+    """A session represents a conversation.
     It contains the message history, token usage, and timestamps.
 
-        Attributes:
+    Attributes:
             session_id (str):
             input_tokens (int):
             output_tokens (int):
             created_at (datetime.datetime):
             updated_at (datetime.datetime):
-            messages (list[MessageDTO]):
+            messages (list[Message]):
             extras (SessionExtras | Unset):
             error (str | Unset):
     """
@@ -38,7 +38,7 @@ class Session:
     output_tokens: int
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    messages: list[MessageDTO]
+    messages: list[Message]
     extras: SessionExtras | Unset = UNSET
     error: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -86,7 +86,7 @@ class Session:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.message_dto import MessageDTO
+        from ..models.message import Message
         from ..models.session_extras import SessionExtras
 
         d = dict(src_dict)
@@ -103,7 +103,7 @@ class Session:
         messages = []
         _messages = d.pop("messages")
         for messages_item_data in _messages:
-            messages_item = MessageDTO.from_dict(messages_item_data)
+            messages_item = Message.from_dict(messages_item_data)
 
             messages.append(messages_item)
 

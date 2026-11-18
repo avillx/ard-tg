@@ -12,14 +12,12 @@ from ...types import Response
 
 
 def _get_kwargs(
-    agent: str,
     memory_name: str,
 ) -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/memory/{agent}/{memory_name}".format(
-            agent=quote(str(agent), safe=""),
+        "url": "/memory/{memory_name}".format(
             memory_name=quote(str(memory_name), safe=""),
         ),
     }
@@ -27,7 +25,9 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Error | MemoryDetail | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Error | MemoryDetail | None:
     if response.status_code == 200:
         response_200 = MemoryDetail.from_dict(response.json())
 
@@ -40,8 +40,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
@@ -56,17 +55,15 @@ def _build_response(
 
 
 def sync_detailed(
-    agent: str,
     memory_name: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Error | MemoryDetail]:
     """Get a specific memory record
 
-     Returns the full content of a named memory record for the agent.
+     Returns the full content of a named memory record.
 
     Args:
-        agent (str):
         memory_name (str):
 
     Raises:
@@ -78,7 +75,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         memory_name=memory_name,
     )
 
@@ -90,17 +86,15 @@ def sync_detailed(
 
 
 def sync(
-    agent: str,
     memory_name: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Error | MemoryDetail | None:
     """Get a specific memory record
 
-     Returns the full content of a named memory record for the agent.
+     Returns the full content of a named memory record.
 
     Args:
-        agent (str):
         memory_name (str):
 
     Raises:
@@ -112,24 +106,21 @@ def sync(
     """
 
     return sync_detailed(
-        agent=agent,
         memory_name=memory_name,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    agent: str,
     memory_name: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Error | MemoryDetail]:
     """Get a specific memory record
 
-     Returns the full content of a named memory record for the agent.
+     Returns the full content of a named memory record.
 
     Args:
-        agent (str):
         memory_name (str):
 
     Raises:
@@ -141,7 +132,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         memory_name=memory_name,
     )
 
@@ -151,17 +141,15 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    agent: str,
     memory_name: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Error | MemoryDetail | None:
     """Get a specific memory record
 
-     Returns the full content of a named memory record for the agent.
+     Returns the full content of a named memory record.
 
     Args:
-        agent (str):
         memory_name (str):
 
     Raises:
@@ -174,7 +162,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            agent=agent,
             memory_name=memory_name,
             client=client,
         )

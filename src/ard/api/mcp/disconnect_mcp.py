@@ -24,9 +24,11 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | Error | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | Error | None:
     if response.status_code == 200:
-        response_200 = cast(Any, None)
+        response_200 = cast("Any", None)
         return response_200
 
     if response.status_code == 400:
@@ -36,11 +38,12 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | Error]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Any | Error]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -57,7 +60,7 @@ def sync_detailed(
     """Disconnect an MCP server
 
      Disconnects an MCP server by ID. The server's tools become unavailable
-    to agents after disconnection.
+    to profiles after disconnection.
 
     Args:
         mcp (str):
@@ -89,7 +92,7 @@ def sync(
     """Disconnect an MCP server
 
      Disconnects an MCP server by ID. The server's tools become unavailable
-    to agents after disconnection.
+    to profiles after disconnection.
 
     Args:
         mcp (str):
@@ -116,7 +119,7 @@ async def asyncio_detailed(
     """Disconnect an MCP server
 
      Disconnects an MCP server by ID. The server's tools become unavailable
-    to agents after disconnection.
+    to profiles after disconnection.
 
     Args:
         mcp (str):
@@ -146,7 +149,7 @@ async def asyncio(
     """Disconnect an MCP server
 
      Disconnects an MCP server by ID. The server's tools become unavailable
-    to agents after disconnection.
+    to profiles after disconnection.
 
     Args:
         mcp (str):

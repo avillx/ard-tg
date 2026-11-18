@@ -20,9 +20,9 @@ T = TypeVar("T", bound="ChatBody")
 class ChatBody:
     """
     Attributes:
-        user_request (list[ContentPart]): User message content as an array of content parts.
+        user_request (list[ContentPart]): User message content as an array of content parts. Must be non-empty.
         logging (bool | Unset): Enable logging for this chat invocation. Default: False.
-        additional_prompt (str | Unset): Additional prompt text appended to the system prompt.
+        additional_prompt (str | Unset): Accepted for compatibility; not applied to the completion.
         tool_servers (list[ProvidedToolServer] | Unset): External client-side tool servers the agent can use for this
             call.
             The client guarantees execution and returns results via the tool result endpoint.

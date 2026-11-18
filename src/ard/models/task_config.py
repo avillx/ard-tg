@@ -14,12 +14,12 @@ T = TypeVar("T", bound="TaskConfig")
 @_attrs_define
 class TaskConfig:
     """Configuration for a periodic autonomous task.
-    Tasks are executed on a cron schedule and send requests to agent recipients.
+    Tasks are executed on a cron schedule and send requests to profile recipients.
 
-        Attributes:
+    Attributes:
             name (str):
             description (str):
-            recipients (list[str]): Agent IDs that receive the task.
+            recipients (list[str]): Profile IDs that receive the task.
             schedule (str): 5-field cron expression (minute hour day-of-month month day-of-week), e.g. `0 9 * * 1`. Example:
                 0 9 * * 1.
             request (str): The task request text.
@@ -76,7 +76,7 @@ class TaskConfig:
 
         description = d.pop("description")
 
-        recipients = cast(list[str], d.pop("recipients"))
+        recipients = cast("list[str]", d.pop("recipients"))
 
         schedule = d.pop("schedule")
 

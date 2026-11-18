@@ -6,8 +6,8 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.agent_config import AgentConfig
 from ...models.error import Error
+from ...models.profile import Profile
 from ...types import Response
 
 
@@ -17,7 +17,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/agent/{id}".format(
+        "url": "/profile/{id}".format(
             id=quote(str(id), safe=""),
         ),
     }
@@ -25,9 +25,11 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> AgentConfig | Error | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Error | Profile | None:
     if response.status_code == 200:
-        response_200 = AgentConfig.from_dict(response.json())
+        response_200 = Profile.from_dict(response.json())
 
         return response_200
 
@@ -38,11 +40,12 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[AgentConfig | Error]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Error | Profile]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -55,11 +58,11 @@ def sync_detailed(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[AgentConfig | Error]:
-    """Get an agent by ID
+) -> Response[Error | Profile]:
+    """Get a profile by ID
 
-     Returns the full configuration of an agent including model, memory settings, prompt, and allowed
-    tools.
+     Returns the profile configuration including model, memory settings, prompt, and allowed tool
+    servers.
 
     Args:
         id (str):
@@ -69,7 +72,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AgentConfig | Error]
+        Response[Error | Profile]
     """
 
     kwargs = _get_kwargs(
@@ -87,11 +90,11 @@ def sync(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> AgentConfig | Error | None:
-    """Get an agent by ID
+) -> Error | Profile | None:
+    """Get a profile by ID
 
-     Returns the full configuration of an agent including model, memory settings, prompt, and allowed
-    tools.
+     Returns the profile configuration including model, memory settings, prompt, and allowed tool
+    servers.
 
     Args:
         id (str):
@@ -101,7 +104,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AgentConfig | Error
+        Error | Profile
     """
 
     return sync_detailed(
@@ -114,11 +117,11 @@ async def asyncio_detailed(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[AgentConfig | Error]:
-    """Get an agent by ID
+) -> Response[Error | Profile]:
+    """Get a profile by ID
 
-     Returns the full configuration of an agent including model, memory settings, prompt, and allowed
-    tools.
+     Returns the profile configuration including model, memory settings, prompt, and allowed tool
+    servers.
 
     Args:
         id (str):
@@ -128,7 +131,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[AgentConfig | Error]
+        Response[Error | Profile]
     """
 
     kwargs = _get_kwargs(
@@ -144,11 +147,11 @@ async def asyncio(
     id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> AgentConfig | Error | None:
-    """Get an agent by ID
+) -> Error | Profile | None:
+    """Get a profile by ID
 
-     Returns the full configuration of an agent including model, memory settings, prompt, and allowed
-    tools.
+     Returns the profile configuration including model, memory settings, prompt, and allowed tool
+    servers.
 
     Args:
         id (str):
@@ -158,7 +161,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        AgentConfig | Error
+        Error | Profile
     """
 
     return (

@@ -21,7 +21,7 @@ class ServerGatewayConfig:
     """Exactly one of `http_gateway` or `command_gateway` must be provided.
     If neither or both are provided, the request is rejected with 400.
 
-        Attributes:
+    Attributes:
             http_gateway (ServerGatewayConfigHttpGateway | Unset): Connect to a remote MCP server via URL.
             command_gateway (ServerGatewayConfigCommandGateway | Unset): Spawn a local MCP server process.
     """
