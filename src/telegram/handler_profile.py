@@ -80,6 +80,13 @@ class SetProfileHandler(CallBackQueryHandler):
             self._profile_service.set_profile(choice)
         except ValueError:
             _ = bot.answer_callback_query(call.id, text=f"Profile is not exist: {choice}")
-            return
+        else:
+            _ = bot.answer_callback_query(call.id, text=f"Coosen profile: {choice}")
 
-        _ = bot.answer_callback_query(call.id, text=f"Coosen profile: {choice}")
+        if isinstance(call.message, telebot_types.MaybeInaccessibleMessage) and isinstance(
+            call.message.id, int
+        ):
+            _ = bot.delete_message(
+                chat_id=call.message.chat.id,
+                message_id=call.message.id,
+            )
