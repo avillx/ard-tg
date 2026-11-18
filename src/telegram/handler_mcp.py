@@ -2,11 +2,11 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from telegram.service import Handler
+from telegram.service import MessageHandler
 lazy import agent
 
 
-class MCPHandler(Handler):
+class MCPHandler(MessageHandler):
     """Handle fetch of the actual MCP list.
 
     Expect call from `/mcp` command. Also allow mcp servers names as arguments,

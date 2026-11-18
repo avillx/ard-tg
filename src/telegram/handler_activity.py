@@ -2,11 +2,11 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from telegram.service import Handler
+from telegram.service import MessageHandler
 lazy import agent
 
 
-class ActivityHandler(Handler):
+class ActivityHandler(MessageHandler):
     """Handle fetch of recent agent activity, if any
 
     Expect call from `/activity` command

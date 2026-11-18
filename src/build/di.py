@@ -83,7 +83,7 @@ def bot_server(cfg: build.Config) -> server.BotServer:
         storage_path=str(Path(cfg.agent_datapath) / "tmp"),
     )
 
-    telegram_handlers: list[telegram.Handler] = [
+    telegram_handlers: list[telegram.BasicHandler] = [
         telegram.InterruptHandler(
             agent_service=agent_service,
         ),
@@ -103,6 +103,12 @@ def bot_server(cfg: build.Config) -> server.BotServer:
         telegram.ConsolidationHandler(
             agent_service=agent_service,
             logger=logger,
+        ),
+        telegram.ShowProfileHandler(
+            profile_service=proifle_service,
+        ),
+        telegram.SetProfileHandler(
+            profile_service=proifle_service,
         ),
         # general message handler must be registered last, it captures all the rest
         telegram.GeneralMessageHandler(

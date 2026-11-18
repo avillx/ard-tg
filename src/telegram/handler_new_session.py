@@ -1,11 +1,11 @@
 lazy import telebot
 lazy import telebot.types as telebot_types
 
-from telegram.service import Handler
+from telegram.service import MessageHandler
 lazy import agent
 
 
-class NewSessionHandler(Handler):
+class NewSessionHandler(MessageHandler):
     """Handle interrupt of the current session and drop it
 
     Expect call from `/new` command
