@@ -73,7 +73,6 @@ All configs provides via this envirement variables:
 - `ARDTG_AGENT_DATAPATH` *required* - path to agent folder for store message attachments
   (videos, photos, voice, docs, etc...) and gateway skills, must match the agent working directory
 - `ARDTG_FILESTORAGE_PATH` *required* - path to folder for store gateway files (`contacts.json`)
-- `ARDTG_AGENT_ID` *optional* - id of agent recipient. `default - default`
 - `ARDTG_SESSION_LIFE_TIME` *optional* - time in seconds before dropping session. `default - 600 (10min)`
 - `ARDTG_STICKER_PACK` *optional* - name of sticker pack for agent usage
   Agent has no `send_sticker` tool if sticker pack is not defined

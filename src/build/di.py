@@ -58,19 +58,22 @@ def bot_server(cfg: build.Config) -> server.BotServer:
 
     agent_client = client.Client(base_url=cfg.agent_url)
 
+    proifle_service = agent.ProfileService(
+        agent_client=agent_client,
+    )
+
     session_service = agent.SessionService(
-        agent_id=cfg.agent_id,
         agent_client=agent_client,
         life_time=float(cfg.session_life_time),
         logger=logger,
         instruction=telegram._TELEGRAM_GUIDE,
         time=agent.SystemTime(),
+        profile_source=proifle_service,
     )
 
     agent_service = agent.Service(
         agent_url=cfg.agent_url,
         agent_client=agent_client,
-        agent_id=cfg.agent_id,
         session_service=session_service,
         logger=logger,
     )

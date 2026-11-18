@@ -2,7 +2,7 @@ openapi: "3.0.3"
 info:
   title: Agent Runtime Daemon API
   description: REST API for managing profiles, sessions, tasks, MCP servers, memory, activity, providers, and streaming chat completions.
-  version: "1.2.0"
+  version: "1.3.0"
 
 servers:
   - url: http://localhost:8080/
@@ -507,12 +507,13 @@ paths:
       operationId: listProfiles
       responses:
         "200":
-          description: List of all configured profiles.
+          description: All configured profiles keyed by profile ID.
           content:
             application/json:
               schema:
-                type: array
-                items:
+                type: object
+                description: Map of profile ID to its configuration.
+                additionalProperties:
                   $ref: "#/components/schemas/Profile"
 
   /profile/{id}:

@@ -10,7 +10,6 @@ import ard.api.activity.get_activity as get_activity
 import ard.api.chat.interrupt_chat as interrupt_chat
 import ard.api.mcp.list_mcp_servers as list_mcp_servers
 import ard.api.tasks.list_tasks as list_tasks
-import ard.api.tools.list_tools as list_tools
 import ard.client as agent_client
 import ard.models as models
 from ard.models.content_part import ContentPart
@@ -20,7 +19,6 @@ _DEFAULT_STREAM_TIMEOUT = 10000
 
 class Service:
     _agent_url: str
-    _agent_id: str
     _agent_client: agent_client.Client
     _session_service: session.SessionService
     _logger: logging.Logger
@@ -28,24 +26,21 @@ class Service:
     def __init__(
         self,
         agent_url: str,
-        agent_id: str,
         agent_client: agent_client.Client,
         session_service: session.SessionService,
         logger: logging.Logger,
     ):
         self._logger = logger.getChild("Agent")
         self._agent_url = agent_url
-        self._agent_id = agent_id
         self._agent_client = agent_client
         self._session_service = session_service
 
     def interrupt(self):
         """Interrupt the agent session in progress."""
         session_id = self._session_service.get()
-        self._logger.info("interrupting agent %s, session: %s", self._agent_id, session_id)
+        self._logger.info("interrupting, session: %s", session_id)
 
         _ = interrupt_chat.sync_detailed(
-            agent=self._agent_id,
             session=session_id,
             client=self._agent_client,
         )
@@ -70,27 +65,13 @@ class Service:
 
         return task_list
 
-    def tool_list(self) -> dict[str, models.ToolRepr]:
-        """Return all working tool servers
-
-        dict key is a name of tool server
-        dict
-        """
-        self._logger.info("Tools requested")
-
-        tool_servers_dto = list_tools.sync(client=self._agent_client)
-        if tool_servers_dto is None:
-            return {}
-
-        return tool_servers_dto.to_dict()
-
     def today_activity(self) -> list[models.ActivityRecord]:
         """Return today's agent activity
 
         raise on errors abd bad validations
         """
         self._logger.info("Activity requested")
-        request = models.GetActivityBody(agent=self._agent_id, from_=dt.datetime.now(dt.UTC))
+        request = models.GetActivityBody(from_=dt.datetime.now(dt.UTC))
 
         resp = get_activity.sync(
             client=self._agent_client,
@@ -124,7 +105,6 @@ class Service:
             [
                 self._agent_url.rstrip("/"),
                 "memory",
-                self._agent_id,
                 "consolidate",
             ]
         )
@@ -182,7 +162,6 @@ class Service:
             [
                 self._agent_url.rstrip("/"),
                 "chat",
-                self._agent_id,
                 session_id,
             ]
         )

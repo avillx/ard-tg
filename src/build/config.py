@@ -31,7 +31,6 @@ def _env_value_session_ttl() -> float:
 class Config:
     telegram_token: str = os.getenv("ARDTG_TELEGRAM_TOKEN", "")
     agent_url: str = os.getenv("ARDTG_AGENT_URL", "")
-    agent_id: str = os.getenv("ARDTG_AGENT_ID", "default")
     sticker_pack: str = os.getenv("ARDTG_STICKER_PACK", "")
     webhook_url: str = os.getenv("ARDTG_WEBHOOK_URL", "")
     agent_datapath: str = os.getenv("ARDTG_AGENT_DATAPATH", "")

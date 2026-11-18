@@ -15,6 +15,12 @@ class SuperfluousSetSessionError(Exception):
     pass
 
 
+class ProfileSource(ABC):
+    @abstractmethod
+    def get_profile(self) -> str:
+        pass
+
+
 class TimeProvider(ABC):
     @abstractmethod
     def now(self) -> float:
@@ -30,7 +36,8 @@ class SystemTime(TimeProvider):
 class SessionService:
     """Service with session management responsibility."""
 
-    _agent_id: str
+    _profile_id: str
+    _profile_source: ProfileSource
     _agent_client: agent_client.Client
     _actual_session: str
     _last_update: float
@@ -43,8 +50,8 @@ class SessionService:
 
     def __init__(
         self,
-        agent_id: str,
         agent_client: agent_client.Client,
+        profile_source: ProfileSource,
         life_time: float,
         instruction: str,
         logger: logging.Logger,
@@ -53,13 +60,14 @@ class SessionService:
         self._logger = logger.getChild("Sessions")
         self._agent_client = agent_client
         self._life_time = life_time
-        self._agent_id = agent_id
+        self._profile_id = profile_source.get_profile()
         self._last_update = 0.0
         self._actual_session = ""
         self._mutex = threading.Lock()
         self._instruction = instruction
         self._additional_time = 0.0
         self._time = time
+        self._profile_source = profile_source
 
     def drop(self):
         """Drop the current session and set it to None."""
@@ -87,12 +95,11 @@ class SessionService:
     def get_actual(self) -> str:
         """Get the session, creating a new one when it is unset or expired."""
         with self._mutex:
-            # is expired or empty
-
+            profile_is_actual = self._profile_source.get_profile() == self._profile_id
             actual_session_is_unset = self._actual_session == ""
             actual_session_is_expires = not self._is_actual()
 
-            if actual_session_is_unset or actual_session_is_expires:
+            if actual_session_is_unset or actual_session_is_expires or not profile_is_actual:
                 self._actual_session = self._create_new_session()
 
             self._last_update = self._time.now()
@@ -107,13 +114,14 @@ class SessionService:
     def _create_new_session(self, additional_time: float = 0.0) -> str:
         """Request a new session from the agent and return its id."""
         self._additional_time = additional_time
+        self._profile_id = self._profile_source.get_profile()
 
         create_session_request = models.CreateSessionBody(
+            profile_id=self._profile_id,
             instruction=self._instruction,
         )
 
         resp = create_session.sync(
-            self._agent_id,
             client=self._agent_client,
             body=create_session_request,
         )
