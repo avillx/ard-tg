@@ -5,8 +5,9 @@ lazy import telebot
 lazy import telebot.types as telebot_types
 
 import telegram.attachments as attachments
+import telegram.rich_message as rich_message
+import telegram.sticker_cache as sticker_cache
 import telegram.tools as tools
-from telegram import rich_message, sticker_cache
 from telegram.chat_event_handler import ChatEventHandler
 from telegram.service import Handler
 from telegram.typing_action import TypingAction

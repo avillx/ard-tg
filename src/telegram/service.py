@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import telebot
 import telebot.types as telebot_types
 
-_TELEGRAM_GUIDE = """
+TELEGRAM_GUIDE = """
 # Gateway
 
 You recieve user messages from messanger `Telegram`. markdown has fully support.

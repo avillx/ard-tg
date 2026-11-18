@@ -66,7 +66,7 @@ def bot_server(cfg: build.Config) -> server.BotServer:
         agent_client=agent_client,
         life_time=float(cfg.session_life_time),
         logger=logger,
-        instruction=telegram._TELEGRAM_GUIDE,
+        instruction=telegram.TELEGRAM_GUIDE,
         time=agent.SystemTime(),
         profile_source=proifle_service,
     )
