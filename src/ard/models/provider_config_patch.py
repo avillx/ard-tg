@@ -23,26 +23,26 @@ class ProviderConfigPatch:
         api_type (ProviderConfigPatchApiType | Unset):
     """
 
-    name: None | str | Unset = UNSET
-    base_url: None | str | Unset = UNSET
-    key_ref: None | str | Unset = UNSET
+    name: str | Unset | None = UNSET
+    base_url: str | Unset | None = UNSET
+    key_ref: str | Unset | None = UNSET
     api_type: ProviderConfigPatchApiType | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        name: None | str | Unset
+        name: str | Unset | None
         if isinstance(self.name, Unset):
             name = UNSET
         else:
             name = self.name
 
-        base_url: None | str | Unset
+        base_url: str | Unset | None
         if isinstance(self.base_url, Unset):
             base_url = UNSET
         else:
             base_url = self.base_url
 
-        key_ref: None | str | Unset
+        key_ref: str | Unset | None
         if isinstance(self.key_ref, Unset):
             key_ref = UNSET
         else:
@@ -70,30 +70,30 @@ class ProviderConfigPatch:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
 
-        def _parse_name(data: object) -> None | str | Unset:
+        def _parse_name(data: object) -> str | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            return cast("None | str | Unset", data)
 
         name = _parse_name(d.pop("name", UNSET))
 
-        def _parse_base_url(data: object) -> None | str | Unset:
+        def _parse_base_url(data: object) -> str | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            return cast("None | str | Unset", data)
 
         base_url = _parse_base_url(d.pop("base_url", UNSET))
 
-        def _parse_key_ref(data: object) -> None | str | Unset:
+        def _parse_key_ref(data: object) -> str | Unset | None:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            return cast("None | str | Unset", data)
 
         key_ref = _parse_key_ref(d.pop("key_ref", UNSET))
 

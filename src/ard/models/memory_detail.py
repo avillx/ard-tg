@@ -14,22 +14,18 @@ class MemoryDetail:
     """Full content of a named memory record.
 
     Example:
-        {'agent': 'agent_main', 'memory_name': 'week_25', 'content': 'The agent processed 15 tasks...'}
+        {'memory_name': 'week_25', 'content': 'The agent processed 15 tasks...'}
 
     Attributes:
-        agent (str):
         memory_name (str):
         content (str):
     """
 
-    agent: str
     memory_name: str
     content: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        agent = self.agent
-
         memory_name = self.memory_name
 
         content = self.content
@@ -38,7 +34,6 @@ class MemoryDetail:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
-                "agent": agent,
                 "memory_name": memory_name,
                 "content": content,
             }
@@ -49,14 +44,11 @@ class MemoryDetail:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        agent = d.pop("agent")
-
         memory_name = d.pop("memory_name")
 
         content = d.pop("content")
 
         memory_detail = cls(
-            agent=agent,
             memory_name=memory_name,
             content=content,
         )

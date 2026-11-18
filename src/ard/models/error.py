@@ -16,7 +16,7 @@ class Error:
     """Error response.
 
     Example:
-        {'message': 'agent not found'}
+        {'message': 'session is not exist'}
 
     Attributes:
         message (str | Unset): Human-readable error message.

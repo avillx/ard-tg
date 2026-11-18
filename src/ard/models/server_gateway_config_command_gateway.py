@@ -9,7 +9,9 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.server_gateway_config_command_gateway_env import ServerGatewayConfigCommandGatewayEnv
+    from ..models.server_gateway_config_command_gateway_env import (
+        ServerGatewayConfigCommandGatewayEnv,
+    )
 
 
 T = TypeVar("T", bound="ServerGatewayConfigCommandGateway")
@@ -57,12 +59,14 @@ class ServerGatewayConfigCommandGateway:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.server_gateway_config_command_gateway_env import ServerGatewayConfigCommandGatewayEnv
+        from ..models.server_gateway_config_command_gateway_env import (
+            ServerGatewayConfigCommandGatewayEnv,
+        )
 
         d = dict(src_dict)
         command = d.pop("command")
 
-        args = cast(list[str], d.pop("args", UNSET))
+        args = cast("list[str]", d.pop("args", UNSET))
 
         _env = d.pop("env", UNSET)
         env: ServerGatewayConfigCommandGatewayEnv | Unset

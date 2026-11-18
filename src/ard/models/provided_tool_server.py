@@ -20,7 +20,7 @@ class ProvidedToolServer:
     """Client-provided tool servers available for a single chat call.
     The client guarantees execution and returns results via the tool result endpoint.
 
-        Attributes:
+    Attributes:
             tools (list[ProvidedTool]):
             instruction (str | Unset): Optional instruction for the agent about how to use these tools.
     """

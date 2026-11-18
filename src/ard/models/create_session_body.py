@@ -15,18 +15,24 @@ T = TypeVar("T", bound="CreateSessionBody")
 class CreateSessionBody:
     """
     Attributes:
+        profile_id (str | Unset): Profile the session belongs to.
         instruction (str | Unset): Optional initial instruction stored in session extras.
     """
 
+    profile_id: str | Unset = UNSET
     instruction: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        profile_id = self.profile_id
+
         instruction = self.instruction
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
+        if profile_id is not UNSET:
+            field_dict["profile_id"] = profile_id
         if instruction is not UNSET:
             field_dict["instruction"] = instruction
 
@@ -35,9 +41,12 @@ class CreateSessionBody:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
+        profile_id = d.pop("profile_id", UNSET)
+
         instruction = d.pop("instruction", UNSET)
 
         create_session_body = cls(
+            profile_id=profile_id,
             instruction=instruction,
         )
 

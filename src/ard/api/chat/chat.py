@@ -18,7 +18,6 @@ from ...types import Response
 
 
 def _get_kwargs(
-    agent: str,
     session: str,
     *,
     body: ChatBody,
@@ -27,8 +26,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/chat/{agent}/{session}".format(
-            agent=quote(str(agent), safe=""),
+        "url": "/chat/{session}".format(
             session=quote(str(session), safe=""),
         ),
     }
@@ -73,7 +71,7 @@ def _parse_response(
                 componentsschemas_chat_event_type_0 = CompletionEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             try:
                 if not isinstance(data, dict):
@@ -81,7 +79,7 @@ def _parse_response(
                 componentsschemas_chat_event_type_1 = CompletionMistakeEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_1
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             try:
                 if not isinstance(data, dict):
@@ -89,7 +87,7 @@ def _parse_response(
                 componentsschemas_chat_event_type_2 = ToolErrorEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_2
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             try:
                 if not isinstance(data, dict):
@@ -97,7 +95,7 @@ def _parse_response(
                 componentsschemas_chat_event_type_3 = ToolResultEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_3
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             try:
                 if not isinstance(data, dict):
@@ -105,7 +103,7 @@ def _parse_response(
                 componentsschemas_chat_event_type_4 = LoopExitEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_4
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             try:
                 if not isinstance(data, dict):
@@ -113,7 +111,7 @@ def _parse_response(
                 componentsschemas_chat_event_type_5 = CompactionEvent.from_dict(data)
 
                 return componentsschemas_chat_event_type_5
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
@@ -126,13 +124,12 @@ def _parse_response(
         return response_200
 
     if response.status_code == 400:
-        response_400 = cast(Any, None)
+        response_400 = cast("Any", None)
         return response_400
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
@@ -156,7 +153,6 @@ def _build_response(
 
 
 def sync_detailed(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -173,13 +169,13 @@ def sync_detailed(
 ]:
     """Start a chat completion
 
-     Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
-    On failure before the stream starts (bad request) or during the run, the server
-    emits an SSE `error: <json>` frame with a `400` status when possible.
+     Initiates a chat completion in the given session and streams events via
+    Server-Sent Events (SSE). Each event is a JSON object prefixed with `data: `.
+    The stream ends with `data: [DONE]`.
+    On failure the server emits an SSE `error: <json>` frame; the status is `400`
+    when the failure happens before the first event, otherwise it stays `200`.
 
     Args:
-        agent (str):
         session (str):
         body (ChatBody):
 
@@ -192,7 +188,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         session=session,
         body=body,
     )
@@ -205,7 +200,6 @@ def sync_detailed(
 
 
 def sync(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -223,13 +217,13 @@ def sync(
 ):
     """Start a chat completion
 
-     Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
-    On failure before the stream starts (bad request) or during the run, the server
-    emits an SSE `error: <json>` frame with a `400` status when possible.
+     Initiates a chat completion in the given session and streams events via
+    Server-Sent Events (SSE). Each event is a JSON object prefixed with `data: `.
+    The stream ends with `data: [DONE]`.
+    On failure the server emits an SSE `error: <json>` frame; the status is `400`
+    when the failure happens before the first event, otherwise it stays `200`.
 
     Args:
-        agent (str):
         session (str):
         body (ChatBody):
 
@@ -242,7 +236,6 @@ def sync(
     """
 
     return sync_detailed(
-        agent=agent,
         session=session,
         client=client,
         body=body,
@@ -250,7 +243,6 @@ def sync(
 
 
 async def asyncio_detailed(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -267,13 +259,13 @@ async def asyncio_detailed(
 ]:
     """Start a chat completion
 
-     Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
-    On failure before the stream starts (bad request) or during the run, the server
-    emits an SSE `error: <json>` frame with a `400` status when possible.
+     Initiates a chat completion in the given session and streams events via
+    Server-Sent Events (SSE). Each event is a JSON object prefixed with `data: `.
+    The stream ends with `data: [DONE]`.
+    On failure the server emits an SSE `error: <json>` frame; the status is `400`
+    when the failure happens before the first event, otherwise it stays `200`.
 
     Args:
-        agent (str):
         session (str):
         body (ChatBody):
 
@@ -286,7 +278,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         session=session,
         body=body,
     )
@@ -297,7 +288,6 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -315,13 +305,13 @@ async def asyncio(
 ):
     """Start a chat completion
 
-     Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-    Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
-    On failure before the stream starts (bad request) or during the run, the server
-    emits an SSE `error: <json>` frame with a `400` status when possible.
+     Initiates a chat completion in the given session and streams events via
+    Server-Sent Events (SSE). Each event is a JSON object prefixed with `data: `.
+    The stream ends with `data: [DONE]`.
+    On failure the server emits an SSE `error: <json>` frame; the status is `400`
+    when the failure happens before the first event, otherwise it stays `200`.
 
     Args:
-        agent (str):
         session (str):
         body (ChatBody):
 
@@ -335,7 +325,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            agent=agent,
             session=session,
             client=client,
             body=body,

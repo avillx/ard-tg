@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
@@ -10,25 +9,21 @@ from ...models.create_session_body import CreateSessionBody
 from ...models.create_session_response_200 import CreateSessionResponse200
 from ...models.error import Error
 from ...models.validation_error import ValidationError
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
-    agent: str,
     *,
-    body: CreateSessionBody | Unset = UNSET,
+    body: CreateSessionBody,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/session/{agent}".format(
-            agent=quote(str(agent), safe=""),
-        ),
+        "url": "/session",
     }
 
-    if not isinstance(body, Unset):
-        _kwargs["json"] = body.to_dict()
+    _kwargs["json"] = body.to_dict()
 
     headers["Content-Type"] = "application/json"
 
@@ -53,7 +48,7 @@ def _parse_response(
                 response_400_type_0 = Error.from_dict(data)
 
                 return response_400_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
+            except TypeError, ValueError, AttributeError, KeyError:
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
@@ -67,8 +62,7 @@ def _parse_response(
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
@@ -83,19 +77,17 @@ def _build_response(
 
 
 def sync_detailed(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
-    body: CreateSessionBody | Unset = UNSET,
+    body: CreateSessionBody,
 ) -> Response[CreateSessionResponse200 | Error | ValidationError]:
     """Create a new session
 
-     Creates a new session for the agent. A session holds the conversation history,
-    token usage, and metadata.
+     Creates a new session bound to a profile. A session holds the conversation
+    history, token usage, and metadata.
 
     Args:
-        agent (str):
-        body (CreateSessionBody | Unset):
+        body (CreateSessionBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -106,7 +98,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         body=body,
     )
 
@@ -118,19 +109,17 @@ def sync_detailed(
 
 
 def sync(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
-    body: CreateSessionBody | Unset = UNSET,
+    body: CreateSessionBody,
 ) -> CreateSessionResponse200 | Error | ValidationError | None:
     """Create a new session
 
-     Creates a new session for the agent. A session holds the conversation history,
-    token usage, and metadata.
+     Creates a new session bound to a profile. A session holds the conversation
+    history, token usage, and metadata.
 
     Args:
-        agent (str):
-        body (CreateSessionBody | Unset):
+        body (CreateSessionBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,26 +130,23 @@ def sync(
     """
 
     return sync_detailed(
-        agent=agent,
         client=client,
         body=body,
     ).parsed
 
 
 async def asyncio_detailed(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
-    body: CreateSessionBody | Unset = UNSET,
+    body: CreateSessionBody,
 ) -> Response[CreateSessionResponse200 | Error | ValidationError]:
     """Create a new session
 
-     Creates a new session for the agent. A session holds the conversation history,
-    token usage, and metadata.
+     Creates a new session bound to a profile. A session holds the conversation
+    history, token usage, and metadata.
 
     Args:
-        agent (str):
-        body (CreateSessionBody | Unset):
+        body (CreateSessionBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -171,7 +157,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         body=body,
     )
 
@@ -181,19 +166,17 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
-    body: CreateSessionBody | Unset = UNSET,
+    body: CreateSessionBody,
 ) -> CreateSessionResponse200 | Error | ValidationError | None:
     """Create a new session
 
-     Creates a new session for the agent. A session holds the conversation history,
-    token usage, and metadata.
+     Creates a new session bound to a profile. A session holds the conversation
+    history, token usage, and metadata.
 
     Args:
-        agent (str):
-        body (CreateSessionBody | Unset):
+        body (CreateSessionBody):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -205,7 +188,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            agent=agent,
             client=client,
             body=body,
         )

@@ -56,8 +56,7 @@ def _parse_response(
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
@@ -78,7 +77,8 @@ def sync_detailed(
 ) -> Response[Error | ValidationError | list[ActivityRecord]]:
     """Get activity logs for a period
 
-     Retrieves activity logs for the specified agent and time range.
+     Retrieves activity logs for the given time range. The range is sent as a
+    JSON request body.
 
     Args:
         body (GetActivityBody):
@@ -109,7 +109,8 @@ def sync(
 ) -> Error | ValidationError | list[ActivityRecord] | None:
     """Get activity logs for a period
 
-     Retrieves activity logs for the specified agent and time range.
+     Retrieves activity logs for the given time range. The range is sent as a
+    JSON request body.
 
     Args:
         body (GetActivityBody):
@@ -135,7 +136,8 @@ async def asyncio_detailed(
 ) -> Response[Error | ValidationError | list[ActivityRecord]]:
     """Get activity logs for a period
 
-     Retrieves activity logs for the specified agent and time range.
+     Retrieves activity logs for the given time range. The range is sent as a
+    JSON request body.
 
     Args:
         body (GetActivityBody):
@@ -164,7 +166,8 @@ async def asyncio(
 ) -> Error | ValidationError | list[ActivityRecord] | None:
     """Get activity logs for a period
 
-     Retrieves activity logs for the specified agent and time range.
+     Retrieves activity logs for the given time range. The range is sent as a
+    JSON request body.
 
     Args:
         body (GetActivityBody):

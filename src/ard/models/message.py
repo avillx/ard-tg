@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.message_dto_role import MessageDTORole
+from ..models.message_role import MessageRole
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -14,20 +14,20 @@ if TYPE_CHECKING:
     from ..models.tool_call import ToolCall
 
 
-T = TypeVar("T", bound="MessageDTO")
+T = TypeVar("T", bound="Message")
 
 
 @_attrs_define
-class MessageDTO:
+class Message:
     """A single message in a session conversation.
 
     Attributes:
-        role (MessageDTORole): Message role: `agent` (assistant response), `user`, `tool` (tool result), or `system`.
+        role (MessageRole): Message role: `agent` (assistant response), `user`, `tool` (tool result), or `system`.
         content (list[ContentPart]):
         tool_calls (list[ToolCall] | Unset): Present only on `agent` messages.
     """
 
-    role: MessageDTORole
+    role: MessageRole
     content: list[ContentPart]
     tool_calls: list[ToolCall] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -66,7 +66,7 @@ class MessageDTO:
         from ..models.tool_call import ToolCall
 
         d = dict(src_dict)
-        role = MessageDTORole(d.pop("role"))
+        role = MessageRole(d.pop("role"))
 
         content = []
         _content = d.pop("content")
@@ -84,14 +84,14 @@ class MessageDTO:
 
                 tool_calls.append(tool_calls_item)
 
-        message_dto = cls(
+        message = cls(
             role=role,
             content=content,
             tool_calls=tool_calls,
         )
 
-        message_dto.additional_properties = d
-        return message_dto
+        message.additional_properties = d
+        return message
 
     @property
     def additional_keys(self) -> list[str]:

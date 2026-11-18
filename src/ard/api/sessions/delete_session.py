@@ -11,14 +11,12 @@ from ...types import Response
 
 
 def _get_kwargs(
-    agent: str,
     session: str,
 ) -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "delete",
-        "url": "/session/{agent}/{session}".format(
-            agent=quote(str(agent), safe=""),
+        "url": "/session/{session}".format(
             session=quote(str(session), safe=""),
         ),
     }
@@ -26,9 +24,11 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | Error | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | Error | None:
     if response.status_code == 200:
-        response_200 = cast(Any, None)
+        response_200 = cast("Any", None)
         return response_200
 
     if response.status_code == 400:
@@ -38,11 +38,12 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | Error]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[Any | Error]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -52,7 +53,6 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 
 def sync_detailed(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -62,7 +62,6 @@ def sync_detailed(
      Deletes a session and all its messages. This action is irreversible.
 
     Args:
-        agent (str):
         session (str):
 
     Raises:
@@ -74,7 +73,6 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         session=session,
     )
 
@@ -86,7 +84,6 @@ def sync_detailed(
 
 
 def sync(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -96,7 +93,6 @@ def sync(
      Deletes a session and all its messages. This action is irreversible.
 
     Args:
-        agent (str):
         session (str):
 
     Raises:
@@ -108,14 +104,12 @@ def sync(
     """
 
     return sync_detailed(
-        agent=agent,
         session=session,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -125,7 +119,6 @@ async def asyncio_detailed(
      Deletes a session and all its messages. This action is irreversible.
 
     Args:
-        agent (str):
         session (str):
 
     Raises:
@@ -137,7 +130,6 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        agent=agent,
         session=session,
     )
 
@@ -147,7 +139,6 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    agent: str,
     session: str,
     *,
     client: AuthenticatedClient | Client,
@@ -157,7 +148,6 @@ async def asyncio(
      Deletes a session and all its messages. This action is irreversible.
 
     Args:
-        agent (str):
         session (str):
 
     Raises:
@@ -170,7 +160,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            agent=agent,
             session=session,
             client=client,
         )

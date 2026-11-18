@@ -18,7 +18,7 @@ class ConsolidationCompletionEvent:
     """A completion event emitted during memory consolidation.
     Note: for this stream the `type` field is emitted as an empty string.
 
-        Attributes:
+    Attributes:
             type_ (str): Always empty for consolidation events.
             done (bool):
             completion (str):

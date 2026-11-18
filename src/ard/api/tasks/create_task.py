@@ -33,9 +33,11 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ValidationError | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Any | ValidationError | None:
     if response.status_code == 200:
-        response_200 = cast(Any, None)
+        response_200 = cast("Any", None)
         return response_200
 
     if response.status_code == 400:
@@ -45,8 +47,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
@@ -68,14 +69,14 @@ def sync_detailed(
 ) -> Response[Any | ValidationError]:
     """Create a task
 
-     Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task `name` is taken from the
-    request body, not the path.
+     Creates a periodic autonomous task. Tasks are executed on a cron schedule
+    and send requests to one or more profile recipients. The task `name` is taken
+    from the request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
-            Tasks are executed on a cron schedule and send requests to agent recipients.
+            Tasks are executed on a cron schedule and send requests to profile recipients.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -105,14 +106,14 @@ def sync(
 ) -> Any | ValidationError | None:
     """Create a task
 
-     Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task `name` is taken from the
-    request body, not the path.
+     Creates a periodic autonomous task. Tasks are executed on a cron schedule
+    and send requests to one or more profile recipients. The task `name` is taken
+    from the request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
-            Tasks are executed on a cron schedule and send requests to agent recipients.
+            Tasks are executed on a cron schedule and send requests to profile recipients.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -137,14 +138,14 @@ async def asyncio_detailed(
 ) -> Response[Any | ValidationError]:
     """Create a task
 
-     Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task `name` is taken from the
-    request body, not the path.
+     Creates a periodic autonomous task. Tasks are executed on a cron schedule
+    and send requests to one or more profile recipients. The task `name` is taken
+    from the request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
-            Tasks are executed on a cron schedule and send requests to agent recipients.
+            Tasks are executed on a cron schedule and send requests to profile recipients.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -172,14 +173,14 @@ async def asyncio(
 ) -> Any | ValidationError | None:
     """Create a task
 
-     Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-    and can send requests to one or more agent recipients. The task `name` is taken from the
-    request body, not the path.
+     Creates a periodic autonomous task. Tasks are executed on a cron schedule
+    and send requests to one or more profile recipients. The task `name` is taken
+    from the request body, not the path.
 
     Args:
         name (str):
         body (TaskConfig): Configuration for a periodic autonomous task.
-            Tasks are executed on a cron schedule and send requests to agent recipients.
+            Tasks are executed on a cron schedule and send requests to profile recipients.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

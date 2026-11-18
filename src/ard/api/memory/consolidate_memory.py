@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from typing import Any, cast
-from urllib.parse import quote
 
 import httpx
 
@@ -10,15 +9,11 @@ from ...models.consolidation_completion_event import ConsolidationCompletionEven
 from ...types import Response
 
 
-def _get_kwargs(
-    agent: str,
-) -> dict[str, Any]:
+def _get_kwargs() -> dict[str, Any]:
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/memory/{agent}/consolidate".format(
-            agent=quote(str(agent), safe=""),
-        ),
+        "url": "/memory/consolidate",
     }
 
     return _kwargs
@@ -33,21 +28,20 @@ def _parse_response(
         return response_200
 
     if response.status_code == 400:
-        response_400 = cast(Any, None)
+        response_400 = cast("Any", None)
         return response_400
 
     if response.status_code == 404:
-        response_404 = cast(Any, None)
+        response_404 = cast("Any", None)
         return response_404
 
     if response.status_code == 500:
-        response_500 = cast(Any, None)
+        response_500 = cast("Any", None)
         return response_500
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
-    else:
-        return None
+    return None
 
 
 def _build_response(
@@ -62,17 +56,13 @@ def _build_response(
 
 
 def sync_detailed(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any | ConsolidationCompletionEvent]:
-    """Consolidate memory for an agent
+    """Consolidate memory
 
      Triggers memory consolidation as an SSE stream.
     Returns completion events as the consolidation agent runs.
-
-    Args:
-        agent (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -82,9 +72,7 @@ def sync_detailed(
         Response[Any | ConsolidationCompletionEvent]
     """
 
-    kwargs = _get_kwargs(
-        agent=agent,
-    )
+    kwargs = _get_kwargs()
 
     response = client.get_httpx_client().request(
         **kwargs,
@@ -94,17 +82,13 @@ def sync_detailed(
 
 
 def sync(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Any | ConsolidationCompletionEvent | None:
-    """Consolidate memory for an agent
+    """Consolidate memory
 
      Triggers memory consolidation as an SSE stream.
     Returns completion events as the consolidation agent runs.
-
-    Args:
-        agent (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -115,23 +99,18 @@ def sync(
     """
 
     return sync_detailed(
-        agent=agent,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[Any | ConsolidationCompletionEvent]:
-    """Consolidate memory for an agent
+    """Consolidate memory
 
      Triggers memory consolidation as an SSE stream.
     Returns completion events as the consolidation agent runs.
-
-    Args:
-        agent (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -141,9 +120,7 @@ async def asyncio_detailed(
         Response[Any | ConsolidationCompletionEvent]
     """
 
-    kwargs = _get_kwargs(
-        agent=agent,
-    )
+    kwargs = _get_kwargs()
 
     response = await client.get_async_httpx_client().request(**kwargs)
 
@@ -151,17 +128,13 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    agent: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Any | ConsolidationCompletionEvent | None:
-    """Consolidate memory for an agent
+    """Consolidate memory
 
      Triggers memory consolidation as an SSE stream.
     Returns completion events as the consolidation agent runs.
-
-    Args:
-        agent (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -173,7 +146,6 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            agent=agent,
             client=client,
         )
     ).parsed

@@ -2,7 +2,6 @@
 
 from .activity_config import ActivityConfig
 from .activity_record import ActivityRecord
-from .agent_config import AgentConfig
 from .chat_body import ChatBody
 from .compaction_event import CompactionEvent
 from .compaction_event_type import CompactionEventType
@@ -23,9 +22,10 @@ from .loop_exit_event import LoopExitEvent
 from .loop_exit_event_type import LoopExitEventType
 from .mcp_server_info import MCPServerInfo
 from .memory_detail import MemoryDetail
-from .message_dto import MessageDTO
-from .message_dto_role import MessageDTORole
+from .message import Message
+from .message_role import MessageRole
 from .model_config import ModelConfig
+from .profile import Profile
 from .provided_tool import ProvidedTool
 from .provided_tool_call_event import ProvidedToolCallEvent
 from .provided_tool_call_event_args import ProvidedToolCallEventArgs
@@ -55,14 +55,12 @@ from .tool_repr import ToolRepr
 from .tool_result_event import ToolResultEvent
 from .tool_result_event_type import ToolResultEventType
 from .tool_result_payload import ToolResultPayload
-from .tool_servers import ToolServers
 from .validation_error import ValidationError
 from .validation_error_problems_type_0 import ValidationErrorProblemsType0
 
 __all__ = (
     "ActivityConfig",
     "ActivityRecord",
-    "AgentConfig",
     "ChatBody",
     "CompactionEvent",
     "CompactionEventType",
@@ -83,9 +81,10 @@ __all__ = (
     "LoopExitEventType",
     "MCPServerInfo",
     "MemoryDetail",
-    "MessageDTO",
-    "MessageDTORole",
+    "Message",
+    "MessageRole",
     "ModelConfig",
+    "Profile",
     "ProvidedTool",
     "ProvidedToolCallEvent",
     "ProvidedToolCallEventArgs",
@@ -115,7 +114,6 @@ __all__ = (
     "ToolResultEvent",
     "ToolResultEventType",
     "ToolResultPayload",
-    "ToolServers",
     "ValidationError",
     "ValidationErrorProblemsType0",
 )

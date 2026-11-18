@@ -18,7 +18,7 @@ class ToolCall:
     """A tool call made by the model during a chat completion.
 
     Example:
-        {'id': 'call_abc123', 'tool': 'read_file', 'args': {'path': '/data/report.txt'}}
+        {'id': 'call_abc123', 'tool': 'read', 'args': {'path': '/data/report.txt'}}
 
     Attributes:
         id (str): Tool call ID assigned by the model provider.

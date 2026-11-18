@@ -1,8 +1,8 @@
 openapi: "3.0.3"
 info:
-  title: Arch Agent API
-  description: REST API for managing autonomous agents, sessions, tasks, tools, MCP servers, memory, activity, providers, and streaming chat completions.
-  version: "1.0.0"
+  title: Agent Runtime Daemon API
+  description: REST API for managing profiles, sessions, tasks, MCP servers, memory, activity, providers, and streaming chat completions.
+  version: "1.2.0"
 
 servers:
   - url: http://localhost:8080/
@@ -10,40 +10,40 @@ servers:
 
 tags:
   - name: Chat
-    description: Streaming chat completions with an agent.
+    description: Streaming chat completions for a session.
   - name: Sessions
-    description: Create, list, get, and delete agent sessions.
+    description: Create, list, get, and delete sessions.
   - name: Tasks
-    description: Periodic autonomous tasks for agents.
-  - name: Tools
-    description: List registered tool servers.
+    description: Periodic autonomous tasks for profiles.
   - name: MCP
     description: Connect, disconnect, and list MCP servers.
   - name: Memory
-    description: List and retrieve agent memory records and manage consolidation config.
+    description: List and retrieve memory records and manage consolidation config.
   - name: Activity
-    description: Retrieve agent activity logs and manage reporting config.
-  - name: Agents
-    description: Create, read, update, and delete agents.
+    description: Retrieve activity logs and manage reporting config.
+  - name: Profiles
+    description: Create, read, update, and delete profiles.
   - name: Providers
     description: Configure API providers and model settings.
+  - name: Health
+    description: Server liveness probe.
   - name: Tool Results
     description: Resolve client-provided tool call results.
 
 paths:
   # ── Chat ──────────────────────────────────────────────────────────────
-  /chat/{agent}/{session}:
+  /chat/{session}:
     post:
       tags: [Chat]
       summary: Start a chat completion
       description: |
-        Initiates an agent chat completion and streams events via Server-Sent Events (SSE).
-        Each event is a JSON object prefixed with `data: `. The stream ends with `data: [DONE]`.
-        On failure before the stream starts (bad request) or during the run, the server
-        emits an SSE `error: <json>` frame with a `400` status when possible.
+        Initiates a chat completion in the given session and streams events via
+        Server-Sent Events (SSE). Each event is a JSON object prefixed with `data: `.
+        The stream ends with `data: [DONE]`.
+        On failure the server emits an SSE `error: <json>` frame; the status is `400`
+        when the failure happens before the first event, otherwise it stays `200`.
       operationId: chat
       parameters:
-        - $ref: "#/components/parameters/AgentID"
         - $ref: "#/components/parameters/Session"
       requestBody:
         required: true
@@ -55,7 +55,7 @@ paths:
               properties:
                 user_request:
                   type: array
-                  description: User message content as an array of content parts.
+                  description: User message content as an array of content parts. Must be non-empty.
                   items:
                     $ref: "#/components/schemas/ContentPart"
                 logging:
@@ -64,7 +64,7 @@ paths:
                   default: false
                 additional_prompt:
                   type: string
-                  description: Additional prompt text appended to the system prompt.
+                  description: Accepted for compatibility; not applied to the completion.
                 tool_servers:
                   type: array
                   description: |
@@ -83,41 +83,40 @@ paths:
                 $ref: "#/components/schemas/ChatEvent"
         "400":
           description: |
-            Bad request delivered as an SSE `error: <json>` frame before the stream starts
-            (for example, a malformed JSON body).
+            Bad request delivered as an SSE `error: <json>` frame
+            (for example, a malformed JSON body or a chat failure before the first event).
 
-  /chat/{agent}/{session}/interrupt:
+  /chat/{session}/interrupt:
     post:
       tags: [Chat]
       summary: Interrupt a running chat completion
-      description: |
-        Interrupts the current chat completion for the given agent and session.
+      description: Interrupts the current chat completion for the given session.
       operationId: interruptChat
       parameters:
-        - $ref: "#/components/parameters/AgentID"
         - $ref: "#/components/parameters/Session"
       responses:
         "202":
           description: Interruption accepted.
 
   # ── Sessions ──────────────────────────────────────────────────────────
-  /session/{agent}:
+  /session:
     post:
       tags: [Sessions]
       summary: Create a new session
       description: |
-        Creates a new session for the agent. A session holds the conversation history,
-        token usage, and metadata.
+        Creates a new session bound to a profile. A session holds the conversation
+        history, token usage, and metadata.
       operationId: createSession
-      parameters:
-        - $ref: "#/components/parameters/AgentID"
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
               type: object
               properties:
+                profile_id:
+                  type: string
+                  description: Profile the session belongs to.
                 instruction:
                   type: string
                   description: Optional initial instruction stored in session extras.
@@ -137,11 +136,11 @@ paths:
           $ref: "#/components/responses/BadRequest"
     get:
       tags: [Sessions]
-      summary: List sessions for an agent
-      description: Returns a list of session headers for the given agent.
+      summary: List sessions
+      description: |
+        Returns headers of all sessions. Broken (unreadable) session headers are
+        returned as entries with `session_id` and `error` filled in and the rest left empty.
       operationId: listSessions
-      parameters:
-        - $ref: "#/components/parameters/AgentID"
       responses:
         "200":
           description: Array of session headers.
@@ -154,14 +153,13 @@ paths:
         "400":
           $ref: "#/components/responses/MessageError"
 
-  /session/{agent}/{session}:
+  /session/{session}:
     get:
       tags: [Sessions]
       summary: Get a session by ID
       description: Returns the full session data including message history, token usage, and timestamps.
       operationId: getSession
       parameters:
-        - $ref: "#/components/parameters/AgentID"
         - $ref: "#/components/parameters/Session"
       responses:
         "200":
@@ -178,13 +176,22 @@ paths:
       description: Deletes a session and all its messages. This action is irreversible.
       operationId: deleteSession
       parameters:
-        - $ref: "#/components/parameters/AgentID"
         - $ref: "#/components/parameters/Session"
       responses:
         "200":
           description: Session deleted.
         "400":
           $ref: "#/components/responses/MessageError"
+
+  # ── Health ─────────────────────────────────────────────────────────────
+  /health:
+    get:
+      tags: [Health]
+      summary: Return 200 when server run
+      operationId: healthProbe
+      responses:
+        "200":
+          description: healthy
 
   # ── Tasks ─────────────────────────────────────────────────────────────
   /task:
@@ -207,9 +214,9 @@ paths:
       tags: [Tasks]
       summary: Create a task
       description: |
-        Creates a periodic autonomous task for the agent. Tasks are executed on a cron schedule
-        and can send requests to one or more agent recipients. The task `name` is taken from the
-        request body, not the path.
+        Creates a periodic autonomous task. Tasks are executed on a cron schedule
+        and send requests to one or more profile recipients. The task `name` is taken
+        from the request body, not the path.
       operationId: createTask
       parameters:
         - $ref: "#/components/parameters/TaskName"
@@ -223,11 +230,7 @@ paths:
         "200":
           description: Task created.
         "400":
-          description: Validation error.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationError"
+          $ref: "#/components/responses/ValidationError"
     delete:
       tags: [Tasks]
       summary: Delete a task
@@ -259,30 +262,9 @@ paths:
         "200":
           description: Task patched.
         "400":
-          description: Validation error.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationError"
+          $ref: "#/components/responses/ValidationError"
         "404":
           $ref: "#/components/responses/MessageError"
-
-  # ── Tools ─────────────────────────────────────────────────────────────
-  /tools:
-    get:
-      tags: [Tools]
-      summary: List all registered tool servers and their tools
-      description: |
-        Returns all tool servers known to the system, keyed by server name.
-        Each server maps tool names to their descriptions.
-      operationId: listTools
-      responses:
-        "200":
-          description: Tool servers with their tools.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ToolServers"
 
   # ── MCP ───────────────────────────────────────────────────────────────
   /mcp:
@@ -326,7 +308,7 @@ paths:
         "200":
           description: MCP server connected.
         "400":
-          description: Validation error or server failed to start.
+          description: Validation error or the server failed to start.
           content:
             application/json:
               schema:
@@ -336,7 +318,7 @@ paths:
       summary: Disconnect an MCP server
       description: |
         Disconnects an MCP server by ID. The server's tools become unavailable
-        to agents after disconnection.
+        to profiles after disconnection.
       operationId: disconnectMCP
       parameters:
         - $ref: "#/components/parameters/MCPID"
@@ -347,19 +329,18 @@ paths:
           $ref: "#/components/responses/MessageError"
 
   # ── Memory ────────────────────────────────────────────────────────────
-  /memory/{agent}:
+  /memory:
     get:
       tags: [Memory]
-      summary: List memory records for an agent
+      summary: List memory records
       description: |
-        Returns the memory index for the agent — an object mapping memory record names
-        to their descriptions.
+        Returns the memory index — an object mapping memory record names
+        to their descriptions. The route is registered as `/memory/`;
+        a request to `/memory` is redirected to it.
       operationId: listMemories
-      parameters:
-        - $ref: "#/components/parameters/AgentID"
       responses:
         "200":
-          description: Memory index for the agent.
+          description: Memory index.
           content:
             application/json:
               schema:
@@ -370,15 +351,13 @@ paths:
         "404":
           $ref: "#/components/responses/MessageError"
 
-  /memory/{agent}/{memory_name}:
+  /memory/{memory_name}:
     get:
       tags: [Memory]
       summary: Get a specific memory record
-      description: |
-        Returns the full content of a named memory record for the agent.
+      description: Returns the full content of a named memory record.
       operationId: getMemory
       parameters:
-        - $ref: "#/components/parameters/AgentID"
         - $ref: "#/components/parameters/MemoryName"
       responses:
         "200":
@@ -390,29 +369,28 @@ paths:
         "400":
           $ref: "#/components/responses/MessageError"
 
-  /memory/{agent}/consolidate:
+  /memory/consolidate:
     post:
       tags: [Memory]
-      summary: Consolidate memory for an agent
+      summary: Consolidate memory
       description: |
         Triggers memory consolidation as an SSE stream.
         Returns completion events as the consolidation agent runs.
       operationId: consolidateMemory
-      parameters:
-        - $ref: "#/components/parameters/AgentID"
       responses:
         "200":
           description: |
             SSE stream of consolidation completion events. Each event is a JSON object
             wrapped as `data: <json>\n\n`. The stream ends with `data: [DONE]`.
+            On failure an `error: <json>` frame is emitted instead.
           content:
             text/event-stream:
               schema:
                 $ref: "#/components/schemas/ConsolidationCompletionEvent"
         "400":
-          description: Agent memory is disabled.
+          description: Memory consolidation is disabled.
         "404":
-          description: Agent not found.
+          description: Memory is not found.
         "500":
           description: Internal error.
 
@@ -456,7 +434,8 @@ paths:
       tags: [Activity]
       summary: Get activity logs for a period
       description: |
-        Retrieves activity logs for the specified agent and time range.
+        Retrieves activity logs for the given time range. The range is sent as a
+        JSON request body.
       operationId: getActivity
       requestBody:
         required: true
@@ -464,11 +443,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [agent, from]
+              required: [from]
               properties:
-                agent:
-                  type: string
-                  description: Agent identifier.
                 from:
                   type: string
                   format: date-time
@@ -476,7 +452,7 @@ paths:
                 to:
                   type: string
                   format: date-time
-                  description: End of the time range (optional).
+                  description: End of the time range (optional, empty means unbounded).
       responses:
         "200":
           description: Activity logs for the period.
@@ -523,88 +499,88 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
 
-  # ── Agents ─────────────────────────────────────────────────────────────
-  /agent:
+  # ── Profiles ───────────────────────────────────────────────────────────
+  /profile:
     get:
-      tags: [Agents]
-      summary: List all agents
-      operationId: listAgents
+      tags: [Profiles]
+      summary: List all profiles
+      operationId: listProfiles
       responses:
         "200":
-          description: List of all configured agents.
+          description: List of all configured profiles.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AgentConfig"
+                  $ref: "#/components/schemas/Profile"
 
-  /agent/{id}:
+  /profile/{id}:
     get:
-      tags: [Agents]
-      summary: Get an agent by ID
-      description: Returns the full configuration of an agent including model, memory settings, prompt, and allowed tools.
-      operationId: getAgent
+      tags: [Profiles]
+      summary: Get a profile by ID
+      description: Returns the profile configuration including model, memory settings, prompt, and allowed tool servers.
+      operationId: getProfile
       parameters:
-        - $ref: "#/components/parameters/EntityID"
+        - $ref: "#/components/parameters/ProfileID"
       responses:
         "200":
-          description: Agent details.
+          description: Profile details.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AgentConfig"
+                $ref: "#/components/schemas/Profile"
         "400":
           $ref: "#/components/responses/MessageError"
     post:
-      tags: [Agents]
-      summary: Create an agent
+      tags: [Profiles]
+      summary: Create a profile
       description: |
-        Creates a new agent with the ID given in the path. At minimum, a model must be specified.
-      operationId: createAgent
+        Creates a new profile with the ID given in the path. At minimum, a model must be specified.
+      operationId: createProfile
       parameters:
-        - $ref: "#/components/parameters/EntityID"
+        - $ref: "#/components/parameters/ProfileID"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AgentConfig"
+              $ref: "#/components/schemas/Profile"
       responses:
         "200":
-          description: Agent created.
+          description: Profile created.
         "400":
           $ref: "#/components/responses/BadRequest"
     put:
-      tags: [Agents]
-      summary: Update an agent
+      tags: [Profiles]
+      summary: Update a profile
       description: |
-        Fully replaces the agent configuration. This is a PUT operation — all fields
+        Fully replaces the profile configuration. This is a PUT operation — all fields
         must be provided.
-      operationId: updateAgent
+      operationId: updateProfile
       parameters:
-        - $ref: "#/components/parameters/EntityID"
+        - $ref: "#/components/parameters/ProfileID"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AgentConfig"
+              $ref: "#/components/schemas/Profile"
       responses:
         "200":
-          description: Agent updated.
+          description: Profile updated.
         "400":
           $ref: "#/components/responses/BadRequest"
     delete:
-      tags: [Agents]
-      summary: Delete an agent
-      description: Deletes an agent and all its associated sessions and memory records.
-      operationId: deleteAgent
+      tags: [Profiles]
+      summary: Delete a profile
+      description: Deletes a profile and all its associated sessions and memory records.
+      operationId: deleteProfile
       parameters:
-        - $ref: "#/components/parameters/EntityID"
+        - $ref: "#/components/parameters/ProfileID"
       responses:
         "200":
-          description: Agent deleted.
+          description: Profile deleted.
         "400":
           $ref: "#/components/responses/MessageError"
 
@@ -738,16 +714,22 @@ paths:
         "200":
           description: Model configuration set (empty body).
         "400":
-          description: Bad request.
+          description: Bad request or malformed JSON body.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                oneOf:
+                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ValidationError"
               examples:
                 badEncoding:
                   summary: Bad base64url encoding
                   value:
                     message: "'model' path value bad encoding"
+                brokenJSON:
+                  summary: Malformed request body
+                  value:
+                    problems: "broken json"
                 emptyModel:
                   summary: Empty model name
                   value:
@@ -810,13 +792,6 @@ paths:
 # ── Components ──────────────────────────────────────────────────────────
 components:
   parameters:
-    AgentID:
-      name: agent
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Agent identifier.
     Session:
       name: session
       in: path
@@ -852,13 +827,13 @@ components:
       schema:
         type: string
       description: Memory record name.
-    EntityID:
+    ProfileID:
       name: id
       in: path
       required: true
       schema:
         type: string
-      description: Entity identifier (agent ID).
+      description: Profile identifier.
     ToolResultID:
       name: id
       in: path
@@ -884,7 +859,7 @@ components:
           type: string
           description: Human-readable error message.
       example:
-        message: "agent not found"
+        message: "session is not exist"
 
     ValidationError:
       type: object
@@ -934,7 +909,7 @@ components:
           description: Tool arguments. The actual schema is determined by the tool definition.
       example:
         id: "call_abc123"
-        tool: "read_file"
+        tool: "read"
         args:
           path: "/data/report.txt"
 
@@ -943,12 +918,6 @@ components:
       description: A mapping of tool name to its description.
       additionalProperties:
         type: string
-
-    ToolServers:
-      type: object
-      description: A mapping of tool server name to its tools.
-      additionalProperties:
-        $ref: "#/components/schemas/ToolRepr"
 
     # ── Session ─────────────────────────────────────────────────────────
     SessionHeader:
@@ -982,7 +951,7 @@ components:
     Session:
       type: object
       description: |
-        A session represents a conversation with an agent.
+        A session represents a conversation.
         It contains the message history, token usage, and timestamps.
       required: [session_id, input_tokens, output_tokens, created_at, updated_at, messages]
       properties:
@@ -1008,9 +977,9 @@ components:
         messages:
           type: array
           items:
-            $ref: "#/components/schemas/MessageDTO"
+            $ref: "#/components/schemas/Message"
 
-    MessageDTO:
+    Message:
       type: object
       description: A single message in a session conversation.
       required: [role, content]
@@ -1034,7 +1003,7 @@ components:
       type: object
       description: |
         Configuration for a periodic autonomous task.
-        Tasks are executed on a cron schedule and send requests to agent recipients.
+        Tasks are executed on a cron schedule and send requests to profile recipients.
       required: [name, description, recipients, schedule, request]
       properties:
         name:
@@ -1043,7 +1012,7 @@ components:
           type: string
         recipients:
           type: array
-          description: Agent IDs that receive the task.
+          description: Profile IDs that receive the task.
           items:
             type: string
         schedule:
@@ -1197,7 +1166,7 @@ components:
           enum: [loop_exit]
         cause:
           type: string
-          description: Human-readable error message explaining why the loop exited (empty when no error).
+          description: Human-readable error message explaining why the loop exited (omitted when no error).
 
     CompactionEvent:
       type: object
@@ -1227,13 +1196,13 @@ components:
           description: Tool name.
         args:
           type: object
-          description: Tool arguments (omitted when empty).
+          description: Tool arguments (omitted when the tool was called without arguments).
         result_id:
           type: string
           description: URL-safe id for calling the /toolresult/{id} endpoint to resolve this call.
         agent_id:
           type: string
-          description: Agent identifier.
+          description: Profile identifier.
         session_id:
           type: string
           description: Session identifier.
@@ -1327,16 +1296,13 @@ components:
     MemoryDetail:
       type: object
       description: Full content of a named memory record.
-      required: [agent, memory_name, content]
+      required: [memory_name, content]
       properties:
-        agent:
-          type: string
         memory_name:
           type: string
         content:
           type: string
       example:
-        agent: "agent_main"
         memory_name: "week_25"
         content: "The agent processed 15 tasks..."
 
@@ -1393,10 +1359,10 @@ components:
         interval: 120
         model: "gpt-4"
 
-    # ── Agent ───────────────────────────────────────────────────────────
-    AgentConfig:
+    # ── Profile ─────────────────────────────────────────────────────────
+    Profile:
       type: object
-      description: Configuration for an agent. At minimum, a model must be specified.
+      description: Configuration for a profile. At minimum, a model must be specified.
       required: [model]
       properties:
         model:
@@ -1478,6 +1444,7 @@ components:
       description: |
         Model configuration parameters. Provider-specific settings such as
         `temperature`, `max_tokens`, `top_p`, etc.
+      additionalProperties: true
       example:
         temperature: 0.7
         max_tokens: 4096
@@ -1517,3 +1484,9 @@ components:
             oneOf:
               - $ref: "#/components/schemas/Error"
               - $ref: "#/components/schemas/ValidationError"
+    ValidationError:
+      description: Validation error with per-field problems.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"

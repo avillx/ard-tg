@@ -1,4 +1,4 @@
-"""A client library for accessing Arch Agent API"""
+"""A client library for accessing Agent Runtime Daemon API"""
 
 from .client import AuthenticatedClient, Client
 

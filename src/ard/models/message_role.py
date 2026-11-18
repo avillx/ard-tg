@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class MessageDTORole(str, Enum):
+class MessageRole(str, Enum):
     AGENT = "agent"
     SYSTEM = "system"
     TOOL = "tool"

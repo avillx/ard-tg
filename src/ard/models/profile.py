@@ -8,12 +8,12 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="AgentConfig")
+T = TypeVar("T", bound="Profile")
 
 
 @_attrs_define
-class AgentConfig:
-    """Configuration for an agent. At minimum, a model must be specified.
+class Profile:
+    """Configuration for a profile. At minimum, a model must be specified.
 
     Example:
         {'model': 'gpt-4', 'memory': True, 'description': 'General assistant', 'tool_servers': ['filesystem']}
@@ -73,11 +73,11 @@ class AgentConfig:
 
         description = d.pop("description", UNSET)
 
-        tool_servers = cast(list[str], d.pop("tool_servers", UNSET))
+        tool_servers = cast("list[str]", d.pop("tool_servers", UNSET))
 
         system_prompt = d.pop("system_prompt", UNSET)
 
-        agent_config = cls(
+        profile = cls(
             model=model,
             memory=memory,
             description=description,
@@ -85,8 +85,8 @@ class AgentConfig:
             system_prompt=system_prompt,
         )
 
-        agent_config.additional_properties = d
-        return agent_config
+        profile.additional_properties = d
+        return profile
 
     @property
     def additional_keys(self) -> list[str]:
