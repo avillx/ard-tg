@@ -18,6 +18,7 @@ from .error import Error
 from .get_activity_body import GetActivityBody
 from .list_mcp_servers_response_200 import ListMCPServersResponse200
 from .list_memories_response_200 import ListMemoriesResponse200
+from .list_profiles_response_200 import ListProfilesResponse200
 from .loop_exit_event import LoopExitEvent
 from .loop_exit_event_type import LoopExitEventType
 from .mcp_server_info import MCPServerInfo
@@ -77,6 +78,7 @@ __all__ = (
     "GetActivityBody",
     "ListMCPServersResponse200",
     "ListMemoriesResponse200",
+    "ListProfilesResponse200",
     "LoopExitEvent",
     "LoopExitEventType",
     "MCPServerInfo",
