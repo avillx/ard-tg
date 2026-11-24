@@ -16,7 +16,7 @@ from .create_session_body import CreateSessionBody
 from .create_session_response_200 import CreateSessionResponse200
 from .error import Error
 from .get_activity_body import GetActivityBody
-from .list_mcp_servers_response_200 import ListMCPServersResponse200
+from .list_mcp_servers_response_200 import ListMcpServersResponse200
 from .list_memories_response_200 import ListMemoriesResponse200
 from .list_profiles_response_200 import ListProfilesResponse200
 from .loop_exit_event import LoopExitEvent
@@ -76,7 +76,7 @@ __all__ = (
     "CreateSessionResponse200",
     "Error",
     "GetActivityBody",
-    "ListMCPServersResponse200",
+    "ListMcpServersResponse200",
     "ListMemoriesResponse200",
     "ListProfilesResponse200",
     "LoopExitEvent",

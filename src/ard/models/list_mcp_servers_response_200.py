@@ -10,13 +10,11 @@ if TYPE_CHECKING:
     from ..models.mcp_server_info import MCPServerInfo
 
 
-T = TypeVar("T", bound="ListMCPServersResponse200")
+T = TypeVar("T", bound="ListMcpServersResponse200")
 
 
 @_attrs_define
-class ListMCPServersResponse200:
-    """ """
-
+class ListMcpServersResponse200:
     additional_properties: dict[str, MCPServerInfo] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class CompactionEventType(str, Enum):
+class CompactionEventType(StrEnum):
     COMPACTION = "compaction"
 
     def __str__(self) -> str:

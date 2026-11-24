@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProviderConfigApiType(str, Enum):
+class ProviderConfigApiType(StrEnum):
     OPENAI = "openai"
 
     def __str__(self) -> str:

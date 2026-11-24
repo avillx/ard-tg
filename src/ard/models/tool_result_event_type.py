@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ToolResultEventType(str, Enum):
+class ToolResultEventType(StrEnum):
     TOOL_RESULT = "tool_result"
 
     def __str__(self) -> str:

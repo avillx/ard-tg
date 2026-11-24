@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class MessageRole(str, Enum):
+class MessageRole(StrEnum):
     AGENT = "agent"
     SYSTEM = "system"
     TOOL = "tool"

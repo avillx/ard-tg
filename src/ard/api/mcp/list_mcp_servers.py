@@ -1,11 +1,11 @@
 from http import HTTPStatus
 from typing import Any
 
-import httpx
+import httpx2
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.list_mcp_servers_response_200 import ListMCPServersResponse200
+from ...models.list_mcp_servers_response_200 import ListMcpServersResponse200
 from ...types import Response
 
 
@@ -20,10 +20,10 @@ def _get_kwargs() -> dict[str, Any]:
 
 
 def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ListMCPServersResponse200 | None:
+    *, client: AuthenticatedClient | Client, response: httpx2.Response
+) -> ListMcpServersResponse200 | None:
     if response.status_code == 200:
-        response_200 = ListMCPServersResponse200.from_dict(response.json())
+        response_200 = ListMcpServersResponse200.from_dict(response.json())
 
         return response_200
 
@@ -33,8 +33,8 @@ def _parse_response(
 
 
 def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ListMCPServersResponse200]:
+    *, client: AuthenticatedClient | Client, response: httpx2.Response
+) -> Response[ListMcpServersResponse200]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -46,7 +46,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[ListMCPServersResponse200]:
+) -> Response[ListMcpServersResponse200]:
     """List connected MCP servers
 
      Returns all currently connected MCP servers, keyed by server ID.
@@ -54,10 +54,10 @@ def sync_detailed(
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ListMCPServersResponse200]
+        Response[ListMcpServersResponse200]
     """
 
     kwargs = _get_kwargs()
@@ -72,7 +72,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-) -> ListMCPServersResponse200 | None:
+) -> ListMcpServersResponse200 | None:
     """List connected MCP servers
 
      Returns all currently connected MCP servers, keyed by server ID.
@@ -80,10 +80,10 @@ def sync(
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ListMCPServersResponse200
+        ListMcpServersResponse200
     """
 
     return sync_detailed(
@@ -94,7 +94,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-) -> Response[ListMCPServersResponse200]:
+) -> Response[ListMcpServersResponse200]:
     """List connected MCP servers
 
      Returns all currently connected MCP servers, keyed by server ID.
@@ -102,10 +102,10 @@ async def asyncio_detailed(
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ListMCPServersResponse200]
+        Response[ListMcpServersResponse200]
     """
 
     kwargs = _get_kwargs()
@@ -118,7 +118,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-) -> ListMCPServersResponse200 | None:
+) -> ListMcpServersResponse200 | None:
     """List connected MCP servers
 
      Returns all currently connected MCP servers, keyed by server ID.
@@ -126,10 +126,10 @@ async def asyncio(
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
-        httpx.TimeoutException: If the request takes longer than Client.timeout.
+        httpx2.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ListMCPServersResponse200
+        ListMcpServersResponse200
     """
 
     return (

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class LoopExitEventType(str, Enum):
+class LoopExitEventType(StrEnum):
     LOOP_EXIT = "loop_exit"
 
     def __str__(self) -> str:

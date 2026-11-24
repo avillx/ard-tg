@@ -1,10 +1,11 @@
-venv
-.env
+# Shit
 .ruff_cache
 *.pyc
 __pycache__
-.vscode
 .pytest_cache
-run_gateway.*
 .venv
+*.egg-info/
+
+# Editor settings
 .zed
+.vscode

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class CompletionMistakeEventType(str, Enum):
+class CompletionMistakeEventType(StrEnum):
     COMPLETE_MISTAKE = "complete_mistake"
 
     def __str__(self) -> str:

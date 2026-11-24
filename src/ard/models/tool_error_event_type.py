@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ToolErrorEventType(str, Enum):
+class ToolErrorEventType(StrEnum):
     TOOL_ERROR = "tool_error"
 
     def __str__(self) -> str:

@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProvidedToolCallEventType(str, Enum):
+class ProvidedToolCallEventType(StrEnum):
     PROVIDED_TOOLCALL = "provided_toolcall"
 
     def __str__(self) -> str:

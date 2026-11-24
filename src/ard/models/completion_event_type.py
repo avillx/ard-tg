@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class CompletionEventType(str, Enum):
+class CompletionEventType(StrEnum):
     COMPLETE = "complete"
 
     def __str__(self) -> str:
