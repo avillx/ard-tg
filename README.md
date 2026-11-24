@@ -27,7 +27,7 @@ Can be interrupted by command.
 - `/new` Starts a new session
 - `/activity` Return recent agent activity log.
 - `/tasks` Fetch message representation of taskm, per one agent scheduled task. With no request
-- `/tools` Fetch list of available tools servers
+- `/profiles` Fetch menu-message to select agent profile
 - `/mcp` Fetch list of mcp servers with transport type (process/http)
 - `/consolidate` immidiate starts memory consolidation, stream colsolidatior completions as messages
 
