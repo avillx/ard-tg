@@ -1,0 +1,7 @@
+{
+	"name": "ard-tg-devcontainer",
+	"image": "mcr.microsoft.com/devcontainers/python:3.15-trixie",
+  "postCreateCommand": [
+    "python3","-m","pip","install","-e",".[dev]"
+  ],
+}
