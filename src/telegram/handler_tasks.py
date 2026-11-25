@@ -7,6 +7,7 @@ import telebot.types as telebot_types
 from telegram.service import CommandPrompter, MessageHandler
 lazy import agent
 
+_COMMAND = "tasks"
 
 class TasksHandler(MessageHandler,CommandPrompter):
     """Handle fetch of the actual tasks config
@@ -21,11 +22,11 @@ class TasksHandler(MessageHandler,CommandPrompter):
 
     @override
     def command_prompt(self) -> tuple[str,str]:
-        return "tasks", "♻️ Show tasks"
+        return _COMMAND, "♻️ Show tasks"
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
-        bot.register_message_handler(self.handle, commands=["tasks"], pass_bot=True)
+        bot.register_message_handler(self.handle, commands=[_COMMAND], pass_bot=True)
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:

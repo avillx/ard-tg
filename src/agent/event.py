@@ -54,31 +54,32 @@ class EventHandler(ABC):
     def process_error(self, err: models.Error):
         pass
 
+class ConsolidationEventHandler(ABC):
+    def __init__(self) -> None:
+        super().__init__()
 
-def determine_response(data: str) -> EventType | None:
-    if "data: [DONE]" in data:
-        return None
+    def process_event(self, event: EventType):
+        match event:
+            case models.CompletionEvent():
+                self._process_completion(event)
 
-    if data.startswith("data:"):
-        raw_str = data.removeprefix("data: ")
-        event_dict = json.loads(raw_str)  # pyright: ignore[reportAny]
-        event_type_name: str = event_dict.get("type")  # pyright: ignore[reportAny]
-        event_type = _EVENT_TYPE_MAP.get(event_type_name)
-        if event_type is None:
-            raise ValueError(f"unknown result type {event_type_name}")
+            case models.Error():
+                self._process_error(event)
 
-        return event_type.from_dict(event_dict)  # pyright: ignore[reportAny]
+            case _:
+                raise Exception(f"unexpected event: {type(event)}")
 
-    if data.startswith("error:"):
-        raw_str = data.removeprefix("error: ")
-        error_dict = json.loads(raw_str)  # pyright: ignore[reportAny]
-        return models.Error.from_dict(error_dict)  # pyright: ignore[reportAny]
+    @abstractmethod
+    def _process_completion(self, event: models.CompletionEvent):
+        pass
 
-    return None
+    @abstractmethod
+    def _process_error(self, err: models.Error):
+        pass
 
 
 class AgentEventHandler:
-    _tools_map: dict[str, tool.SafeTool]
+    _tools_map: dict[str, tool.Tool]
     _client: agent_client.Client
     _event_handler: EventHandler
 
@@ -86,7 +87,7 @@ class AgentEventHandler:
         self,
         client: agent_client.Client,
         event_handler: EventHandler,
-        provided_tools: list[tool.SafeTool],
+        provided_tools: list[tool.Tool],
     ) -> None:
         self._event_handler = event_handler
         self._client = client
@@ -145,7 +146,7 @@ class AgentEventHandler:
             result = f"tool '{tool}' is not exist"
 
         else:
-            args: dict[str, Any] = {}  # pyright: ignore[reportExplicitAny]
+            args: tool.ToolArgs = {}
 
             if isinstance(event.args, models.ProvidedToolCallEventArgs):
                 args = event.args.to_dict()
@@ -166,26 +167,23 @@ class AgentEventHandler:
             client=self._client,
         )
 
+def determine_response(data: str) -> EventType | None:
+    if "data: [DONE]" in data:
+        return None
 
-class ConsolidationEventHandler(ABC):
-    def __init__(self) -> None:
-        super().__init__()
+    if data.startswith("data:"):
+        raw_str = data.removeprefix("data: ")
+        event_dict = json.loads(raw_str)  # pyright: ignore[reportAny]
+        event_type_name: str = event_dict.get("type")  # pyright: ignore[reportAny]
+        event_type = _EVENT_TYPE_MAP.get(event_type_name)
+        if event_type is None:
+            raise ValueError(f"unknown result type {event_type_name}")
 
-    def process_event(self, event: EventType):
-        match event:
-            case models.CompletionEvent():
-                self._process_completion(event)
+        return event_type.from_dict(event_dict)  # pyright: ignore[reportAny]
 
-            case models.Error():
-                self._process_error(event)
+    if data.startswith("error:"):
+        raw_str = data.removeprefix("error: ")
+        error_dict = json.loads(raw_str)  # pyright: ignore[reportAny]
+        return models.Error.from_dict(error_dict)  # pyright: ignore[reportAny]
 
-            case _:
-                raise Exception(f"unexpected event: {type(event)}")
-
-    @abstractmethod
-    def _process_completion(self, event: models.CompletionEvent):
-        pass
-
-    @abstractmethod
-    def _process_error(self, err: models.Error):
-        pass
+    return None

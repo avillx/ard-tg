@@ -6,6 +6,7 @@ lazy import telebot.types as telebot_types
 from telegram.service import CommandPrompter, MessageHandler
 lazy import agent
 
+_COMMAND = "interrupt"
 
 class InterruptHandler(MessageHandler,CommandPrompter):
     """Handle interrupt of the agent stream
@@ -20,11 +21,11 @@ class InterruptHandler(MessageHandler,CommandPrompter):
 
     @override
     def command_prompt(self) -> tuple[str,str]:
-        return "interrupt", "🚧 Interrupt agent response"
+        return _COMMAND, "🚧 Interrupt agent response"
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
-        bot.register_message_handler(self.handle, commands=["interrupt"], pass_bot=True)
+        bot.register_message_handler(self.handle, commands=[_COMMAND], pass_bot=True)
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:

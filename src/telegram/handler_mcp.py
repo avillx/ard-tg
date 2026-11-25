@@ -7,6 +7,7 @@ import telebot.types as telebot_types
 from telegram.service import CommandPrompter, MessageHandler
 lazy import agent
 
+_COMMAND = "mcp"
 
 class MCPHandler(MessageHandler,CommandPrompter):
     """Handle fetch of the actual MCP list.
@@ -22,11 +23,11 @@ class MCPHandler(MessageHandler,CommandPrompter):
 
     @override
     def command_prompt(self) -> tuple[str,str]:
-        return "mcp", "⚒️ Show list of MCP servers"
+        return _COMMAND, "⚒️ Show list of MCP servers"
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
-        bot.register_message_handler(self.handle, commands=["mcp"], pass_bot=True)
+        bot.register_message_handler(self.handle, commands=[_COMMAND], pass_bot=True)
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:

@@ -6,6 +6,7 @@ lazy import telebot.types as telebot_types
 from telegram.service import CommandPrompter, MessageHandler
 lazy import agent
 
+_COMMAND = "new"
 
 class NewSessionHandler(MessageHandler,CommandPrompter):
     """Handle interrupt of the current session and drop it
@@ -26,11 +27,11 @@ class NewSessionHandler(MessageHandler,CommandPrompter):
 
     @override
     def command_prompt(self) -> tuple[str,str]:
-        return "new", "💠 New session"
+        return _COMMAND, "💠 New session"
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
-        bot.register_message_handler(self.handle, commands=["new"], pass_bot=True)
+        bot.register_message_handler(self.handle, commands=[_COMMAND], pass_bot=True)
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:

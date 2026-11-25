@@ -7,6 +7,7 @@ from telegram.service import CallBackQueryHandler, CommandPrompter, MessageHandl
 lazy import agent
 
 BUTTON_PREFIX = "profile"
+_COMMAND = "profile"
 
 
 class ShowProfileHandler(MessageHandler,CommandPrompter):
@@ -20,11 +21,11 @@ class ShowProfileHandler(MessageHandler,CommandPrompter):
 
     @override
     def command_prompt(self) -> tuple[str,str]:
-        return "profile", "👤 Show agent profiles"
+        return _COMMAND, "👤 Show agent profiles"
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
-        bot.register_message_handler(self.handle, commands=["profile"], pass_bot=True)
+        bot.register_message_handler(self.handle, commands=[_COMMAND], pass_bot=True)
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:

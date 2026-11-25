@@ -7,6 +7,7 @@ import telebot.types as telebot_types
 from telegram.service import CommandPrompter, MessageHandler
 lazy import agent
 
+_COMMAND = "activity"
 
 class ActivityHandler(MessageHandler,CommandPrompter):
     """Handle fetch of recent agent activity, if any
@@ -21,11 +22,11 @@ class ActivityHandler(MessageHandler,CommandPrompter):
 
     @override
     def command_prompt(self) -> tuple[str,str]:
-        return "activity", "🗂 Show recent activity"
+        return _COMMAND, "🗂 Show recent activity"
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
-        bot.register_message_handler(self.handle, commands=["activity"], pass_bot=True)
+        bot.register_message_handler(self.handle, commands=[_COMMAND], pass_bot=True)
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:

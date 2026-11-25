@@ -10,6 +10,7 @@ from telegram.typing_action import TypingAction
 lazy import agent
 
 CONSOLIDATION_DRAFT_ID = 2
+_COMMAND = "consolidate"
 
 class ConsolidationHandler(MessageHandler,CommandPrompter):
     """Handle requests for consolidation
@@ -26,11 +27,11 @@ class ConsolidationHandler(MessageHandler,CommandPrompter):
 
     @override
     def command_prompt(self) -> tuple[str,str]:
-        return "consolidate", "💾 Start memory consolidation process"
+        return _COMMAND, "💾 Start memory consolidation process"
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
-        bot.register_message_handler(self.handle, commands=["consolidate"], pass_bot=True)
+        bot.register_message_handler(self.handle, commands=[_COMMAND], pass_bot=True)
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
