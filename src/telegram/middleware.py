@@ -72,7 +72,7 @@ class UserContactKeeper(BaseMiddleware):
         self._contact_service.add_contact(str(chat_id), name)
 
     @override
-    def post_process(self, message: telebot_types.Message, data, exception: Exception | None):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
+    def post_process(self, message: telebot_types.Message, data, exception: Exception | None): # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
         pass
 
 

@@ -8,24 +8,24 @@ from .handler_profile import SetProfileHandler, ShowProfileHandler
 from .handler_tasks import TasksHandler
 from .middleware import LoggingMiddleware, UserContactKeeper, UserWhitelistMiddleware
 from .service import TELEGRAM_GUIDE, BasicHandler, CallBackQueryHandler, MessageHandler, Service
-from .sticker_cache import StickerCache
+from .sticker_service import StickerService
 
 __all__ = (
-    "BasicHandler",
-    "CallBackQueryHandler",
     "TELEGRAM_GUIDE",
     "ActivityHandler",
+    "BasicHandler",
+    "CallBackQueryHandler",
     "ConsolidationHandler",
     "GeneralMessageHandler",
     "InterruptHandler",
     "LoggingMiddleware",
-    "MessageHandler",
     "MCPHandler",
+    "MessageHandler",
     "NewSessionHandler",
+    "Service",
     "SetProfileHandler",
     "ShowProfileHandler",
-    "Service",
-    "StickerCache",
+    "StickerService",
     "TasksHandler",
     "UserContactKeeper",
     "UserWhitelistMiddleware",

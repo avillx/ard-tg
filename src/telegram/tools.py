@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, override
+from typing import override
 
 import telebot
 from telebot import types as telebot_types
@@ -7,7 +7,7 @@ from telebot import types as telebot_types
 import agent
 
 
-class SendStickerTool(agent.SafeTool):
+class SendStickerTool(agent.Tool):
     _bot: telebot.TeleBot
     _chat_id: int
     _sticker_pack: dict[str, str]
@@ -38,11 +38,11 @@ class SendStickerTool(agent.SafeTool):
         )
 
     @override
-    def _execute(self, args: dict[str, Any]) -> str:
+    def execute(self, args: agent.ToolArgs) -> str:
 
         emoji = args.get("emoji")
-        if emoji is None:
-            return "'emoji' parameter is required"
+        if not isinstance(emoji,str):
+            return "'emoji' bad parameter type. expected string"
 
         file_id = self._sticker_pack.get(emoji)
         if file_id is None:
@@ -52,7 +52,7 @@ class SendStickerTool(agent.SafeTool):
         return "sticker sended"
 
 
-class SendPhotoTool(agent.SafeTool):
+class SendPhotoTool(agent.Tool):
     _bot: telebot.TeleBot
     _chat_id: int
 
@@ -75,7 +75,7 @@ class SendPhotoTool(agent.SafeTool):
         )
 
     @override
-    def _execute(self, args: dict[str, Any]) -> str:
+    def execute(self, args: agent.ToolArgs) -> str:
         p = args.get("path")
         if not isinstance(p, str) or p == "":
             return "path is required"
@@ -85,7 +85,7 @@ class SendPhotoTool(agent.SafeTool):
         return "photo sended"
 
 
-class SendFileTool(agent.SafeTool):
+class SendFileTool(agent.Tool):
     _bot: telebot.TeleBot
     _chat_id: int
 
@@ -108,7 +108,7 @@ class SendFileTool(agent.SafeTool):
         )
 
     @override
-    def _execute(self, args: dict[str, Any]) -> str:
+    def execute(self, args: agent.ToolArgs) -> str:
         p = args.get("path")
         if not isinstance(p, str) or p == "":
             return "path is required"
@@ -117,7 +117,7 @@ class SendFileTool(agent.SafeTool):
         return "file sended"
 
 
-class SendVoiceTool(agent.SafeTool):
+class SendVoiceTool(agent.Tool):
     _bot: telebot.TeleBot
     _chat_id: int
 
@@ -140,7 +140,7 @@ class SendVoiceTool(agent.SafeTool):
         )
 
     @override
-    def _execute(self, args: dict[str, Any]) -> str:
+    def execute(self, args: agent.ToolArgs) -> str:
         p = args.get("path")
         if not isinstance(p, str) or p == "":
             return "path is required"

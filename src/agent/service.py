@@ -137,7 +137,7 @@ class Service:
         request: str,
         *,
         event_handler: event.EventHandler,
-        provided_tools: list[tool.SafeTool],
+        provided_tools: list[tool.Tool],
     ):
         """Run the agentic loop with the provided tools
 

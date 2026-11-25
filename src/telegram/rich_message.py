@@ -6,12 +6,13 @@ import telebot.types as telebot_types
 
 lazy import ard.models as models
 
+_TOOL_ARG_REPRESENT_LENGHT = 50
 
 class RichMessage:
     _bot: telebot.TeleBot
     _draft_id: int
     _chat_id: int
-    _candidate: str
+    _last_agent_text: str
     _text_drafts: list[str]
     _is_finally_sended: bool
     _logger: logging.Logger
@@ -26,7 +27,7 @@ class RichMessage:
         self._bot = bot
         self._draft_id = draft_id
         self._chat_id = chat_id
-        self._candidate = ""
+        self._last_agent_text = ""
         self._text_drafts = []
         self._is_finally_sended = False
         self._logger = logger
@@ -42,7 +43,7 @@ class RichMessage:
         if text == "":
             return
 
-        self._candidate = text
+        self._last_agent_text = text
         self._text_drafts.append(text)
 
     def send_draft(self):
@@ -51,57 +52,59 @@ class RichMessage:
         rich_message = telebot_types.InputRichMessage(
             markdown=draft,
         )
-        self._bot.send_rich_message_draft(
+        _ = self._bot.send_rich_message_draft(
             chat_id=self._chat_id, draft_id=self._draft_id, rich_message=rich_message
         )
 
-    def send_finale(self) -> None:
-        if self._is_finally_sended:
+    def send_final_message(self) -> None:
+        text = self._get_final_text()
+        if text is None:
             return
 
-        if self._candidate == "":
-            if len(self._text_drafts) <= 0:
-                # nothing to send
-                return
+        if self._is_finally_sended:
+            return
+        self._send_with_fallback(text)
+        self._is_finally_sended = True
 
-            self._candidate = self._text_drafts[-1]
+    def _get_final_text(self) -> str | None:
+        if self._last_agent_text != "":
+            return self._last_agent_text
 
-        rich_message = telebot_types.InputRichMessage(markdown=self._candidate)
+        if len(self._text_drafts) > 0:
+            return self._text_drafts[-1]
 
+        return None
+
+    def _send_with_fallback(self, text:str) -> None:
         try:
-            self._bot.send_rich_message(
-                chat_id=self._chat_id,
-                rich_message=rich_message,
-            )
+            self._send_rich_message(text)
         except Exception as e:  # noqa: BLE001 - rich messages are optional for the bot
             # A failed rich message falls back to plain text, which may fail as well and
             # must not break the update processing.
             self._logger.warning("cant send rich message, fallback is used: %s", e)
-            self._bot.send_message(
-                chat_id=self._chat_id,
-                text=fmt.escape_markdown(self._candidate),
-            )
+            self._send_message(text)
 
-        self._is_finally_sended = True
+    def _send_message(self, text:str) -> None:
+        _ = self._bot.send_message(
+            chat_id=self._chat_id,
+            text=fmt.escape_markdown(text),
+        )
+
+    def _send_rich_message(self, text:str) -> None:
+        _ = self._bot.send_rich_message(
+            chat_id=self._chat_id,
+            rich_message=telebot_types.InputRichMessage(markdown=text),
+        )
 
 
 def tool_call_repr(call: models.ToolCall) -> str:
-
-    if call is None:
-        return ""
-
-    if call.tool is None:
-        return ""
-
-    call_repr = f"{fmt.escape_markdown(call.tool)}"
-
-    call_repr += ":\n"
+    call_repr = f"{fmt.escape_markdown(call.tool)}:\n"
     args = call.args.to_dict()
 
-    for k, v in args.items():
-        arg_repr = f"{k} = {v}" if hasattr(v, "__repr__") else f"{k}"
-        if len(arg_repr) > 40:
-            arg_repr = f"{arg_repr[:40]}..."
+    for k, v in args.items():  # pyright: ignore[reportAny] - ensure tool scheme is not possible
+        arg_repr = f"{k} = {v}" if hasattr(v, "__repr__") else f"{k}" # pyright: ignore[reportAny]
+        if len(arg_repr) > _TOOL_ARG_REPRESENT_LENGHT:
+            arg_repr = f"{arg_repr[:_TOOL_ARG_REPRESENT_LENGHT]}..."
 
         call_repr += f"\n- {fmt.escape_markdown(arg_repr)}"
 

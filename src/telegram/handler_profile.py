@@ -1,16 +1,15 @@
 from typing import override
 
-import telebot.formatting as fmt
 lazy import telebot
 lazy import telebot.types as telebot_types
 
-from telegram.service import CallBackQueryHandler, MessageHandler
+from telegram.service import CallBackQueryHandler, CommandPrompter, MessageHandler
 lazy import agent
 
-ButtonPrefix = "profile"
+BUTTON_PREFIX = "profile"
 
 
-class ShowProfileHandler(MessageHandler):
+class ShowProfileHandler(MessageHandler,CommandPrompter):
     _profile_service: agent.ProfileService
 
     def __init__(
@@ -20,19 +19,25 @@ class ShowProfileHandler(MessageHandler):
         self._profile_service = profile_service
 
     @override
+    def command_prompt(self) -> tuple[str,str]:
+        return "profile", "👤 Show agent profiles"
+
+    @override
     def register_on(self, bot: telebot.TeleBot) -> None:
         bot.register_message_handler(self.handle, commands=["profile"], pass_bot=True)
 
+    @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
+
         markup = telebot_types.InlineKeyboardMarkup(row_width=1)
         btns: list[telebot_types.InlineKeyboardButton] = []
         msg: str = "### 👤 Agent profiles:\n"
         for profile_id, profile_description in self._profile_service.all_profiles().items():
             msg += f"- **{profile_id}**: {profile_description}\n"
-            data = ":".join([ButtonPrefix, profile_id])
+            data = ":".join([BUTTON_PREFIX, profile_id])
             btns.append(telebot_types.InlineKeyboardButton(profile_id, callback_data=data))
 
-        btns.append(telebot_types.InlineKeyboardButton("default", callback_data=f"{ButtonPrefix}:"))
+        btns.append(telebot_types.InlineKeyboardButton("default", callback_data=f"{BUTTON_PREFIX}:"))
         _ = markup.add(*btns)
 
         rich_message = telebot_types.InputRichMessage(markdown=msg)
@@ -40,11 +45,12 @@ class ShowProfileHandler(MessageHandler):
         _ = bot.send_rich_message(message.chat.id, rich_message, reply_markup=markup)
 
 
+
 def is_profile_callback(call: telebot_types.CallbackQuery):
     if not isinstance(call.data, str):
         return None
 
-    return call.data.startswith(ButtonPrefix)
+    return call.data.startswith(BUTTON_PREFIX)
 
 
 class SetProfileHandler(CallBackQueryHandler):
@@ -79,14 +85,37 @@ class SetProfileHandler(CallBackQueryHandler):
         try:
             self._profile_service.set_profile(choice)
         except ValueError:
-            _ = bot.answer_callback_query(call.id, text=f"Profile is not exist: {choice}")
-        else:
-            _ = bot.answer_callback_query(call.id, text=f"Coosen profile: {choice}")
-
-        if isinstance(call.message, telebot_types.MaybeInaccessibleMessage) and isinstance(
-            call.message.id, int
-        ):
-            _ = bot.delete_message(
-                chat_id=call.message.chat.id,
-                message_id=call.message.id,
+            _ = bot.answer_callback_query(
+                callback_query_id = call.id,
+                text=f"Profile is not exist: {choice}"
             )
+        else:
+            _ = bot.answer_callback_query(
+                callback_query_id = call.id,
+                text=f"Coosen profile: {choice}",
+            )
+
+        chat_id = resolve_chat_id(call)
+        message_id = resolve_message_id(call)
+        if chat_id is None or message_id is None:
+            return
+
+        _ = bot.delete_message(
+            chat_id=chat_id,
+            message_id=message_id,
+        )
+
+def resolve_message_id(q: telebot_types.CallbackQuery) -> int | None:
+    if not isinstance(q.message, telebot_types.MaybeInaccessibleMessage):
+       return None
+
+    if not isinstance(q.message.id, int):
+       return None
+
+    return q.message.id
+
+def resolve_chat_id(q: telebot_types.CallbackQuery) -> int | None:
+    if not isinstance(q.message, telebot_types.MaybeInaccessibleMessage):
+       return None
+
+    return q.message.chat.id

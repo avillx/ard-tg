@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import override
 lazy import logging
 
 lazy import telebot
@@ -6,7 +7,7 @@ lazy import telebot.types as telebot_types
 
 import telegram.attachments as attachments
 import telegram.rich_message as rich_message
-import telegram.sticker_cache as sticker_cache
+import telegram.sticker_service as sticker_service
 import telegram.tools as tools
 from telegram.chat_event_handler import ChatEventHandler
 from telegram.service import MessageHandler
@@ -19,7 +20,7 @@ class GeneralMessageHandler(MessageHandler):
     """Handler to process all raw messages to agent."""
 
     _agent_service: agent.Service
-    _sticker_cache: sticker_cache.StickerCache
+    _sticker_service: sticker_service.StickerService
     _sticker_pack: str
     _storage: storage.Storage
     _logger: logging.Logger
@@ -27,24 +28,28 @@ class GeneralMessageHandler(MessageHandler):
     def __init__(
         self,
         agent_service: agent.Service,
-        sticker_cache: sticker_cache.StickerCache,
-        sticker_pack: str,
+        sticker_cache: sticker_service.StickerService,
         storage_: storage.Storage,
         logger: logging.Logger,
     ):
         self._agent_service = agent_service
-        self._sticker_cache = sticker_cache
-        self._sticker_pack = sticker_pack
+        self._sticker_service = sticker_cache
         self._storage = storage_
         self._logger = logger.getChild("Telegram.GeneralMessageHandler")
 
+    @override
     def register_on(self, bot: telebot.TeleBot) -> None:
+
+        def allow_all(_message: telebot_types.Message) -> bool:
+            return True
+
         bot.register_message_handler(
             self.handle,
-            func=lambda message: True,
+            func=allow_all,
             pass_bot=True,
         )
 
+    @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
         with TypingAction(bot, message.chat.id, self._logger) as typing_action:
             provided_tools = self._provided_tools(
@@ -94,19 +99,19 @@ class GeneralMessageHandler(MessageHandler):
                 )
 
             except Exception as e:  # noqa: BLE001 - gateway failure must be reported to the user
-                bot.send_message(message.chat.id, "⚠️ gateway problem")
+                _ = bot.send_message(message.chat.id, "⚠️ gateway problem")
                 self._logger.error("gateway exception: %s", e)
             finally:
-                rich_msg.send_finale()
+                rich_msg.send_final_message()
 
     # class helper
     def _provided_tools(
         self,
         chat_id: int,
         bot: telebot.TeleBot,
-    ) -> list[agent.SafeTool]:
+    ) -> list[agent.Tool]:
 
-        provided_tools: list[agent.SafeTool] = [
+        provided_tools: list[agent.Tool] = [
             tools.SendPhotoTool(
                 bot=bot,
                 chat_id=chat_id,
@@ -121,14 +126,9 @@ class GeneralMessageHandler(MessageHandler):
             ),
         ]
 
-        if self._sticker_pack != "":
-            provided_tools.append(
-                tools.SendStickerTool(
-                    bot=bot,
-                    chat_id=chat_id,
-                    sticker_pack=self._sticker_cache.get_pack(self._sticker_pack),
-                )
-            )
+        sticker_tools = self._sticker_service.get_tools(chat_id)
+        if len(sticker_tools) > 0:
+            provided_tools.extend(sticker_tools)
 
         return provided_tools
 

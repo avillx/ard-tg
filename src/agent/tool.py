@@ -1,67 +1,45 @@
 from abc import ABC, abstractmethod
-from typing import Any, override
+from typing import Any
 
 import ard.models as models
 
+ToolArgs = dict[str, Any] # pyright: ignore[reportExplicitAny]
+ToolSchema = dict[str, Any] # pyright: ignore[reportExplicitAny]
 
-class AgentTool(ABC):
-    @abstractmethod
-    def name(self) -> str:
-        pass
-
-    @abstractmethod
-    def description(self) -> str:
-        pass
-
-    @abstractmethod
-    def schema(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
-        pass
-
-    @abstractmethod
-    def execute(self, args: dict[str, Any]) -> str:  # pyright: ignore[reportExplicitAny]
-        pass
-
-
-class SafeTool(AgentTool, ABC):
+class Tool(ABC):
     _name: str
     _desctiption: str
-    _schema: dict[str, Any]  # pyright: ignore[reportExplicitAny]
+    _schema: ToolSchema
 
     def __init__(
         self,
         name: str,
         description: str,
-        schema: dict[str, Any],  # pyright: ignore[reportExplicitAny]
+        schema: ToolSchema
     ):
         self._name = name
         self._desctiption = description
         self._schema = schema
 
-    @override
+
     def name(self) -> str:
         return self._name
 
-    @override
+
     def description(self) -> str:
         return self._desctiption
 
-    @override
-    def schema(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
+
+    def schema(self) -> ToolSchema:
         return self._schema
 
-    @override
-    def execute(self, args: dict[str, Any]) -> str:  # pyright: ignore[reportExplicitAny]
-        try:
-            return self._execute(args)
-        except Exception as e:  # noqa: BLE001 - tool code is arbitrary
-            return f"error: {e}"
 
     @abstractmethod
-    def _execute(self, args: dict[str, Any]) -> str:  # pyright: ignore[reportExplicitAny]
+    def execute(self, args: ToolArgs) -> str:
         pass
 
 
-def create_provided_tool_server(tools: list[AgentTool]) -> models.ProvidedToolServer:
+def create_provided_tool_server(tools: list[Tool]) -> models.ProvidedToolServer:
 
     provided_tools: list[models.ProvidedTool] = []
 

@@ -4,11 +4,11 @@ import telebot
 import telebot.types as telebot_types
 
 TELEGRAM_GUIDE = """
-# Gateway
+## Gateway
 
 You recieve user messages from messanger `Telegram`. markdown has fully support.
-
-all attachments sended by user stores in `tmp/*` of your default cwd
+- All attachments sended by user stores in `tmp/*` of your default cwd
+- To sent anything back it must also in `tmp` copy to `tmp` and then send it
 """
 
 
@@ -18,7 +18,6 @@ class BasicHandler(ABC):
     Owns its update route and knows how to register it on a bot. Dependencies are
     passed in a constructor.
     """
-
     @abstractmethod
     def register_on(self, bot: telebot.TeleBot) -> None:
         pass
@@ -36,26 +35,45 @@ class CallBackQueryHandler(BasicHandler, ABC):
         pass
 
 
+class CommandPrompter(ABC):
+    @abstractmethod
+    def command_prompt(self) -> tuple[str,str]:
+        pass
+
 class Service:
     _handlers: list[BasicHandler]
+    _bot: telebot.TeleBot
 
-    def __init__(self, handlers: list[BasicHandler]):
+    def __init__(
+        self,
+        handlers: list[BasicHandler],
+        bot: telebot.TeleBot,
+    ):
         self._handlers = handlers
+        self._bot = bot
 
-    def set_commands_prompt(self, bot: telebot.TeleBot):
-        """Register allowed commands prompt for users in a bot."""
-        commands: list[telebot_types.BotCommand] = [
-            telebot_types.BotCommand("interrupt", "🚧 Interrupt agent response"),
-            telebot_types.BotCommand("new", "💠 New session"),
-            telebot_types.BotCommand("activity", "🗂 Show recent activity"),
-            telebot_types.BotCommand("tasks", "♻️ Show tasks"),
-            telebot_types.BotCommand("profile", "👤 Show agent profiles"),
-            telebot_types.BotCommand("mcp", "⚒️ Show list of MCP servers"),
-            telebot_types.BotCommand("consolidate", "💾 Start memory consolidation process"),
-        ]
-        bot.set_my_commands(commands)
+    def run(self):
+        """Register routes bot handlers."""
+        self.register_command_prompt()
+        self.register_handlers()
 
-    def register_handlers(self, bot: telebot.TeleBot):
+    def register_command_prompt(self):
+        """Register routes bot handlers."""
+
+        command_prompts:  list[telebot_types.BotCommand] = []
+
+        for handler in self._handlers:
+            if not isinstance(handler,CommandPrompter):
+                continue
+            command, description = handler.command_prompt()
+            command_prompts.append(
+                telebot_types.BotCommand(command, description),
+            )
+
+        _ = self._bot.set_my_commands(command_prompts)
+
+
+    def register_handlers(self):
         """Register routes bot handlers."""
         for handler in self._handlers:
-            handler.register_on(bot)
+            handler.register_on(self._bot)

@@ -1,12 +1,14 @@
+from typing import override
+
 import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from telegram.service import MessageHandler
+from telegram.service import CommandPrompter, MessageHandler
 lazy import agent
 
 
-class MCPHandler(MessageHandler):
+class MCPHandler(MessageHandler,CommandPrompter):
     """Handle fetch of the actual MCP list.
 
     Expect call from `/mcp` command. Also allow mcp servers names as arguments,
@@ -18,14 +20,20 @@ class MCPHandler(MessageHandler):
     def __init__(self, agent_service: agent.Service):
         self._agent_service = agent_service
 
+    @override
+    def command_prompt(self) -> tuple[str,str]:
+        return "mcp", "⚒️ Show list of MCP servers"
+
+    @override
     def register_on(self, bot: telebot.TeleBot) -> None:
         bot.register_message_handler(self.handle, commands=["mcp"], pass_bot=True)
 
+    @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
         mcp_servers_list = self._agent_service.mcp_list()
 
         if len(mcp_servers_list) <= 0:
-            bot.send_message(message.chat.id, "⚒️ Has no mcp servers")
+            _ = bot.send_message(message.chat.id, "⚒️ Has no mcp servers")
             return
 
         response: list[str] = [fmt.mbold("⚒️ MCP servers:")]
@@ -33,4 +41,4 @@ class MCPHandler(MessageHandler):
             response.append(fmt.escape_markdown(f"- {name}"))
 
         response.append(fmt.mcite("For details: /tools <mcp_server>"))
-        bot.send_message(message.chat.id, fmt.format_text(*response))
+        _ = bot.send_message(message.chat.id, fmt.format_text(*response))

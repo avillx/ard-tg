@@ -33,7 +33,7 @@ class ResponseSink:
         self.hanlder.send_header("Content-Length", str(len(response_body)))
         self.hanlder.end_headers()
 
-        self.hanlder.wfile.write(response_body)
+        _ = self.hanlder.wfile.write(response_body)
 
 
 class EndpointHandler(ABC):

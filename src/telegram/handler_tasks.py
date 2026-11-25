@@ -1,12 +1,14 @@
+from typing import override
+
 import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from telegram.service import MessageHandler
+from telegram.service import CommandPrompter, MessageHandler
 lazy import agent
 
 
-class TasksHandler(MessageHandler):
+class TasksHandler(MessageHandler,CommandPrompter):
     """Handle fetch of the actual tasks config
 
     Expect call from `/tasks` command
@@ -17,17 +19,23 @@ class TasksHandler(MessageHandler):
     def __init__(self, agent_service: agent.Service):
         self._agent_service = agent_service
 
+    @override
+    def command_prompt(self) -> tuple[str,str]:
+        return "tasks", "♻️ Show tasks"
+
+    @override
     def register_on(self, bot: telebot.TeleBot) -> None:
         bot.register_message_handler(self.handle, commands=["tasks"], pass_bot=True)
 
+    @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
         task_list = self._agent_service.task_list()
-        if task_list is None:
-            bot.send_message(message.chat.id, "♻️ Agent return no tasks")
+        if len(task_list) <= 0:
+            _ = bot.send_message(message.chat.id, "♻️ Agent return no tasks")
             return
 
         if len(task_list) <= 0:
-            bot.send_message(message.chat.id, "♻️ Has no tasks")
+            _ = bot.send_message(message.chat.id, "♻️ Has no tasks")
             return
 
         for task in task_list:
@@ -40,4 +48,4 @@ class TasksHandler(MessageHandler):
                 + fmt.escape_markdown(fmt.format_text(*task.recipients, ",")),
                 fmt.mbold("Description: ") + fmt.escape_markdown(task.description),
             )
-            bot.send_message(message.chat.id, response)
+            _ = bot.send_message(message.chat.id, response)

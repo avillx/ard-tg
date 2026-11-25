@@ -26,6 +26,7 @@ include = ["src", "tests"]
 extraPaths = ["src", "tests"]
 typeCheckingMode = "recommended"
 exclude = ["src/ard/**"]
+allowedUntypedLibraries = ["telebot"]
 
 [tool.ruff]
 line-length = 100
@@ -36,6 +37,7 @@ extend-exclude = ["src/ard","skills/"]
 
 [tool.ruff.lint]
 ignore = [
+  "EXE002", # shebang check
   "A003",    # flake8-builtins - class attribute {name} is shadowing a python builtin
   "B010",    # flake8-bugbear - do not call setattr with a constant attribute value
   "D100",    # pydocstyle - missing docstring in public module

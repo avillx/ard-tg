@@ -10,6 +10,7 @@ from server import endpoints, http_server
 lazy import attach
 lazy import contacts
 lazy import notifications
+lazy import telegram
 
 
 class BotServer:
@@ -17,12 +18,14 @@ class BotServer:
     _http_server: http_server.Server
     _logger: logging.Logger
     _notifier: notifications.Notifier
+    _telegram_service: telegram.Service
     _use_webhook: bool
 
     def __init__(
         self,
         attachment_service: attach.AttachService,
         contact_service: contacts.ContactService,
+        telegram_service: telegram.Service,
         notifier: notifications.Notifier,
         webhook_url: str,
         bot: telebot.TeleBot,
@@ -33,6 +36,7 @@ class BotServer:
         self._bot = bot
         self._use_webhook = False
         self._http_server = http_server.Server(logger)
+        self._telegram_service = telegram_service
 
         # routes
         self._http_server.post("/attach", endpoints.AttachSessionHandler(attachment_service))
@@ -55,6 +59,7 @@ class BotServer:
             raise e
 
     def run(self):
+        self._telegram_service.run()
 
         notified: bool = False
 
