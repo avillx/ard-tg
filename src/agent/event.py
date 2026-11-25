@@ -54,31 +54,7 @@ class EventHandler(ABC):
     def process_error(self, err: models.Error):
         pass
 
-class ConsolidationEventHandler(ABC):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def process_event(self, event: EventType):
-        match event:
-            case models.CompletionEvent():
-                self._process_completion(event)
-
-            case models.Error():
-                self._process_error(event)
-
-            case _:
-                raise Exception(f"unexpected event: {type(event)}")
-
-    @abstractmethod
-    def _process_completion(self, event: models.CompletionEvent):
-        pass
-
-    @abstractmethod
-    def _process_error(self, err: models.Error):
-        pass
-
-
-class AgentEventHandler:
+class ChatEventHandler:
     _tools_map: dict[str, tool.Tool]
     _client: agent_client.Client
     _event_handler: EventHandler

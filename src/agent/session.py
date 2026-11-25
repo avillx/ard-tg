@@ -14,6 +14,19 @@ DEFAULT_SESSION_TTL: float = 600
 class SuperfluousSetSessionError(Exception):
     pass
 
+class SessionDefiner(ABC):
+    @abstractmethod
+    def set_session_id(self, session_id: str, additional_time: float = 0.0) -> None:
+        pass
+
+class SessionSource(ABC):
+    @abstractmethod
+    def get_session_id(self) -> str:
+        pass
+
+    @abstractmethod
+    def get_unexpired_session_id(self) -> str:
+        pass
 
 class ProfileSource(ABC):
     @abstractmethod
@@ -33,7 +46,7 @@ class SystemTime(TimeProvider):
         return time.monotonic()
 
 
-class SessionService:
+class SessionService(SessionSource,SessionDefiner):
     """Service with session management responsibility."""
 
     _profile_id: str
@@ -74,12 +87,13 @@ class SessionService:
         with self._mutex:
             self._actual_session = ""
 
-    def set(self, session_id: str, additional_time: float = 0.0):
+    @override
+    def set_session_id(self, session_id: str, additional_time: float = 0.0):
         """Set the session id as the actual session
 
         additional_time extends the time to live of the set session
         """
-        if self._is_actual() and session_id == self.get():
+        if self._is_actual() and session_id == self.get_session_id():
             raise SuperfluousSetSessionError()
 
         with self._mutex:
@@ -87,12 +101,14 @@ class SessionService:
             self._last_update = self._time.now()
             self._actual_session = session_id
 
-    def get(self) -> str:
+    @override
+    def get_session_id(self) -> str:
         """Return the currently set session."""
         with self._mutex:
             return self._actual_session
 
-    def get_actual(self) -> str:
+    @override
+    def get_unexpired_session_id(self) -> str:
         """Get the session, creating a new one when it is unset or expired."""
         with self._mutex:
             profile_is_actual = self._profile_source.get_profile() == self._profile_id
