@@ -41,5 +41,4 @@ class MCPHandler(MessageHandler,CommandPrompter):
         for name in mcp_servers_list:
             response.append(fmt.escape_markdown(f"- {name}"))
 
-        response.append(fmt.mcite("For details: /tools <mcp_server>"))
         _ = bot.send_message(message.chat.id, fmt.format_text(*response))

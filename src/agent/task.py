@@ -1,28 +1,19 @@
-lazy import logging
+from abc import ABC, abstractmethod
 
-import ard.api.tasks.list_tasks as list_tasks
-import ard.client as agent_client
-import ard.models as models
+from attr import dataclass
 
 
-class TaskListService:
-    _logger: logging.Logger
-    _agent_client: agent_client.Client
+@dataclass
+class Task:
+    name: str
+    description: str
+    recipients: list[str]
+    schedule: str
+    request: str
+    active: bool
+    oneshot: bool
 
-    def __init__(
-        self,
-        client: agent_client.Client,
-        logger: logging.Logger,
-    ) -> None:
-        self._logger = logger
-        self._agent_client = client
-
-    def task_list(self) -> list[models.TaskConfig]:
-        """Return the tasks configured in the agent."""
-        self._logger.info("Tasks requested")
-
-        task_list = list_tasks.sync(client=self._agent_client)
-        if task_list is None:
-            return []
-
-        return task_list
+class TasksListService(ABC):
+    @abstractmethod
+    def list(self) -> list[Task]:
+        pass

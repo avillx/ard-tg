@@ -1,55 +1,55 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import override
 
-import ard.models as models
-
-ToolArgs = dict[str, Any] # pyright: ignore[reportExplicitAny]
-ToolSchema = dict[str, Any] # pyright: ignore[reportExplicitAny]
-
-class Tool(ABC):
-    _name: str
-    _desctiption: str
-    _schema: ToolSchema
-
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        schema: ToolSchema
-    ):
-        self._name = name
-        self._desctiption = description
-        self._schema = schema
+from agent.chat import ContentPart, ProvidedToolCallEvent, Tool, ToolResult
 
 
-    def name(self) -> str:
-        return self._name
-
-
-    def description(self) -> str:
-        return self._desctiption
-
-
-    def schema(self) -> ToolSchema:
-        return self._schema
-
-
+class ToolResultSink(ABC):
     @abstractmethod
-    def execute(self, args: ToolArgs) -> str:
+    def send_result(self,res: ToolResult) -> None:
         pass
 
 
-def create_provided_tool_server(tools: list[Tool]) -> models.ProvidedToolServer:
+class ToolExecutor(ABC):
+    @abstractmethod
+    def process_provided_toolcall(self, event: ProvidedToolCallEvent):
+        pass
 
-    provided_tools: list[models.ProvidedTool] = []
 
-    for t in tools:
-        provided_tools.append(
-            models.ProvidedTool(
-                name=t.name(),
-                description=t.description(),
-                schema=models.ProvidedToolSchema.from_dict(t.schema()),
-            )
+class ProvidedToolExecutor(ToolExecutor):
+    _tools_map: dict[str, Tool]
+    _sink: ToolResultSink
+
+    def __init__(
+        self,
+        sink: ToolResultSink,
+        tools: list[Tool],
+    ) -> None:
+        self._sink = sink
+        self._tools_map = {}
+        for t in tools:
+            self._tools_map[t.name()] = t
+
+
+    @override
+    def process_provided_toolcall(self, event: ProvidedToolCallEvent):
+
+        text_result = f"tool '{event.tool}' is not exist"
+        t = self._tools_map.get(event.tool)
+        if t is not None:
+            try:
+                text_result = t.execute(event.args)
+            except Exception as e:  # noqa: BLE001 - tool code is arbitrary
+                text_result = f"tool error: {e}"
+
+        content = ContentPart(
+            image_url="",
+            text=text_result
         )
 
-    return models.ProvidedToolServer(tools=provided_tools)
+        result = ToolResult(
+            result_id=event.result_id,
+            content=[content]
+        )
+
+        self._sink.send_result(result)

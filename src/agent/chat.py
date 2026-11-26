@@ -1,96 +1,218 @@
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
+from typing import Any
 lazy import logging
 
-import agent.event as event
+from attr import dataclass
+
 import agent.interruption as interruption
 import agent.session as session
-import agent.tool as tool
-import ard.client as agent_client
-import ard.models as models
-from ard.models.content_part import ContentPart
 
-_DEFAULT_CHAT_STREAM_TIMEOUT = 10000
+ToolArgs = dict[str, Any] # pyright: ignore[reportExplicitAny]
+ResultID = str
+ToolSchema = dict[str, Any] # pyright: ignore[reportExplicitAny]
 
-class ChatService:
-    _agent_url: str
-    _agent_client: agent_client.Client
-    _session_source: session.SessionSource
-    _interruptor: interruption.Interruptor
-    _logger: logging.Logger
+@dataclass
+class ToolResult:
+    result_id: ResultID
+    content: list[ContentPart]
+
+class Tool(ABC):
+    _name: str
+    _desctiption: str
+    _schema: ToolSchema
 
     def __init__(
         self,
-        agent_url: str,
-        agent_client: agent_client.Client,
+        name: str,
+        description: str,
+        schema: ToolSchema
+    ):
+        self._name = name
+        self._desctiption = description
+        self._schema = schema
+
+
+    def name(self) -> str:
+        return self._name
+
+
+    def description(self) -> str:
+        return self._desctiption
+
+
+    def schema(self) -> ToolSchema:
+        return self._schema
+
+
+    @abstractmethod
+    def execute(self, args: ToolArgs) -> str:
+        pass
+
+@dataclass
+class ContentPart:
+    image_url: str
+    text: str
+
+
+@dataclass
+class ToolCall:
+    tool: str
+    args: ToolArgs
+
+@dataclass
+class Event:
+    pass
+
+@dataclass
+class LoopExitEvent(Event):
+    cause: str | None
+
+@dataclass
+class CompletionEvent(Event):
+    done: bool
+    completion: str
+    tool_calls: list[ToolCall]
+
+@dataclass
+class CompletionMistakeEvent(Event):
+    cause: str
+
+@dataclass
+class CompactionEvent(Event):
+    message: str
+    result: str
+
+@dataclass
+class ToolErrorEvent(Event):
+    cause: str
+    tool_name: str
+    args: ToolArgs
+
+@dataclass
+class ProvidedToolCallEvent(Event):
+    tool: str
+    agent_id: str
+    session_id: str
+    result_id: ResultID
+    args: ToolArgs
+
+@dataclass
+class ErrorEvent(Event):
+    cause: str
+
+@dataclass
+class ToolResultEvent(Event):
+    content: list[ContentPart]
+
+
+class EventHandler(ABC):
+    @abstractmethod
+    def process_loop_exit(self, event: LoopExitEvent):
+        pass
+
+    @abstractmethod
+    def process_compaction(self, event: CompactionEvent):
+        pass
+
+    @abstractmethod
+    def process_completion(self, event: CompletionEvent):
+        pass
+
+    @abstractmethod
+    def process_completion_mistake(self, event: CompletionMistakeEvent):
+        pass
+
+    @abstractmethod
+    def process_tool_error(self, event: ToolErrorEvent):
+        pass
+
+    @abstractmethod
+    def process_tool_result(self, event: ToolResultEvent):
+        pass
+
+    @abstractmethod
+    def process_error(self, err: ErrorEvent):
+        pass
+
+    @abstractmethod
+    def process_provided_toolcall(self, event: ProvidedToolCallEvent):
+        pass
+
+class ChatStreamer(ABC):
+    @abstractmethod
+    def chat(self,*,request: ContentPart,session_id: str,tools: list[Tool]) -> Iterator[Event]:
+        pass
+
+class HandlerError(Exception):
+    pass
+
+class ChatService:
+    _session_source: session.SessionSource
+    _interruptor: interruption.Interruptor
+    _logger: logging.Logger
+    _chat_streamer: ChatStreamer
+
+    def __init__(
+        self,
         session_source: session.SessionSource,
         interruptor: interruption.Interruptor,
+        chat_streamer: ChatStreamer,
         logger: logging.Logger,
     ):
-        self._logger = logger.getChild("Agent")
-        self._agent_url = agent_url
-        self._agent_client = agent_client
+        self._logger = logger.getChild("Chat")
         self._session_source = session_source
         self._interruptor = interruptor
-
-
-    def _build_url(self) -> str:
-        return "/".join(
-            [
-                self._agent_url.rstrip("/"),
-                "chat",
-                self._session_source.get_unexpired_session_id(),
-            ]
-        )
+        self._chat_streamer = chat_streamer
 
     def chat(
         self,
-        request: str,
-        *,
-        event_handler: event.EventHandler,
-        provided_tools: list[tool.Tool],
+        request: ContentPart,
+        event_handler: EventHandler,
+        provided_tools: list[Tool],
     ):
         """Run the agentic loop with the provided tools _DEFAULT_CHAT_STREAM_TIMEOUT
         All events are processed through the introduced event handler
         """
+        session_id = self._session_source.get_unexpired_session_id()
+        self._logger.info("chat started with session: %s",session_id)
+        for ev in self._chat_streamer.chat(
+            request=request,
+            session_id=session_id,
+            tools=provided_tools,
+        ):
+            try:
+                self.handle_event(event_handler,ev)
+            except Exception as e:
+                self._interruptor.interrupt(session_id)
+                self._logger.error("event handling error %s",e)
+                raise HandlerError() from e
 
-        chat_event_handler = event.ChatEventHandler(
-            client=self._agent_client,
-            event_handler=event_handler,
-            provided_tools=provided_tools,
-        )
+    def handle_event(self,handler: EventHandler,event: Event):
+        match event:
+            case ProvidedToolCallEvent():
+                handler.process_provided_toolcall(event)
 
-        chat_body: models.ChatBody = models.ChatBody(
-            logging=True,
-            user_request=[ContentPart(text=request)],
-            tool_servers=chat_event_handler.allowed_tool_servers(),
-        )
+            case CompactionEvent():
+                handler.process_compaction(event)
 
-        self._logger.info("Agentic loop requested")
+            case CompletionEvent():
+                handler.process_completion(event)
 
-        httpx_client = self._agent_client.get_httpx_client()
+            case CompletionMistakeEvent():
+                handler.process_completion_mistake(event)
 
-        with httpx_client.stream(
-            method="POST",
-            url=self._build_url(),
-            json=chat_body.to_dict(),
-            timeout=_DEFAULT_CHAT_STREAM_TIMEOUT,
-        ) as response:
-            for line in response.iter_lines():
-                self._process_line(chat_event_handler,line)
+            case LoopExitEvent():
+                handler.process_loop_exit(event)
 
-    def _process_line(self,event_handler: event.ChatEventHandler, line: str):
-        if line == "":
-            return
+            case ToolResultEvent():
+                handler.process_tool_result(event)
 
-        try:
-            ev = event.determine_response(line)
-            if ev is None:
-                return
-        except Exception as e:  # noqa: BLE001 - malformed stream line
-            self._logger.error("agent api: %s", e)
-            return
+            case ToolErrorEvent():
+                handler.process_tool_error(event)
 
-        try:
-            event_handler.process_event(ev)
-        except Exception as e:  # noqa: BLE001 - event handlers are external code
-            self._logger.error("chat declined cause: %s", e)
-            self._interruptor.interrupt()
+            case ErrorEvent():
+                handler.process_error(event)
+
+            case _:
+                raise Exception(f"unexpected event: {type(event)}")

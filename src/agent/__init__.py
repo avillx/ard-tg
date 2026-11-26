@@ -1,19 +1,47 @@
-from .event import ConsolidationEventHandler, EventHandler
+from .models import (
+    CompactionEvent,
+    CompletionEvent,
+    CompletionMistakeEvent,
+    ContentPart,
+    Event,
+    LoopExitEvent,
+    ProvidedToolCallEvent,
+    ResultID,
+    Tool,
+    ToolArgs,
+    ToolCall,
+    ToolErrorEvent,
+    ToolResult,
+    ToolResultEvent,
+    ToolSchema,
+)
 from .profile import ProfileService
-from .service import Service
 from .session import DEFAULT_SESSION_TTL, SessionService, SuperfluousSetSessionError, SystemTime
-from .tool import Tool, ToolArgs, ToolSchema
+from .tool import ToolResultSink
 
 __all__ = (
     "DEFAULT_SESSION_TTL",
+    "CompactionEvent",
+    "CompletionEvent",
+    "CompletionMistakeEvent",
     "ConsolidationEventHandler",
+    "ToolResultSink",
+    "ContentPart",
+    "Event",
     "EventHandler",
+    "LoopExitEvent",
     "ProfileService",
+    "ProvidedToolCallEvent",
+    "ResultID",
     "Service",
     "SessionService",
     "SuperfluousSetSessionError",
     "SystemTime",
     "Tool",
     "ToolArgs",
-    "ToolSchema"
+    "ToolCall",
+    "ToolErrorEvent",
+    "ToolResult",
+    "ToolResultEvent",
+    "ToolSchema",
 )

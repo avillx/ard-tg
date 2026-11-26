@@ -1,93 +1,55 @@
-import json
+import logging
 from abc import ABC, abstractmethod
-lazy import logging
+from collections.abc import Iterator
 
-import ard.client as agent_client
-import ard.models as models
-from agent.event import EventType, determine_response
-
-_DEFAULT_CONSOLIDATION_STREAM_TIMEOUT = 10000
+from agent.chat import CompletionEvent, ErrorEvent, Event
 
 
 class ConsolidationEventHandler(ABC):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def process_event(self, event: EventType| None):
-        match event:
-            case models.CompletionEvent():
-                self._process_completion(event)
-
-            case models.Error():
-                self._process_error(event)
-
-            case _:
-                raise Exception(f"unexpected event: {type(event)}")
-
     @abstractmethod
-    def _process_completion(self, event: models.CompletionEvent):
+    def process_completion(self, event: CompletionEvent):
         pass
 
     @abstractmethod
-    def _process_error(self, err: models.Error):
+    def process_error(self, err: ErrorEvent):
         pass
 
-class ConsolidateService:
+class ConsolidationEventError(Exception):
+    pass
+
+class ConsolidationStreamer(ABC):
+    @abstractmethod
+    def consolidate(self) -> Iterator[Event]:
+        pass
+
+class ConsolidationService:
+    _consolidation_streamer: ConsolidationStreamer
     _logger: logging.Logger
-    _agent_client: agent_client.Client
-    _agent_url: str
-    _event_handler: ConsolidationEventHandler
 
     def __init__(
         self,
-        client: agent_client.Client,
-        agent_url: str,
-        event_handler: ConsolidationEventHandler,
+        consolidation_streamer: ConsolidationStreamer,
         logger: logging.Logger,
     ) -> None:
-        self._logger = logger
-        self._agent_client = client
-        self._agent_url = agent_url
-        self._event_handler = event_handler
+        self._consolidation_streamer = consolidation_streamer
+        self._logger=logger.getChild("consolidation")
 
+    def consolidate(self,handler: ConsolidationEventHandler):
+        self._logger.info("consolidation requested")
+        for ev in self._consolidation_streamer.consolidate():
+            try:
+                self.process_event(handler,ev)
+            except Exception as e:
+                self._logger.error("consolidation event processing failed: %s",e)
+                raise ConsolidationEventError() from e
 
-    def _endpoint(self) -> str:
-        return "/".join(
-            [
-                self._agent_url.rstrip("/"),
-                "memory",
-                "consolidate",
-            ]
-        )
+    def process_event(self,handler: ConsolidationEventHandler,event:Event):
+        match event:
+            case CompletionEvent():
+                handler.process_completion(event)
 
+            case ErrorEvent():
+                handler.process_error(event)
 
-    def consolidate(self):
-        """Start agent memory consolidation immediately
-
-        Completions are flushed into the on_completion callback
-        """
-        self._logger.info("Consolidation requested")
-
-        httpx_client = self._agent_client.get_httpx_client()
-
-        with httpx_client.stream(
-            method="POST",
-            timeout=_DEFAULT_CONSOLIDATION_STREAM_TIMEOUT,
-            url=self._endpoint(),
-        ) as response:
-            for line in response.iter_lines():
-                self._process_line(line)
-
-
-    def _process_line(self,line: str) -> None:
-        try:
-            event_dict = json.loads(line.removeprefix("data: "))  # pyright: ignore[reportAny]
-            completion_event = determine_response(event_dict)  # pyright: ignore[reportAny]
-        except Exception as e:  # noqa: BLE001 - malformed stream line
-            self._logger.error("consolidation: api respond bad json: %s", e)
-            return
-
-        try:
-            self._event_handler.process_event(completion_event)
-        except Exception as e:  # noqa: BLE001 - callback is external code
-            self._logger.error("consolidation process: %s", e)
+            case _:
+                raise Exception(f"unexpected event: {type(event)}")
