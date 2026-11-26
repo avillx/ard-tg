@@ -3,8 +3,9 @@ from typing import override
 lazy import telebot
 lazy import telebot.types as telebot_types
 
+from agent.interruption import Interruptor
+from agent.session import SessionDropper, SessionSource
 from telegram.service import CommandPrompter, MessageHandler
-lazy import agent
 
 _COMMAND = "new"
 
@@ -14,16 +15,19 @@ class NewSessionHandler(MessageHandler,CommandPrompter):
     Expect call from `/new` command
     """
 
-    _agent_service: agent.Service
-    _session_service: agent.SessionService
+    _interruptor: Interruptor
+    _session_dropper: SessionDropper
+    _session_source: SessionSource
 
     def __init__(
         self,
-        agent_service: agent.Service,
-        session_service: agent.SessionService,
+        interruptor: Interruptor,
+        session_dropper: SessionDropper,
+        session_source: SessionSource
     ):
-        self._agent_service = agent_service
-        self._session_service = session_service
+        self._interruptor = interruptor
+        self._session_dropper = session_dropper
+        self._session_source = session_source
 
     @override
     def command_prompt(self) -> tuple[str,str]:
@@ -35,6 +39,7 @@ class NewSessionHandler(MessageHandler,CommandPrompter):
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
-        self._agent_service.interrupt()
-        self._session_service.drop()
-        _ = bot.send_message(message.chat.id, "💠 New session")
+        session_id = self._session_source.get_session_id()
+        self._interruptor.interrupt(session_id)
+        self._session_dropper.drop()
+        _ = bot.send_message(message.chat.id, "💠 Session cleaned")

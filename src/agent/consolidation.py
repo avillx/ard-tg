@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from typing import override
 
 from agent.chat import CompletionEvent, ErrorEvent, Event
 
@@ -22,7 +23,12 @@ class ConsolidationStreamer(ABC):
     def consolidate(self) -> Iterator[Event]:
         pass
 
-class ConsolidationService:
+class Consolidator(ABC):
+    @abstractmethod
+    def consolidate(self,handler: ConsolidationEventHandler):
+        pass
+
+class ConsolidationService(Consolidator):
     _consolidation_streamer: ConsolidationStreamer
     _logger: logging.Logger
 
@@ -34,16 +40,17 @@ class ConsolidationService:
         self._consolidation_streamer = consolidation_streamer
         self._logger=logger.getChild("consolidation")
 
+    @override
     def consolidate(self,handler: ConsolidationEventHandler):
         self._logger.info("consolidation requested")
         for ev in self._consolidation_streamer.consolidate():
             try:
-                self.process_event(handler,ev)
+                self._process_event(handler,ev)
             except Exception as e:
                 self._logger.error("consolidation event processing failed: %s",e)
                 raise ConsolidationEventError() from e
 
-    def process_event(self,handler: ConsolidationEventHandler,event:Event):
+    def _process_event(self,handler: ConsolidationEventHandler,event:Event):
         match event:
             case CompletionEvent():
                 handler.process_completion(event)

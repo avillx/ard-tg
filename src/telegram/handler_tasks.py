@@ -4,8 +4,8 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
+from agent.task import TasksListService
 from telegram.service import CommandPrompter, MessageHandler
-lazy import agent
 
 _COMMAND = "tasks"
 
@@ -15,10 +15,10 @@ class TasksHandler(MessageHandler,CommandPrompter):
     Expect call from `/tasks` command
     """
 
-    _agent_service: agent.Service
+    _task_list_service: TasksListService
 
-    def __init__(self, agent_service: agent.Service):
-        self._agent_service = agent_service
+    def __init__(self, task_list_service: TasksListService):
+        self._task_list_service = task_list_service
 
     @override
     def command_prompt(self) -> tuple[str,str]:
@@ -30,7 +30,7 @@ class TasksHandler(MessageHandler,CommandPrompter):
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
-        task_list = self._agent_service.task_list()
+        task_list = self._task_list_service.list()
         if len(task_list) <= 0:
             _ = bot.send_message(message.chat.id, "♻️ Agent return no tasks")
             return

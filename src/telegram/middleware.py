@@ -3,8 +3,8 @@ lazy import logging
 
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
 
+from agent.contacts import AlreadyExistContactError, ContactSink
 from telegram.tools import telebot_types
-lazy import contacts
 
 
 class LoggingMiddleware(BaseMiddleware):
@@ -52,24 +52,26 @@ class UserWhitelistMiddleware(BaseMiddleware):
 
 
 class UserContactKeeper(BaseMiddleware):
-    _contact_service: contacts.ContactService
+    _contact_sink: ContactSink
 
-    def __init__(self, contact_service: contacts.ContactService):
+    def __init__(self, contact_sink: ContactSink):
         super().__init__()
         self.update_types: list[str] = ["message", "chosen_inline_result", "chat_join_request"]
-        self._contact_service = contact_service
+        self._contact_sink = contact_sink
 
     @override
     def pre_process(self, message: telebot_types.Message, data):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
         chat_id = _extract_chat_id(message)
-        if self._contact_service.contacts().get(str(chat_id)):
-            return
 
-        name = ""
+        name = "unknown"
         if hasattr(message, "chat") and message.chat.first_name:
             name = message.chat.first_name
 
-        self._contact_service.add_contact(str(chat_id), name)
+        try:
+            self._contact_sink.add_contact(chat_id, name)
+        except AlreadyExistContactError:
+            # Thats mean is a already known contact. no need to save it
+            return
 
     @override
     def post_process(self, message: telebot_types.Message, data, exception: Exception | None): # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]

@@ -4,55 +4,29 @@ from typing import override
 import telebot
 from telebot import types as telebot_types
 
-import agent
+from agent.chat import Tool, ToolArgs
+from telegram.handler_general_message import TelegramToolFactory
 
 
-class SendStickerTool(agent.Tool):
-    _bot: telebot.TeleBot
-    _chat_id: int
-    _sticker_pack: dict[str, str]
-
-    def __init__(
-        self,
-        bot: telebot.TeleBot,
-        chat_id: int,
-        sticker_pack: dict[str, str],
-    ):
-        self._bot = bot
-        self._chat_id = chat_id
-        self._sticker_pack = sticker_pack
-        super().__init__(
-            name="send_sticker",
-            description="sends sticker in current chat",
-            schema={
-                "type": "object",
-                "properties": {
-                    "emoji": {
-                        "type": "string",
-                        "description": "sticker choosed by this emoji, only one emoji from enum",
-                        "enum": list(self._sticker_pack.keys()),
-                    }
-                },
-                "required": ["emoji"],
-            },
-        )
-
+class FSToolsFactory(TelegramToolFactory):
     @override
-    def execute(self, args: agent.ToolArgs) -> str:
+    def get_tools(self,chat_id: int,bot: telebot.TeleBot) -> list[Tool]:
+        return [
+            SendPhotoTool(
+                bot=bot,
+                chat_id=chat_id,
+            ),
+            SendFileTool(
+                bot=bot,
+                chat_id=chat_id,
+            ),
+            SendVoiceTool(
+                bot=bot,
+                chat_id=chat_id,
+            ),
+        ]
 
-        emoji = args.get("emoji")
-        if not isinstance(emoji,str):
-            return "'emoji' bad parameter type. expected string"
-
-        file_id = self._sticker_pack.get(emoji)
-        if file_id is None:
-            return f"has no sticker for {emoji}"
-
-        _ = self._bot.send_sticker(self._chat_id, file_id)
-        return "sticker sended"
-
-
-class SendPhotoTool(agent.Tool):
+class SendPhotoTool(Tool):
     _bot: telebot.TeleBot
     _chat_id: int
 
@@ -75,7 +49,7 @@ class SendPhotoTool(agent.Tool):
         )
 
     @override
-    def execute(self, args: agent.ToolArgs) -> str:
+    def execute(self, args: ToolArgs) -> str:
         p = args.get("path")
         if not isinstance(p, str) or p == "":
             return "path is required"
@@ -85,7 +59,7 @@ class SendPhotoTool(agent.Tool):
         return "photo sended"
 
 
-class SendFileTool(agent.Tool):
+class SendFileTool(Tool):
     _bot: telebot.TeleBot
     _chat_id: int
 
@@ -108,7 +82,7 @@ class SendFileTool(agent.Tool):
         )
 
     @override
-    def execute(self, args: agent.ToolArgs) -> str:
+    def execute(self, args: ToolArgs) -> str:
         p = args.get("path")
         if not isinstance(p, str) or p == "":
             return "path is required"
@@ -117,7 +91,7 @@ class SendFileTool(agent.Tool):
         return "file sended"
 
 
-class SendVoiceTool(agent.Tool):
+class SendVoiceTool(Tool):
     _bot: telebot.TeleBot
     _chat_id: int
 
@@ -140,7 +114,7 @@ class SendVoiceTool(agent.Tool):
         )
 
     @override
-    def execute(self, args: agent.ToolArgs) -> str:
+    def execute(self, args: ToolArgs) -> str:
         p = args.get("path")
         if not isinstance(p, str) or p == "":
             return "path is required"

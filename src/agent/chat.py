@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, override
 lazy import logging
 
 from attr import dataclass
@@ -147,7 +147,17 @@ class ChatStreamer(ABC):
 class HandlerError(Exception):
     pass
 
-class ChatService:
+class Chat(ABC):
+    @abstractmethod
+    def chat(
+        self,
+        request: ContentPart,
+        event_handler: EventHandler,
+        provided_tools: list[Tool],
+    ):
+        pass
+
+class ChatService(Chat):
     _session_source: session.SessionSource
     _interruptor: interruption.Interruptor
     _logger: logging.Logger
@@ -165,6 +175,7 @@ class ChatService:
         self._interruptor = interruptor
         self._chat_streamer = chat_streamer
 
+    @override
     def chat(
         self,
         request: ContentPart,
@@ -182,13 +193,13 @@ class ChatService:
             tools=provided_tools,
         ):
             try:
-                self.handle_event(event_handler,ev)
+                self._handle_event(event_handler,ev)
             except Exception as e:
                 self._interruptor.interrupt(session_id)
                 self._logger.error("event handling error %s",e)
                 raise HandlerError() from e
 
-    def handle_event(self,handler: EventHandler,event: Event):
+    def _handle_event(self,handler: EventHandler,event: Event):
         match event:
             case ProvidedToolCallEvent():
                 handler.process_provided_toolcall(event)

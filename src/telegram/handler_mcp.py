@@ -4,8 +4,8 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
+from agent.mcp import MCPRepo
 from telegram.service import CommandPrompter, MessageHandler
-lazy import agent
 
 _COMMAND = "mcp"
 
@@ -16,10 +16,10 @@ class MCPHandler(MessageHandler,CommandPrompter):
     e.g. `/mcp some-mcp-server some-other`.
     """
 
-    _agent_service: agent.Service
+    _mcp_repo: MCPRepo
 
-    def __init__(self, agent_service: agent.Service):
-        self._agent_service = agent_service
+    def __init__(self, mcp_repo: MCPRepo):
+        self._mcp_repo = mcp_repo
 
     @override
     def command_prompt(self) -> tuple[str,str]:
@@ -31,7 +31,7 @@ class MCPHandler(MessageHandler,CommandPrompter):
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
-        mcp_servers_list = self._agent_service.mcp_list()
+        mcp_servers_list = self._mcp_repo.mcp_list()
 
         if len(mcp_servers_list) <= 0:
             _ = bot.send_message(message.chat.id, "⚒️ Has no mcp servers")

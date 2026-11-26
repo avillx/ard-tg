@@ -3,21 +3,18 @@ from typing import override
 lazy import telebot
 lazy import telebot.types as telebot_types
 
+from agent.profile import ProfileRepo, ProfileSetter
 from telegram.service import CallBackQueryHandler, CommandPrompter, MessageHandler
-lazy import agent
 
 BUTTON_PREFIX = "profile"
 _COMMAND = "profile"
 
 
 class ShowProfileHandler(MessageHandler,CommandPrompter):
-    _profile_service: agent.ProfileService
+    _profile_source: ProfileRepo
 
-    def __init__(
-        self,
-        profile_service: agent.ProfileService,
-    ):
-        self._profile_service = profile_service
+    def __init__(self, profile_source: ProfileRepo):
+        self._profile_source = profile_source
 
     @override
     def command_prompt(self) -> tuple[str,str]:
@@ -33,10 +30,13 @@ class ShowProfileHandler(MessageHandler,CommandPrompter):
         markup = telebot_types.InlineKeyboardMarkup(row_width=1)
         btns: list[telebot_types.InlineKeyboardButton] = []
         msg: str = "### 👤 Agent profiles:\n"
-        for profile_id, profile_description in self._profile_service.all_profiles().items():
-            msg += f"- **{profile_id}**: {profile_description}\n"
-            data = ":".join([BUTTON_PREFIX, profile_id])
-            btns.append(telebot_types.InlineKeyboardButton(profile_id, callback_data=data))
+        for profile in self._profile_source.all_profiles():
+            msg += f"- **{profile.name}**: {profile.description}\n"
+            data = ":".join([BUTTON_PREFIX, profile.name])
+            btns.append(telebot_types.InlineKeyboardButton(
+                text=profile.name,
+                callback_data=data,
+            ))
 
         btns.append(telebot_types.InlineKeyboardButton("default", callback_data=f"{BUTTON_PREFIX}:"))
         _ = markup.add(*btns)
@@ -60,13 +60,13 @@ class SetProfileHandler(CallBackQueryHandler):
     Expect call from `/new` command
     """
 
-    _profile_service: agent.ProfileService
+    _profile_setter: ProfileSetter
 
     def __init__(
         self,
-        profile_service: agent.ProfileService,
+        profile_setter: ProfileSetter,
     ):
-        self._profile_service = profile_service
+        self._profile_setter = profile_setter
 
     @override
     def register_on(self, bot: telebot.TeleBot) -> None:
@@ -84,7 +84,7 @@ class SetProfileHandler(CallBackQueryHandler):
         choice = call.data.split(":", 1)[1]
 
         try:
-            self._profile_service.set_profile(choice)
+            self._profile_setter.set_profile(choice)
         except ValueError:
             _ = bot.answer_callback_query(
                 callback_query_id = call.id,

@@ -12,33 +12,28 @@ class ToolResultSink(ABC):
 
 class ToolExecutor(ABC):
     @abstractmethod
-    def process_provided_toolcall(self, event: ProvidedToolCallEvent):
+    def process_provided_toolcall(self, tools: list[Tool], event: ProvidedToolCallEvent):
         pass
 
 
 class ProvidedToolExecutor(ToolExecutor):
-    _tools_map: dict[str, Tool]
     _sink: ToolResultSink
 
-    def __init__(
-        self,
-        sink: ToolResultSink,
-        tools: list[Tool],
-    ) -> None:
+    def __init__(self, sink: ToolResultSink) -> None:
         self._sink = sink
-        self._tools_map = {}
-        for t in tools:
-            self._tools_map[t.name()] = t
-
 
     @override
-    def process_provided_toolcall(self, event: ProvidedToolCallEvent):
+    def process_provided_toolcall(self, tools: list[Tool], event: ProvidedToolCallEvent):
+        tool: Tool | None = None
+        for t in tools:
+            if t.name == event.tool:
+                tool = t
+
 
         text_result = f"tool '{event.tool}' is not exist"
-        t = self._tools_map.get(event.tool)
-        if t is not None:
+        if isinstance(tool,Tool):
             try:
-                text_result = t.execute(event.args)
+                text_result = tool.execute(event.args)
             except Exception as e:  # noqa: BLE001 - tool code is arbitrary
                 text_result = f"tool error: {e}"
 

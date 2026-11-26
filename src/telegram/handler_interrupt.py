@@ -3,8 +3,9 @@ from typing import override
 lazy import telebot
 lazy import telebot.types as telebot_types
 
+from agent.interruption import Interruptor
+from agent.session import SessionSource
 from telegram.service import CommandPrompter, MessageHandler
-lazy import agent
 
 _COMMAND = "interrupt"
 
@@ -14,10 +15,12 @@ class InterruptHandler(MessageHandler,CommandPrompter):
     Expect call from `/interrupt` command
     """
 
-    _agent_service: agent.Service
+    _interruptor: Interruptor
+    _session_source: SessionSource
 
-    def __init__(self, agent_service: agent.Service):
-        self._agent_service = agent_service
+    def __init__(self, interruptor: Interruptor, session_source: SessionSource):
+        self._interruptor = interruptor
+        self._session_source = session_source
 
     @override
     def command_prompt(self) -> tuple[str,str]:
@@ -29,5 +32,6 @@ class InterruptHandler(MessageHandler,CommandPrompter):
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
+        session_id = self._session_source.get_session_id()
+        self._interruptor.interrupt(session_id)
         _ = bot.send_message(message.chat.id, "🚧 Interrupting agent")
-        self._agent_service.interrupt()

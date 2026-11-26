@@ -4,7 +4,7 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-lazy import ard.models as models
+from agent.chat import ToolCall
 
 _TOOL_ARG_REPRESENT_LENGHT = 50
 
@@ -32,7 +32,7 @@ class RichMessage:
         self._is_finally_sended = False
         self._logger = logger
 
-    def append_tool_calls(self, calls: list[models.ToolCall]) -> None:
+    def append_tool_calls(self, calls: list[ToolCall]) -> None:
         if not calls:
             return
 
@@ -97,11 +97,10 @@ class RichMessage:
         )
 
 
-def tool_call_repr(call: models.ToolCall) -> str:
+def tool_call_repr(call: ToolCall) -> str:
     call_repr = f"{fmt.escape_markdown(call.tool)}:\n"
-    args = call.args.to_dict()
 
-    for k, v in args.items():  # pyright: ignore[reportAny] - ensure tool scheme is not possible
+    for k, v in call.args.items():  # pyright: ignore[reportAny] - ensure tool scheme is not possible
         arg_repr = f"{k} = {v}" if hasattr(v, "__repr__") else f"{k}" # pyright: ignore[reportAny]
         if len(arg_repr) > _TOOL_ARG_REPRESENT_LENGHT:
             arg_repr = f"{arg_repr[:_TOOL_ARG_REPRESENT_LENGHT]}..."

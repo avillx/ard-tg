@@ -4,8 +4,8 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
+from agent.activity import TodayActivity
 from telegram.service import CommandPrompter, MessageHandler
-lazy import agent
 
 _COMMAND = "activity"
 
@@ -15,10 +15,10 @@ class ActivityHandler(MessageHandler,CommandPrompter):
     Expect call from `/activity` command
     """
 
-    _agent_service: agent.Service
+    _today_activity: TodayActivity
 
-    def __init__(self, agent_service: agent.Service):
-        self._agent_service = agent_service
+    def __init__(self, today_activity: TodayActivity):
+        self._today_activity = today_activity
 
     @override
     def command_prompt(self) -> tuple[str,str]:
@@ -30,7 +30,7 @@ class ActivityHandler(MessageHandler,CommandPrompter):
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
-        today_activity = self._agent_service.today_activity()
+        today_activity = self._today_activity.get_activity()
 
         if len(today_activity) <= 0:
             _ = bot.send_message(message.chat.id, "🗂 Agent has no activity for today")
