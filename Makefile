@@ -7,7 +7,7 @@ help: ## Display this help text for Makefile
 
 .PHONY: apigen
 apigen: ## Regenerate api bindings from openapi file "./agent-api.yml"
-	@openapi-python-client generate --path ./agent-api.yml --meta none --output-path ./src/ard --overwrite
+	@openapi-python-client generate --path ./agent-api.yml --meta none --output-path ./ardtg/ard_api --overwrite
 
 
 .PHONY: lint

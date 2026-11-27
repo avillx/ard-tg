@@ -1,0 +1,51 @@
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import TYPE_CHECKING, override
+
+if TYPE_CHECKING:
+    import logging
+
+
+class Storage(ABC):
+    @abstractmethod
+    def save(self, file_path: str, data: bytes):
+        pass
+
+    @abstractmethod
+    def get(self, file_path: str) -> bytes:
+        pass
+
+
+class FileStorage(Storage):
+    _storage_path: str
+    _logger: logging.Logger
+
+    def __init__(
+        self,
+        storage_path: str,
+        logger: logging.Logger,
+    ) -> None:
+        super().__init__()
+        self._storage_path = storage_path
+        self._logger = logger.getChild("files")
+
+    @override
+    def save(self, file_path: str, data: bytes):
+        path = Path(self._storage_path) / file_path
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("wb") as f:
+            _ = f.write(data)
+
+        self._logger.info("saved %s", path)
+
+    @override
+    def get(self, file_path: str) -> bytes:
+        path = Path(self._storage_path) / file_path
+
+        with path.open("rb") as f:
+            data = f.read()
+
+        self._logger.info("readed %s", path)
+
+        return data
