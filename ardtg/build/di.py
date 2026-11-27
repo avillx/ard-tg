@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from ardtg.telegram.handler_general_message import TelegramToolFactory
 
 
-def bot_server(cfg: Config) -> BotApp:
+def build_app(cfg: Config) -> BotApp:
 
     logger = logging.getLogger("app")
 
@@ -201,7 +201,7 @@ def bot_server(cfg: Config) -> BotApp:
     )
 
     tool_factories: list[TelegramToolFactory]= [FSToolsFactory()]
-    if cfg.sticker_pack != "":
+    if cfg.sticker_pack is not None:
         tool_factories.append(StickerToolsFactory(
             sticker_pack_name=cfg.sticker_pack,
             logger=logger,
@@ -253,7 +253,7 @@ def bot_server(cfg: Config) -> BotApp:
     )
 
     notifier = PlaceholderNotifier(logger)
-    if isinstance(cfg.notify_chat_id, int):
+    if cfg.notify_chat_id is not None:
         notifier = BotNotifier(
             messanger_bot=telegram_messanger_bot,
             logger=logger,

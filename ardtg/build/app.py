@@ -37,7 +37,7 @@ class BotApp:
         contact_store: ContactStore,
         telegram_service: TelegramService,
         notifier: Notifier,
-        webhook_url: str,
+        webhook_url: str | None,
         bot: telebot.TeleBot,
         logger: logging.Logger,
     ) -> None:
@@ -52,7 +52,7 @@ class BotApp:
         self._http_server.get("/contacts", ContactsHandler(contact_store, logger))
         self._http_server.get("/health", HealthHandler())
         self._http_server.post("/attach", AttachSessionHandler(attacher))
-        if webhook_url != "":
+        if webhook_url is not None:
             webhook_path = f"/bot/{secrets.token_hex(16)}"
             self._http_server.post(webhook_path, WebhookHandler(bot, webhook_url + webhook_path))
             self._use_webhook = True

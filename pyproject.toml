@@ -19,7 +19,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["ardtg"]
+pythonpath = ["."]
 
 [tool.basedpyright]
 include = ["ardtg", "tests"]
