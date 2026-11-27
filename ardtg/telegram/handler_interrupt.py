@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     import telebot.types as telebot_types
 
     from ardtg.domain.interruption import Interruptor
-    from ardtg.domain.session import SessionSource
+    from ardtg.domain.session import SessionStatement
 
 _COMMAND = "interrupt"
 
@@ -19,11 +19,11 @@ class InterruptHandler(MessageHandler, CommandPrompter):
     """
 
     _interruptor: Interruptor
-    _session_source: SessionSource
+    _session_statement: SessionStatement
 
-    def __init__(self, interruptor: Interruptor, session_source: SessionSource):
+    def __init__(self, interruptor: Interruptor, session_statement: SessionStatement):
         self._interruptor = interruptor
-        self._session_source = session_source
+        self._session_statement = session_statement
 
     @override
     def command_prompt(self) -> tuple[str, str]:
@@ -35,6 +35,6 @@ class InterruptHandler(MessageHandler, CommandPrompter):
 
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
-        session_id = self._session_source.get_session_id()
+        session_id = self._session_statement.get_session_id()
         self._interruptor.interrupt(session_id)
         _ = bot.send_message(message.chat.id, "🚧 Interrupting agent")

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class AgentAPINewSession(SessionCreator):
     _agent_client: Client
 
-    def __init__(self,agent_client: Client) -> None:
+    def __init__(self, agent_client: Client) -> None:
         super().__init__()
         self._agent_client = agent_client
 

@@ -72,9 +72,7 @@ def build_app(cfg: Config) -> BotApp:
         storage_path=cfg.file_storage_path,
     )
 
-    contacts_json_storage = ContactJSONStorage(
-        _storage = contacts_file_storage
-    )
+    contacts_json_storage = ContactJSONStorage(_storage=contacts_file_storage)
 
     contact_service = ContactService(
         repo=contacts_json_storage,
@@ -97,17 +95,13 @@ def build_app(cfg: Config) -> BotApp:
 
     agent_api_client = Client(base_url=cfg.agent_url)
 
-    profile_repo = AgentAPIProfileAdapter(
-        agent_client=agent_api_client
-    )
+    profile_repo = AgentAPIProfileAdapter(agent_client=agent_api_client)
 
     proifle_service = ProfileService(
         profile_repo=profile_repo,
     )
 
-    session_repo = AgentAPINewSession(
-        agent_client=agent_api_client
-    )
+    session_repo = AgentAPINewSession(agent_client=agent_api_client)
 
     session_service = SessionService(
         profile_statement=proifle_service,
@@ -130,7 +124,7 @@ def build_app(cfg: Config) -> BotApp:
 
     interruption_handler = InterruptHandler(
         interruptor=interruptor,
-        session_source=session_service,
+        session_statement=session_service,
     )
 
     tasks_list = AgentAPITaskListAdapter(
@@ -151,24 +145,18 @@ def build_app(cfg: Config) -> BotApp:
         mcp_repo=mcp_repo,
     )
 
+    activity_repo = AgentAPIActivityRepo(client=agent_api_client, logger=logger)
 
-    activity_repo = AgentAPIActivityRepo(
-        client=agent_api_client,
-        logger=logger
-    )
-
-    today_activity = TodayActivity(
-        repo=activity_repo
-    )
+    today_activity = TodayActivity(repo=activity_repo)
 
     activity_handler = ActivityHandler(
         today_activity=today_activity,
     )
 
     new_session_handler = NewSessionHandler(
-        interruptor = interruptor,
-        session_dropper = session_service,
-        session_statement = session_service,
+        interruptor=interruptor,
+        session_dropper=session_service,
+        session_statement=session_service,
     )
 
     consolidation_streamer = AgentAPIConsolidationAdapter(
@@ -200,17 +188,16 @@ def build_app(cfg: Config) -> BotApp:
         logger=logger,
     )
 
-    tool_factories: list[TelegramToolFactory]= [FSToolsFactory()]
+    tool_factories: list[TelegramToolFactory] = [FSToolsFactory()]
     if cfg.sticker_pack is not None:
-        tool_factories.append(StickerToolsFactory(
-            sticker_pack_name=cfg.sticker_pack,
-            logger=logger,
-        ))
+        tool_factories.append(
+            StickerToolsFactory(
+                sticker_pack_name=cfg.sticker_pack,
+                logger=logger,
+            )
+        )
 
-    tool_call_sink = AgentAPIResultSink(
-        client=agent_api_client,
-        logger=logger
-    )
+    tool_call_sink = AgentAPIResultSink(client=agent_api_client, logger=logger)
 
     tool_executor = ProvidedToolExecutor(
         sink=tool_call_sink,
@@ -232,9 +219,15 @@ def build_app(cfg: Config) -> BotApp:
     )
 
     telegram_handlers: list[BasicHandler] = [
-        interruption_handler,tasks_handler,mcp_handler,activity_handler,
-        new_session_handler,consolidation_handler,show_profile_handler,
-        set_profile_handler,general_message_handler,
+        interruption_handler,
+        tasks_handler,
+        mcp_handler,
+        activity_handler,
+        new_session_handler,
+        consolidation_handler,
+        show_profile_handler,
+        set_profile_handler,
+        general_message_handler,
     ]
 
     telegram_service = TelegramService(
@@ -242,9 +235,7 @@ def build_app(cfg: Config) -> BotApp:
         bot=bot,
     )
 
-    telegram_messanger_bot = TelegramMessangerBot(
-        bot=bot
-    )
+    telegram_messanger_bot = TelegramMessangerBot(bot=bot)
 
     attachment_service = AttachService(
         messanger_bot=telegram_messanger_bot,
