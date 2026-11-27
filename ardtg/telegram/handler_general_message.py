@@ -21,11 +21,13 @@ if TYPE_CHECKING:
 
 class TelegramToolFactory(ABC):
     @abstractmethod
-    def get_tools(self,chat_id: int,bot: telebot.TeleBot) -> list[Tool]:
+    def get_tools(self, chat_id: int, bot: telebot.TeleBot) -> list[Tool]:
         pass
+
 
 class GeneralMessageHandler(MessageHandler):
     """Handler to process all raw messages to agent."""
+
     _chat: Chat
     _tool_factories: list[TelegramToolFactory]
     _storage: Storage
@@ -61,7 +63,6 @@ class GeneralMessageHandler(MessageHandler):
     @override
     def handle(self, message: telebot_types.Message, bot: telebot.TeleBot) -> None:
         with TypingAction(bot, message.chat.id, self._logger) as typing_action:
-
             rich_message = RichMessage(
                 chat_id=message.chat.id,
                 bot=bot,
@@ -70,7 +71,7 @@ class GeneralMessageHandler(MessageHandler):
             )
 
             try:
-                self._run_chat(rich_message,typing_action,bot,message)
+                self._run_chat(rich_message, typing_action, bot, message)
 
             except HandlerError as err:
                 _ = bot.send_message(message.chat.id, "⚠️ gateway problem")
@@ -104,7 +105,7 @@ class GeneralMessageHandler(MessageHandler):
 
         text_message = represent_message(
             msg=message,
-            additional_lines=self._resolve_attachments(bot,message),
+            additional_lines=self._resolve_attachments(bot, message),
         )
 
         request = ContentPart(
@@ -118,14 +119,16 @@ class GeneralMessageHandler(MessageHandler):
             provided_tools=provided_tools,
         )
 
-    def _resolve_attachments(self,bot: telebot.TeleBot, message: telebot_types.Message) -> list[str]:
+    def _resolve_attachments(
+        self, bot: telebot.TeleBot, message: telebot_types.Message
+    ) -> list[str]:
         atts = extract_attachments(
             bot=bot,
             msg=message,
         )
         return self._save_attachments(atts)
 
-    def _save_attachments(self,atts:list[Attachment]) -> list[str]:
+    def _save_attachments(self, atts: list[Attachment]) -> list[str]:
         attachments_info: list[str] = []
         for att in atts:
             try:
@@ -137,13 +140,12 @@ class GeneralMessageHandler(MessageHandler):
                 attachments_info.append("can't save attachment, gateway problem")
         return attachments_info
 
-    def _produce_tools(self,chat_id: int,bot: telebot.TeleBot) -> list[Tool]:
+    def _produce_tools(self, chat_id: int, bot: telebot.TeleBot) -> list[Tool]:
         tools: list[Tool] = []
         for factory in self._tool_factories:
-            factory_tools = factory.get_tools(chat_id,bot)
+            factory_tools = factory.get_tools(chat_id, bot)
             tools.extend(factory_tools)
         return tools
-
 
 
 def represent_message(msg: telebot_types.Message, additional_lines: list[str]) -> str:

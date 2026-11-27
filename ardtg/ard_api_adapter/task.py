@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
     from ardtg.ard_api import Client
 
+
 class AgentAPITaskListAdapter(TasksListService):
     _logger: logging.Logger
     _agent_client: Client
@@ -29,16 +30,18 @@ class AgentAPITaskListAdapter(TasksListService):
         if task_list is None:
             return []
 
-        tasks : list[Task] = []
+        tasks: list[Task] = []
         for t in task_list:
-            tasks.append(Task(
-                    name= t.name,
+            tasks.append(
+                Task(
+                    name=t.name,
                     description=t.description,
                     recipients=t.recipients,
                     request=t.request,
                     schedule=t.schedule,
-                    active = False if not isinstance(t.active,bool) else t.active,
-                    oneshot = False if not isinstance(t.oneshot,bool) else t.oneshot,
-                ))
+                    active=False if not isinstance(t.active, bool) else t.active,
+                    oneshot=False if not isinstance(t.oneshot, bool) else t.oneshot,
+                )
+            )
 
         return tasks

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
     from ardtg.ard_api import Client
 
+
 class AgentAPIActivityRepo(ActivityRepo):
     _logger: logging.Logger
     _agent_client: Client
@@ -24,11 +25,7 @@ class AgentAPIActivityRepo(ActivityRepo):
         self._agent_client = client
 
     @override
-    def get_activity(
-        self,
-        from_: datetime,
-        to: datetime | None = None
-    ) -> list[ActivityRecord]:
+    def get_activity(self, from_: datetime, to: datetime | None = None) -> list[ActivityRecord]:
         """Return today's agent activity
 
         raise on errors abd bad validations
@@ -46,21 +43,25 @@ class AgentAPIActivityRepo(ActivityRepo):
 
         # list[models.ActivityRecord] is only valid result
         # when resp is a list, then no need to handle errors
-        if isinstance(resp,list):
+        if isinstance(resp, list):
             return cast_to_domain(resp)
 
         handle_errors(resp)
         return []
 
+
 def cast_to_domain(resp: list[models.ActivityRecord]) -> list[ActivityRecord]:
     result: list[ActivityRecord] = []
     for record in resp:
-        result.append(ActivityRecord(
-            date=record.date,
-            content=record.content,
-        ))
+        result.append(
+            ActivityRecord(
+                date=record.date,
+                content=record.content,
+            )
+        )
 
     return result
+
 
 def handle_errors(resp: models.Error | models.ValidationError | list[models.ActivityRecord] | None):
     match resp:

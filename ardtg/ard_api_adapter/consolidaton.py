@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 _DEFAULT_CONSOLIDATION_STREAM_TIMEOUT = 10000
 
+
 class AgentAPIConsolidationAdapter(ConsolidationStreamer):
     _agent_client: Client
     _agent_url: str
@@ -19,7 +20,6 @@ class AgentAPIConsolidationAdapter(ConsolidationStreamer):
     ) -> None:
         self._agent_client = client
         self._agent_url = agent_url
-
 
     def _endpoint(self) -> str:
         return "/".join(
@@ -49,6 +49,6 @@ class AgentAPIConsolidationAdapter(ConsolidationStreamer):
                 if line == "":
                     continue
                 ev = determine_internal_response(line)
-                if isinstance(ev,StopStream):
+                if isinstance(ev, StopStream):
                     return
                 yield ev

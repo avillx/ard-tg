@@ -49,14 +49,12 @@ class BotApp:
         self._telegram_service = telegram_service
 
         # routes
-        self._http_server.get("/contacts", ContactsHandler(contact_store,logger))
+        self._http_server.get("/contacts", ContactsHandler(contact_store, logger))
         self._http_server.get("/health", HealthHandler())
         self._http_server.post("/attach", AttachSessionHandler(attacher))
         if webhook_url != "":
             webhook_path = f"/bot/{secrets.token_hex(16)}"
-            self._http_server.post(
-                webhook_path, WebhookHandler(bot, webhook_url + webhook_path)
-            )
+            self._http_server.post(webhook_path, WebhookHandler(bot, webhook_url + webhook_path))
             self._use_webhook = True
 
     def serve_http(self):

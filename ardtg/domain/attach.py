@@ -6,21 +6,25 @@ from ardtg.domain.session import SessionDefiner, SuperfluousSetSessionError
 if TYPE_CHECKING:
     import logging
 
+
 class MessangerBot(ABC):
     @abstractmethod
-    def send(self,chat_id: int, message: str):
+    def send(self, chat_id: int, message: str):
         pass
+
 
 class Attacher(ABC):
     @abstractmethod
     def attach(self, session_id: str, chat_id: int, message: str, await_time: float) -> None:
         pass
 
+
 class AttachService(Attacher):
     """Serve attaching an agent session to a chat from an external invocation
 
     e.g. an agent wants to initiate contact with the user from autonomous mode
     """
+
     _session_definer: SessionDefiner
     _messanger_bot: MessangerBot
     _logger: logging.Logger
@@ -43,10 +47,13 @@ class AttachService(Attacher):
             raise Exception("Session attach is superfluous. Messages already received") from err
 
         try:
-            self._messanger_bot.send(chat_id,message)
+            self._messanger_bot.send(chat_id, message)
         except Exception as err:
             self._logger.error(
-                "send attachment message is failed. session: %s. chat: %s. error: %s", session_id, chat_id,err
+                "send attachment message is failed. session: %s. chat: %s. error: %s",
+                session_id,
+                chat_id,
+                err,
             )
             raise Exception("gateway has problem. message is not sended") from err
 

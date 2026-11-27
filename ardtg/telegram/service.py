@@ -18,6 +18,7 @@ class BasicHandler(ABC):
     Owns its update route and knows how to register it on a bot. Dependencies are
     passed in a constructor.
     """
+
     @abstractmethod
     def register_on(self, bot: telebot.TeleBot) -> None:
         pass
@@ -37,8 +38,9 @@ class CallBackQueryHandler(BasicHandler, ABC):
 
 class CommandPrompter(ABC):
     @abstractmethod
-    def command_prompt(self) -> tuple[str,str]:
+    def command_prompt(self) -> tuple[str, str]:
         pass
+
 
 class Service:
     _handlers: list[BasicHandler]
@@ -60,10 +62,10 @@ class Service:
     def register_command_prompt(self):
         """Register routes bot handlers."""
 
-        command_prompts:  list[telebot_types.BotCommand] = []
+        command_prompts: list[telebot_types.BotCommand] = []
 
         for handler in self._handlers:
-            if not isinstance(handler,CommandPrompter):
+            if not isinstance(handler, CommandPrompter):
                 continue
             command, description = handler.command_prompt()
             command_prompts.append(
@@ -71,7 +73,6 @@ class Service:
             )
 
         _ = self._bot.set_my_commands(command_prompts)
-
 
     def register_handlers(self):
         """Register routes bot handlers."""

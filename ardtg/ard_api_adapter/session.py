@@ -17,7 +17,7 @@ class AgentAPINewSession(SessionRepo):
     _agent_client: Client
 
     @override
-    def new_session(self,profile_id: str, instruction: str) -> str:
+    def new_session(self, profile_id: str, instruction: str) -> str:
         """Request a new session from the agent and return its id."""
 
         create_session_request = CreateSessionBody(

@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 _COMMAND = "interrupt"
 
-class InterruptHandler(MessageHandler,CommandPrompter):
+
+class InterruptHandler(MessageHandler, CommandPrompter):
     """Handle interrupt of the agent stream
 
     Expect call from `/interrupt` command
@@ -25,7 +26,7 @@ class InterruptHandler(MessageHandler,CommandPrompter):
         self._session_source = session_source
 
     @override
-    def command_prompt(self) -> tuple[str,str]:
+    def command_prompt(self) -> tuple[str, str]:
         return _COMMAND, "🚧 Interrupt agent response"
 
     @override

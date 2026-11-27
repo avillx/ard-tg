@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 _COMMAND = "mcp"
 
-class MCPHandler(MessageHandler,CommandPrompter):
+
+class MCPHandler(MessageHandler, CommandPrompter):
     """Handle fetch of the actual MCP list.
 
     Expect call from `/mcp` command. Also allow mcp servers names as arguments,
@@ -24,7 +25,7 @@ class MCPHandler(MessageHandler,CommandPrompter):
         self._mcp_repo = mcp_repo
 
     @override
-    def command_prompt(self) -> tuple[str,str]:
+    def command_prompt(self) -> tuple[str, str]:
         return _COMMAND, "⚒️ Show list of MCP servers"
 
     @override

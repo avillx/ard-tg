@@ -13,6 +13,7 @@ class Task:
     active: bool
     oneshot: bool
 
+
 class TasksListService(ABC):
     @abstractmethod
     def list(self) -> list[Task]:

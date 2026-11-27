@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 _COMMAND = "tasks"
 
-class TasksHandler(MessageHandler,CommandPrompter):
+
+class TasksHandler(MessageHandler, CommandPrompter):
     """Handle fetch of the actual tasks config
 
     Expect call from `/tasks` command
@@ -23,7 +24,7 @@ class TasksHandler(MessageHandler,CommandPrompter):
         self._task_list_service = task_list_service
 
     @override
-    def command_prompt(self) -> tuple[str,str]:
+    def command_prompt(self) -> tuple[str, str]:
         return _COMMAND, "♻️ Show tasks"
 
     @override

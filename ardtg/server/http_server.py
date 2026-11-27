@@ -14,34 +14,37 @@ _SERVER_PORT = 8443
 
 class Response:
     _code: int
-    def __init__(self,code: int) -> None:
+
+    def __init__(self, code: int) -> None:
         self._code = code
 
-    def send(self,hanlder: BaseHTTPRequestHandler):
+    def send(self, hanlder: BaseHTTPRequestHandler):
         hanlder.send_response(self._code)
         hanlder.end_headers()
 
 
 class ErrorResponse(Response):
     _problem: str
+
     def __init__(self, code: int, problem: str) -> None:
         super().__init__(code)
         self._problem = problem
 
     @override
-    def send(self,hanlder: BaseHTTPRequestHandler):
+    def send(self, hanlder: BaseHTTPRequestHandler):
         hanlder.send_error(code=self._code, explain=self._problem)
         hanlder.end_headers()
 
 
 class JSONResponse(Response):
-    _content: dict[str,Any] # pyright: ignore[reportExplicitAny]
-    def __init__(self, code: int, content: dict[str,Any]) -> None: # pyright: ignore[reportExplicitAny]
+    _content: dict[str, Any]  # pyright: ignore[reportExplicitAny]
+
+    def __init__(self, code: int, content: dict[str, Any]) -> None:  # pyright: ignore[reportExplicitAny]
         super().__init__(code)
         self._content = content
 
     @override
-    def send(self,hanlder: BaseHTTPRequestHandler):
+    def send(self, hanlder: BaseHTTPRequestHandler):
         response_body = json.dumps(self._content).encode("utf-8")
 
         hanlder.send_response(self._code)

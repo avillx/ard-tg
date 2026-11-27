@@ -13,14 +13,14 @@ BUTTON_PREFIX = "profile"
 _COMMAND = "profile"
 
 
-class ShowProfileHandler(MessageHandler,CommandPrompter):
+class ShowProfileHandler(MessageHandler, CommandPrompter):
     _profile_source: ProfileRepo
 
     def __init__(self, profile_source: ProfileRepo):
         self._profile_source = profile_source
 
     @override
-    def command_prompt(self) -> tuple[str,str]:
+    def command_prompt(self) -> tuple[str, str]:
         return _COMMAND, "👤 Show agent profiles"
 
     @override
@@ -36,18 +36,21 @@ class ShowProfileHandler(MessageHandler,CommandPrompter):
         for profile in self._profile_source.all_profiles():
             msg += f"- **{profile.name}**: {profile.description}\n"
             data = ":".join([BUTTON_PREFIX, profile.name])
-            btns.append(telebot_types.InlineKeyboardButton(
-                text=profile.name,
-                callback_data=data,
-            ))
+            btns.append(
+                telebot_types.InlineKeyboardButton(
+                    text=profile.name,
+                    callback_data=data,
+                )
+            )
 
-        btns.append(telebot_types.InlineKeyboardButton("default", callback_data=f"{BUTTON_PREFIX}:"))
+        btns.append(
+            telebot_types.InlineKeyboardButton("default", callback_data=f"{BUTTON_PREFIX}:")
+        )
         _ = markup.add(*btns)
 
         rich_message = telebot_types.InputRichMessage(markdown=msg)
 
         _ = bot.send_rich_message(message.chat.id, rich_message, reply_markup=markup)
-
 
 
 def is_profile_callback(call: telebot_types.CallbackQuery):
@@ -90,12 +93,11 @@ class SetProfileHandler(CallBackQueryHandler):
             self._profile_setter.set_profile(choice)
         except ValueError:
             _ = bot.answer_callback_query(
-                callback_query_id = call.id,
-                text=f"Profile is not exist: {choice}"
+                callback_query_id=call.id, text=f"Profile is not exist: {choice}"
             )
         else:
             _ = bot.answer_callback_query(
-                callback_query_id = call.id,
+                callback_query_id=call.id,
                 text=f"Coosen profile: {choice}",
             )
 
@@ -109,17 +111,19 @@ class SetProfileHandler(CallBackQueryHandler):
             message_id=message_id,
         )
 
+
 def resolve_message_id(q: telebot_types.CallbackQuery) -> int | None:
     if not isinstance(q.message, telebot_types.MaybeInaccessibleMessage):
-       return None
+        return None
 
     if not isinstance(q.message.id, int):
-       return None
+        return None
 
     return q.message.id
 
+
 def resolve_chat_id(q: telebot_types.CallbackQuery) -> int | None:
     if not isinstance(q.message, telebot_types.MaybeInaccessibleMessage):
-       return None
+        return None
 
     return q.message.chat.id

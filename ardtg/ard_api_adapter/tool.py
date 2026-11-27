@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from ardtg.ard_api.client import Client
     from ardtg.domain.chat import ToolResult
 
+
 class AgentAPIResultSink(ToolResultSink):
     _client: Client
     _logger: logging.Logger
@@ -25,7 +26,7 @@ class AgentAPIResultSink(ToolResultSink):
         self._logger = logger
 
     @override
-    def send_result(self,res: ToolResult) -> None:
+    def send_result(self, res: ToolResult) -> None:
 
         cp = prepare_content_part(res.content)
 
@@ -35,7 +36,7 @@ class AgentAPIResultSink(ToolResultSink):
             client=self._client,
         )
 
-        if isinstance(response,Error):
+        if isinstance(response, Error):
             raise Exception(response.message)
 
         if response is None:

@@ -82,7 +82,7 @@ class TelegramEventHandler(EventHandler):
 
     @override
     def process_provided_toolcall(self, event: ProvidedToolCallEvent):
-        self._tool_executor.process_provided_toolcall(self._tools,event)
+        self._tool_executor.process_provided_toolcall(self._tools, event)
 
     @override
     def process_error(self, err: ErrorEvent):

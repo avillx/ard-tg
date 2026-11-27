@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 _TOOL_ARG_REPRESENT_LENGHT = 50
 
+
 class RichMessage:
     _bot: telebot.TeleBot
     _draft_id: int
@@ -78,7 +79,7 @@ class RichMessage:
 
         return None
 
-    def _send_with_fallback(self, text:str) -> None:
+    def _send_with_fallback(self, text: str) -> None:
         try:
             self._send_rich_message(text)
         except Exception as e:  # noqa: BLE001 - rich messages are optional for the bot
@@ -87,13 +88,13 @@ class RichMessage:
             self._logger.warning("cant send rich message, fallback is used: %s", e)
             self._send_message(text)
 
-    def _send_message(self, text:str) -> None:
+    def _send_message(self, text: str) -> None:
         _ = self._bot.send_message(
             chat_id=self._chat_id,
             text=fmt.escape_markdown(text),
         )
 
-    def _send_rich_message(self, text:str) -> None:
+    def _send_rich_message(self, text: str) -> None:
         _ = self._bot.send_rich_message(
             chat_id=self._chat_id,
             rich_message=telebot_types.InputRichMessage(markdown=text),
@@ -104,7 +105,7 @@ def tool_call_repr(call: ToolCall) -> str:
     call_repr = f"{fmt.escape_markdown(call.tool)}:\n"
 
     for k, v in call.args.items():  # pyright: ignore[reportAny] - ensure tool scheme is not possible
-        arg_repr = f"{k} = {v}" if hasattr(v, "__repr__") else f"{k}" # pyright: ignore[reportAny]
+        arg_repr = f"{k} = {v}" if hasattr(v, "__repr__") else f"{k}"  # pyright: ignore[reportAny]
         if len(arg_repr) > _TOOL_ARG_REPRESENT_LENGHT:
             arg_repr = f"{arg_repr[:_TOOL_ARG_REPRESENT_LENGHT]}..."
 

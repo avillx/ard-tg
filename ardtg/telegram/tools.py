@@ -10,7 +10,7 @@ from telegram.handler_general_message import TelegramToolFactory
 
 class FSToolsFactory(TelegramToolFactory):
     @override
-    def get_tools(self,chat_id: int,bot: telebot.TeleBot) -> list[Tool]:
+    def get_tools(self, chat_id: int, bot: telebot.TeleBot) -> list[Tool]:
         return [
             SendPhotoTool(
                 bot=bot,
@@ -25,6 +25,7 @@ class FSToolsFactory(TelegramToolFactory):
                 chat_id=chat_id,
             ),
         ]
+
 
 class SendPhotoTool(Tool):
     _bot: telebot.TeleBot

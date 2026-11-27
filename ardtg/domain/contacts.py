@@ -6,13 +6,16 @@ from attr import dataclass
 if TYPE_CHECKING:
     import logging
 
+
 @dataclass
 class Contact:
     chat_id: int
     name: str
 
+
 class AlreadyExistContactError(ValueError):
     pass
+
 
 class ContactRepo(ABC):
     @abstractmethod
@@ -20,20 +23,23 @@ class ContactRepo(ABC):
         pass
 
     @abstractmethod
-    def save_contacts(self,contacts: list[Contact]):
+    def save_contacts(self, contacts: list[Contact]):
         pass
+
 
 class ContactStore(ABC):
     @abstractmethod
     def contacts(self) -> list[Contact]:
         pass
 
+
 class ContactSink(ABC):
     @abstractmethod
     def add_contact(self, chat_id: int, name: str):
         pass
 
-class ContactService(ContactStore,ContactSink):
+
+class ContactService(ContactStore, ContactSink):
     _repo: ContactRepo
 
     def __init__(
@@ -62,10 +68,7 @@ class ContactService(ContactStore,ContactSink):
         if exist:
             raise AlreadyExistContactError()
 
-        contacts.append(Contact(
-            chat_id=chat_id,
-            name=name
-        ))
+        contacts.append(Contact(chat_id=chat_id, name=name))
 
         try:
             self._repo.save_contacts(contacts)

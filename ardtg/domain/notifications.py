@@ -36,7 +36,7 @@ class BotNotifier(Notifier):
     def _notify(self, text: str) -> None:
         """Send a notification message with the given text to the selected chat."""
         try:
-            self._messanger_bot.send(self._notify_chat_id,text)
+            self._messanger_bot.send(self._notify_chat_id, text)
         except Exception as e:  # noqa: BLE001 - notification must never break the bot
             self._logger.error("Failed notify about bot up: %s", e)
 

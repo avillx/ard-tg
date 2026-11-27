@@ -33,7 +33,7 @@ class WebhookHandler(EndpointHandler):
         )
 
     @override
-    def handle(self,headers: "Message[str, str]",  body: bytes) -> Response: # noqa
+    def handle(self, headers: "Message[str, str]", body: bytes) -> Response:  # noqa
 
         # virefy header token
         if not hmac.compare_digest(
@@ -69,7 +69,7 @@ class AttachSessionHandler(EndpointHandler):
         self._attacher = attacher
 
     @override
-    def handle(self, headers: "Message[str, str]", body: bytes) -> Response: # noqa
+    def handle(self, headers: "Message[str, str]", body: bytes) -> Response:  # noqa
 
         try:
             request: dict[str, Any] = json.loads(body)  # pyright: ignore[reportExplicitAny, reportAny]
@@ -84,16 +84,16 @@ class AttachSessionHandler(EndpointHandler):
 
         # validate values
         if not isinstance(session_id, str) or not session_id or session_id == "":
-            return ErrorResponse(400,"bad session_id field")
+            return ErrorResponse(400, "bad session_id field")
 
         if not isinstance(chat_id, int) or not chat_id:
-            return ErrorResponse(400,"bad chat_id field")
+            return ErrorResponse(400, "bad chat_id field")
 
         if not isinstance(message, str) or not message:
-            return ErrorResponse(400,"bad message field")
+            return ErrorResponse(400, "bad message field")
 
         if not isinstance(await_time, int) or not int:
-            return ErrorResponse(400,"bad await time field")
+            return ErrorResponse(400, "bad await time field")
 
         try:
             self._attacher.attach(
@@ -103,7 +103,7 @@ class AttachSessionHandler(EndpointHandler):
                 await_time=float(await_time),
             )
         except Exception as e:  # noqa: BLE001 - report the attach failure to the caller
-            return ErrorResponse(400,f"attach {e}")
+            return ErrorResponse(400, f"attach {e}")
 
         return Response(200)
 
@@ -125,13 +125,13 @@ class ContactsHandler(EndpointHandler):
         self._logger = logger
 
     @override
-    def handle(self,headers: "Message[str, str]", body: bytes) -> Response: # noqa
+    def handle(self, headers: "Message[str, str]", body: bytes) -> Response:  # noqa
         try:
             contacts = self._contact_storage.contacts()
-            return JSONResponse(200,{"contacts": contacts})
+            return JSONResponse(200, {"contacts": contacts})
 
         except Exception as err:  # noqa: BLE001 - storage backend is pluggable
-            self._logger.error("problems with /contacts endpoint: %s",err)
+            self._logger.error("problems with /contacts endpoint: %s", err)
             return Response(500)
 
 
@@ -143,5 +143,5 @@ class HealthHandler(EndpointHandler):
     """
 
     @override
-    def handle(self,headers: "Message[str, str]", body: bytes) -> Response: # noqa
+    def handle(self, headers: "Message[str, str]", body: bytes) -> Response:  # noqa
         return Response(200)

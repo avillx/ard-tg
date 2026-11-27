@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 _COMMAND = "activity"
 
-class ActivityHandler(MessageHandler,CommandPrompter):
+
+class ActivityHandler(MessageHandler, CommandPrompter):
     """Handle fetch of recent agent activity, if any
 
     Expect call from `/activity` command
@@ -23,7 +24,7 @@ class ActivityHandler(MessageHandler,CommandPrompter):
         self._today_activity = today_activity
 
     @override
-    def command_prompt(self) -> tuple[str,str]:
+    def command_prompt(self) -> tuple[str, str]:
         return _COMMAND, "🗂 Show recent activity"
 
     @override

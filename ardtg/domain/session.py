@@ -14,20 +14,24 @@ DEFAULT_SESSION_TTL: float = 600
 class SuperfluousSetSessionError(Exception):
     pass
 
+
 class SessionDropper(ABC):
     @abstractmethod
     def drop(self) -> None:
         pass
+
 
 class SessionDefiner(ABC):
     @abstractmethod
     def set_session_id(self, session_id: str, additional_time: float = 0.0) -> None:
         pass
 
+
 class SessionRepo(ABC):
     @abstractmethod
-    def new_session(self,profile_id: str, instruction: str) -> str:
+    def new_session(self, profile_id: str, instruction: str) -> str:
         pass
+
 
 class SessionSource(ABC):
     @abstractmethod
@@ -37,6 +41,7 @@ class SessionSource(ABC):
     @abstractmethod
     def get_unexpired_session_id(self) -> str:
         pass
+
 
 class TimeProvider(ABC):
     @abstractmethod
@@ -50,7 +55,7 @@ class SystemTime(TimeProvider):
         return time.monotonic()
 
 
-class SessionService(SessionSource,SessionDefiner,SessionDropper):
+class SessionService(SessionSource, SessionDefiner, SessionDropper):
     """Service with session management responsibility."""
 
     _profile_id: str

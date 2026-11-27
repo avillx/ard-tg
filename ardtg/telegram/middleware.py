@@ -77,7 +77,7 @@ class UserContactKeeper(BaseMiddleware):
             return
 
     @override
-    def post_process(self, message: telebot_types.Message, data, exception: Exception | None): # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
+    def post_process(self, message: telebot_types.Message, data, exception: Exception | None):  # pyright: ignore[reportMissingParameterType,reportUnknownParameterType]
         pass
 
 

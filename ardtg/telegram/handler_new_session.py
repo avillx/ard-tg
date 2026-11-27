@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 _COMMAND = "new"
 
-class NewSessionHandler(MessageHandler,CommandPrompter):
+
+class NewSessionHandler(MessageHandler, CommandPrompter):
     """Handle interrupt of the current session and drop it
 
     Expect call from `/new` command
@@ -25,14 +26,14 @@ class NewSessionHandler(MessageHandler,CommandPrompter):
         self,
         interruptor: Interruptor,
         session_dropper: SessionDropper,
-        session_source: SessionSource
+        session_source: SessionSource,
     ):
         self._interruptor = interruptor
         self._session_dropper = session_dropper
         self._session_source = session_source
 
     @override
-    def command_prompt(self) -> tuple[str,str]:
+    def command_prompt(self) -> tuple[str, str]:
         return _COMMAND, "💠 New session"
 
     @override

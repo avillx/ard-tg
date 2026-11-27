@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 _DEFAULT_CHAT_STREAM_TIMEOUT = 10000
 
+
 class EventType(Protocol):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any], /) -> Self: ...  # pyright: ignore[reportExplicitAny]
@@ -53,6 +54,7 @@ def cast_data_to_event(data: str):
         raise ValueError(f"unknown result type {event_type_name}")
     return event_type.from_dict(event_dict)  # pyright: ignore[reportAny]
 
+
 def cast_data_to_error(data: str):
     raw_str = data.removeprefix("error: ")
     error_dict = json.loads(raw_str)  # pyright: ignore[reportAny]
@@ -61,6 +63,7 @@ def cast_data_to_error(data: str):
 
 class StopStream:
     pass
+
 
 def determine_response(data: str) -> EventType | StopStream:
     if "data: [DONE]" in data:
@@ -74,51 +77,54 @@ def determine_response(data: str) -> EventType | StopStream:
 
     raise ValueError("unknown data. expect start with 'data:' or 'error:' ")
 
+
 def cast_tool_args(
-    external:
-        models.ProvidedToolCallEventArgs |
-        models.ToolCallArgs |
-        str |
-        Unset
+    external: models.ProvidedToolCallEventArgs | models.ToolCallArgs | str | Unset,
 ) -> ToolArgs:
 
-    if isinstance(external,models.ToolCallArgs):
+    if isinstance(external, models.ToolCallArgs):
         return external.to_dict()
 
-    if isinstance(external,models.ProvidedToolCallEventArgs):
+    if isinstance(external, models.ProvidedToolCallEventArgs):
         return external.to_dict()
 
-    if isinstance(external,str):
-        res = json.loads(external) # pyright: ignore[reportAny]
-        if not isinstance(res,dict):
+    if isinstance(external, str):
+        res = json.loads(external)  # pyright: ignore[reportAny]
+        if not isinstance(res, dict):
             raise ValueError(f"expected dictionary, got: {type(external).__name__}")
-        return cast("ToolArgs",res)
+        return cast("ToolArgs", res)
 
     return {}
+
 
 def cast_tool_calls(external: list[models.ToolCall]) -> list[ToolCall]:
     return [
         ToolCall(
             args=cast_tool_args(e.args),
             tool=e.tool,
-        ) for e in external
+        )
+        for e in external
     ]
 
+
 def cast_to_str(external: str | Unset) -> str:
-    return external if isinstance(external,str) else ""
+    return external if isinstance(external, str) else ""
+
 
 def cast_content_parts(extenral: list[models.ContentPart]) -> list[ContentPart]:
     return [
         ContentPart(
             text=cast_to_str(e.text),
             image_url=cast_to_str(e.image_url),
-        ) for e in extenral
+        )
+        for e in extenral
     ]
+
 
 def cast_to_internal(externtal_event: EventType) -> Event:
     match externtal_event:
         case models.LoopExitEvent():
-            cause = externtal_event.cause if isinstance(externtal_event.cause,str) else None
+            cause = externtal_event.cause if isinstance(externtal_event.cause, str) else None
             return LoopExitEvent(
                 cause=cause,
             )
@@ -126,7 +132,7 @@ def cast_to_internal(externtal_event: EventType) -> Event:
             return CompletionEvent(
                 completion=externtal_event.completion,
                 done=externtal_event.done,
-                tool_calls=cast_tool_calls(externtal_event.tool_calls)
+                tool_calls=cast_tool_calls(externtal_event.tool_calls),
             )
         case models.CompletionMistakeEvent():
             return CompletionMistakeEvent(
@@ -145,7 +151,7 @@ def cast_to_internal(externtal_event: EventType) -> Event:
             )
 
         case models.ProvidedToolCallEvent():
-            if not isinstance(externtal_event.result_id,str):
+            if not isinstance(externtal_event.result_id, str):
                 raise ValueError("agent api has no result id")
 
             return ProvidedToolCallEvent(
@@ -169,7 +175,7 @@ def cast_to_internal(externtal_event: EventType) -> Event:
 
 def determine_internal_response(data: str) -> Event | StopStream:
     response = determine_response(data)
-    if isinstance(response,StopStream):
+    if isinstance(response, StopStream):
         return response
     return cast_to_internal(response)
 
@@ -188,11 +194,16 @@ def prepare_tools(tools: list[Tool]) -> list[models.ProvidedToolServer]:
 
     return [models.ProvidedToolServer(tools=allowed_tools)]
 
+
 def prepare_content_part(content_parts: list[ContentPart]) -> list[models.ContentPart]:
-   return [models.ContentPart(
-        image_url=cp.image_url,
-        text=cp.text,
-    ) for cp in content_parts]
+    return [
+        models.ContentPart(
+            image_url=cp.image_url,
+            text=cp.text,
+        )
+        for cp in content_parts
+    ]
+
 
 class AgentAPIChat(ChatStreamer):
     _agent_url: str
@@ -209,7 +220,7 @@ class AgentAPIChat(ChatStreamer):
         self._agent_url = agent_url
         self._agent_client = agent_client
 
-    def _build_url(self,sesssion_id: str) -> str:
+    def _build_url(self, sesssion_id: str) -> str:
         return "/".join(
             [
                 self._agent_url.rstrip("/"),
@@ -248,6 +259,6 @@ class AgentAPIChat(ChatStreamer):
                 if line == "":
                     continue
                 ev = determine_internal_response(line)
-                if isinstance(ev,StopStream):
+                if isinstance(ev, StopStream):
                     return
                 yield ev

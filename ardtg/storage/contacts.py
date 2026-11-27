@@ -8,10 +8,11 @@ if TYPE_CHECKING:
 
 _CONTACTS_FILE = "contacts.json"
 
+
 class ContactJSONStorage(ContactRepo):
     _storage: Storage
 
-    def __init__(self,_storage: Storage) -> None:
+    def __init__(self, _storage: Storage) -> None:
         super().__init__()
         self._storage = _storage
 
@@ -29,9 +30,10 @@ class ContactJSONStorage(ContactRepo):
         return contacts_list
 
     @override
-    def save_contacts(self,contacts: list[Contact]):
+    def save_contacts(self, contacts: list[Contact]):
         encoded_contacts = json.dumps(contacts, ensure_ascii=False).encode("utf-8")
         self._storage.save(_CONTACTS_FILE, encoded_contacts)
+
 
 def _parse_contact(raw: object) -> Contact:
     if not isinstance(raw, dict):
@@ -49,8 +51,8 @@ def _parse_contact(raw: object) -> Contact:
     return Contact(chat_id=chat_id, name=name)
 
 
-def _parse_contacts(raw: Any) -> list[Contact]: # pyright: ignore[reportExplicitAny,reportAny]
+def _parse_contacts(raw: Any) -> list[Contact]:  # pyright: ignore[reportExplicitAny,reportAny]
     if not isinstance(raw, list):
-        raise ValueError(f"contacts must be array, got {type(raw).__name__}") # pyright: ignore[reportAny]
+        raise ValueError(f"contacts must be array, got {type(raw).__name__}")  # pyright: ignore[reportAny]
 
     return [_parse_contact(item) for item in cast("list[object]", raw)]

@@ -27,9 +27,11 @@ class AgentAPIProfileAdapter(ProfileRepo):
         result: list[Profile] = []
         for profile_id, profile_data in resp.additional_properties.items():
             desc = "" if isinstance(profile_data.description, Unset) else profile_data.description
-            result.append(Profile(
-                name =  profile_id,
-                description = desc,
-            ))
+            result.append(
+                Profile(
+                    name=profile_id,
+                    description=desc,
+                )
+            )
 
         return result

@@ -6,7 +6,7 @@ from ardtg.domain.chat import ContentPart, ProvidedToolCallEvent, Tool, ToolResu
 
 class ToolResultSink(ABC):
     @abstractmethod
-    def send_result(self,res: ToolResult) -> None:
+    def send_result(self, res: ToolResult) -> None:
         pass
 
 
@@ -29,22 +29,15 @@ class ProvidedToolExecutor(ToolExecutor):
             if t.name == event.tool:
                 tool = t
 
-
         text_result = f"tool '{event.tool}' is not exist"
-        if isinstance(tool,Tool):
+        if isinstance(tool, Tool):
             try:
                 text_result = tool.execute(event.args)
             except Exception as e:  # noqa: BLE001 - tool code is arbitrary
                 text_result = f"tool error: {e}"
 
-        content = ContentPart(
-            image_url="",
-            text=text_result
-        )
+        content = ContentPart(image_url="", text=text_result)
 
-        result = ToolResult(
-            result_id=event.result_id,
-            content=[content]
-        )
+        result = ToolResult(result_id=event.result_id, content=[content])
 
         self._sink.send_result(result)

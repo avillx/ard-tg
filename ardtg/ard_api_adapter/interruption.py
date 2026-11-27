@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
     from ardtg.ard_api import Client
 
+
 class AgentAPIInterruption(Interruptor):
     _logger: logging.Logger
     _client: Client
@@ -21,7 +22,7 @@ class AgentAPIInterruption(Interruptor):
         self._client = client
 
     @override
-    def interrupt(self,session_id:str) -> None:
+    def interrupt(self, session_id: str) -> None:
         """Interrupt the agent session in progress."""
         self._logger.info("interrupting, session: %s", session_id)
 

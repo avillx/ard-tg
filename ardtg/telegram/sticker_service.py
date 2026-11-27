@@ -43,7 +43,7 @@ class SendStickerTool(Tool):
     def execute(self, args: ToolArgs) -> str:
 
         emoji = args.get("emoji")
-        if not isinstance(emoji,str):
+        if not isinstance(emoji, str):
             return "'emoji' bad parameter type. expected string"
 
         file_id = self._sticker_pack.get(emoji)
@@ -69,7 +69,7 @@ class StickerToolsFactory(TelegramToolFactory):
         self._sticker_pack_name = sticker_pack_name
 
     @override
-    def get_tools(self,chat_id: int,bot: telebot.TeleBot) -> list[Tool]:
+    def get_tools(self, chat_id: int, bot: telebot.TeleBot) -> list[Tool]:
         pack = self._resolve_pack(bot)
         if pack is None:
             return []
@@ -82,7 +82,7 @@ class StickerToolsFactory(TelegramToolFactory):
             )
         ]
 
-    def _resolve_pack(self,bot: telebot.TeleBot) -> dict[str, str] | None:
+    def _resolve_pack(self, bot: telebot.TeleBot) -> dict[str, str] | None:
 
         # is is not setted just return None
         if self._sticker_pack_name is None:
@@ -94,12 +94,11 @@ class StickerToolsFactory(TelegramToolFactory):
             return sticker_pack
 
         # download pack
-        pack= self._download_pack(self._sticker_pack_name,bot)
+        pack = self._download_pack(self._sticker_pack_name, bot)
         self._sticker_packs[self._sticker_pack_name] = pack
         return pack
 
-
-    def _download_pack(self,sticker_pack_name:str,bot: telebot.TeleBot) -> dict[str, str]:
+    def _download_pack(self, sticker_pack_name: str, bot: telebot.TeleBot) -> dict[str, str]:
 
         self._logger.info("sticker pack %s: not found, getting from telegram", sticker_pack_name)
         sticker_set = bot.get_sticker_set(sticker_pack_name)

@@ -9,26 +9,30 @@ class Profile:
     name: str
     description: str
 
+
 class ProfileStatement(ABC):
     @abstractmethod
     def get_selected_profile(self) -> str:
         pass
+
 
 class ProfileRepo(ABC):
     @abstractmethod
     def all_profiles(self) -> list[Profile]:
         pass
 
+
 class ProfileSetter(ABC):
     @abstractmethod
     def set_profile(self, profile_id: str):
         pass
 
-class ProfileService(ProfileStatement,ProfileSetter):
+
+class ProfileService(ProfileStatement, ProfileSetter):
     _selected_profile: str
     _profile_repo: ProfileRepo
 
-    def __init__(self,profile_repo: ProfileRepo) -> None:
+    def __init__(self, profile_repo: ProfileRepo) -> None:
         self._profile_repo = profile_repo
         self._selected_profile = ""
 
