@@ -62,6 +62,9 @@ def _optional_url(name:str) -> str:
         _validate_url(name)
     return url
 
+# # TODO:
+# def _required_path
+
 @dataclass(frozen=True, slots=True)
 class Config:
 

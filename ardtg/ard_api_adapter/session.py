@@ -7,14 +7,18 @@ from ardtg.ard_api.models import (
     Error,
     ValidationError,
 )
-from ardtg.domain.session import SessionRepo
+from ardtg.domain.session import SessionCreator
 
 if TYPE_CHECKING:
     from ardtg.ard_api import Client
 
 
-class AgentAPINewSession(SessionRepo):
+class AgentAPINewSession(SessionCreator):
     _agent_client: Client
+
+    def __init__(self,agent_client: Client) -> None:
+        super().__init__()
+        self._agent_client = agent_client
 
     @override
     def new_session(self, profile_id: str, instruction: str) -> str:

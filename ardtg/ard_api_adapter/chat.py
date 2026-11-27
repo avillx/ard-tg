@@ -205,7 +205,7 @@ def prepare_content_part(content_parts: list[ContentPart]) -> list[models.Conten
     ]
 
 
-class AgentAPIChat(ChatStreamer):
+class AgentAPIChatStreamer(ChatStreamer):
     _agent_url: str
     _agent_client: Client
     _logger: logging.Logger
@@ -216,6 +216,7 @@ class AgentAPIChat(ChatStreamer):
         agent_client: Client,
         logger: logging.Logger,
     ):
+        super().__init__()
         self._logger = logger.getChild("Agent")
         self._agent_url = agent_url
         self._agent_client = agent_client

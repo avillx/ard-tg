@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from ardtg.domain.interruption import Interruptor
-    from ardtg.domain.session import SessionSource
+    from ardtg.domain.session import SessionStatement
 
 ToolArgs = dict[str, Any]  # pyright: ignore[reportExplicitAny]
 ResultID = str
@@ -167,20 +167,20 @@ class Chat(ABC):
 
 
 class ChatService(Chat):
-    _session_source: SessionSource
+    _session_statement: SessionStatement
     _interruptor: Interruptor
     _logger: logging.Logger
     _chat_streamer: ChatStreamer
 
     def __init__(
         self,
-        session_source: SessionSource,
+        session_statement: SessionStatement,
         interruptor: Interruptor,
         chat_streamer: ChatStreamer,
         logger: logging.Logger,
     ):
         self._logger = logger.getChild("Chat")
-        self._session_source = session_source
+        self._session_statement = session_statement
         self._interruptor = interruptor
         self._chat_streamer = chat_streamer
 
@@ -194,7 +194,7 @@ class ChatService(Chat):
         """Run the agentic loop with the provided tools _DEFAULT_CHAT_STREAM_TIMEOUT
         All events are processed through the introduced event handler
         """
-        session_id = self._session_source.get_unexpired_session_id()
+        session_id = self._session_statement.get_unexpired_session_id()
         self._logger.info("chat started with session: %s", session_id)
         for ev in self._chat_streamer.chat(
             request=request,

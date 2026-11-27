@@ -27,13 +27,13 @@ class SessionDefiner(ABC):
         pass
 
 
-class SessionRepo(ABC):
+class SessionCreator(ABC):
     @abstractmethod
     def new_session(self, profile_id: str, instruction: str) -> str:
         pass
 
 
-class SessionSource(ABC):
+class SessionStatement(ABC):
     @abstractmethod
     def get_session_id(self) -> str:
         pass
@@ -55,12 +55,12 @@ class SystemTime(TimeProvider):
         return time.monotonic()
 
 
-class SessionService(SessionSource, SessionDefiner, SessionDropper):
+class SessionService(SessionStatement, SessionDefiner, SessionDropper):
     """Service with session management responsibility."""
 
     _profile_id: str
     _profile_statement: ProfileStatement
-    _session_repo: SessionRepo
+    _session_creator: SessionCreator
     _actual_session: str
     _last_update: float
     _life_time: float
@@ -76,11 +76,11 @@ class SessionService(SessionSource, SessionDefiner, SessionDropper):
         life_time: float,
         instruction: str,
         logger: logging.Logger,
-        session_repo: SessionRepo,
+        session_creator: SessionCreator,
         time: TimeProvider,
     ):
         self._logger = logger.getChild("Sessions")
-        self._session_repo = session_repo
+        self._session_creator = session_creator
         self._life_time = life_time
         self._last_update = 0.0
         self._actual_session = ""
@@ -140,7 +140,7 @@ class SessionService(SessionSource, SessionDefiner, SessionDropper):
 
     def _new_session(self):
         self._profile_id = self._profile_statement.get_selected_profile()
-        self._actual_session = self._session_repo.new_session(
+        self._actual_session = self._session_creator.new_session(
             instruction=self._instruction,
             profile_id=self._profile_id,
         )
