@@ -42,7 +42,7 @@ class CommandPrompter(ABC):
         pass
 
 
-class Service:
+class TelegramService:
     _handlers: list[BasicHandler]
     _bot: telebot.TeleBot
 

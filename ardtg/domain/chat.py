@@ -15,7 +15,7 @@ ResultID = str
 ToolSchema = dict[str, Any]  # pyright: ignore[reportExplicitAny]
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ToolResult:
     result_id: ResultID
     content: list[ContentPart]
@@ -45,54 +45,54 @@ class Tool(ABC):
         pass
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ContentPart:
     image_url: str
     text: str
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ToolCall:
     tool: str
     args: ToolArgs
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Event:
     pass
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class LoopExitEvent(Event):
     cause: str | None
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class CompletionEvent(Event):
     done: bool
     completion: str
     tool_calls: list[ToolCall]
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class CompletionMistakeEvent(Event):
     cause: str
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class CompactionEvent(Event):
     message: str
     result: str
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ToolErrorEvent(Event):
     cause: str
     tool_name: str
     args: ToolArgs
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ProvidedToolCallEvent(Event):
     tool: str
     agent_id: str
@@ -101,12 +101,12 @@ class ProvidedToolCallEvent(Event):
     args: ToolArgs
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ErrorEvent(Event):
     cause: str
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ToolResultEvent(Event):
     content: list[ContentPart]
 

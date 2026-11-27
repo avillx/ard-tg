@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     import logging
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Contact:
     chat_id: int
     name: str

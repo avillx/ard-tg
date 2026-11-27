@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from attr import dataclass
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Task:
     name: str
     description: str

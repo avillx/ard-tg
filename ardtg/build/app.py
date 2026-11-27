@@ -16,11 +16,11 @@ if TYPE_CHECKING:
     import types
 
     import telebot
-    import telegram
 
     from ardtg.domain.attach import Attacher
     from ardtg.domain.contacts import ContactStore
     from ardtg.domain.notifications import Notifier
+    from ardtg.telegram.service import TelegramService
 
 
 class BotApp:
@@ -28,14 +28,14 @@ class BotApp:
     _http_server: NiceHTTPServer
     _logger: logging.Logger
     _notifier: Notifier
-    _telegram_service: telegram.Service
+    _telegram_service: TelegramService
     _use_webhook: bool
 
     def __init__(
         self,
         attacher: Attacher,
         contact_store: ContactStore,
-        telegram_service: telegram.Service,
+        telegram_service: TelegramService,
         notifier: Notifier,
         webhook_url: str,
         bot: telebot.TeleBot,

@@ -1,9 +1,9 @@
-import dataclasses
 import os
 import urllib.parse as urlparse
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from ardtg.domain import DEFAULT_SESSION_TTL
+from ardtg.domain.session import DEFAULT_SESSION_TTL
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -30,7 +30,7 @@ def _env_value_session_ttl() -> float:
     return _env_value("ARDTG_SESSION_LIFE_TIME", float, DEFAULT_SESSION_TTL, "a number")
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True)
 class Config:
     telegram_token: str = os.getenv("ARDTG_TELEGRAM_TOKEN", "")
     agent_url: str = os.getenv("ARDTG_AGENT_URL", "")
@@ -39,7 +39,7 @@ class Config:
     agent_datapath: str = os.getenv("ARDTG_AGENT_DATAPATH", "")
     file_storage_path: str = os.getenv("ARDTG_FILESTORAGE_PATH", "")
     notify_chat_id: int | None = _env_value("ARDTG_NOTIFY_CHAT_ID", int, None, "a chat id")
-    allowed_chats: list[int] = dataclasses.field(
+    allowed_chats: list[int] = field(
         default_factory=lambda: _env_value("ARDTG_ALLOWED_CHATS", _parse_chat_ids, [], "a chat id")
     )
     session_life_time: float = _env_value_session_ttl()

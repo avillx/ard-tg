@@ -4,7 +4,7 @@ from typing import override
 from attr import dataclass
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Profile:
     name: str
     description: str

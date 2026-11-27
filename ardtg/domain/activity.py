@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from attr import dataclass
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class ActivityRecord:
     date: str
     content: str
