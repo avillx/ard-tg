@@ -1,5 +1,6 @@
 import hmac
 import json
+import logging
 import secrets
 from typing import Any, override
 lazy from email.message import Message
@@ -7,12 +8,12 @@ lazy from email.message import Message
 import telebot
 from telebot import types as telebot_types
 
-from server import http_server
-lazy import attach
-lazy import contacts
+from agent.attach import Attacher
+from agent.contacts import ContactStore
+from server.http_server import EndpointHandler, ErrorResponse, JSONResponse, Response
 
 
-class WebhookHandler(http_server.EndpointHandler):
+class WebhookHandler(EndpointHandler):
     """Serve the `/bot` endpoint that receives Telegram bot requests."""
 
     _bot: telebot.TeleBot
@@ -29,34 +30,29 @@ class WebhookHandler(http_server.EndpointHandler):
         )
 
     @override
-    def handle(
-        self,
-        headers: "Message[str, str]",  # noqa
-        body: bytes,
-        response_sink: http_server.ResponseSink,
-    ):
+    def handle(self,headers: "Message[str, str]",  body: bytes) -> Response: # noqa
 
         # virefy header token
         if not hmac.compare_digest(
             headers.get("X-Telegram-Bot-Api-Secret-Token", ""),
             self._secret_token,
         ):
-            response_sink.send_code(403)
-            return
+            return Response(403)
 
         try:
-            update = telebot_types.Update.de_json(json.loads(body))
+            json_dictionary = json.loads(body)  # pyright: ignore[reportAny]
+            update = telebot_types.Update.de_json(json_dictionary)  # pyright: ignore[reportAny]
             if update is None:
                 raise Exception("telegram send empty update")
 
             self._bot.process_new_updates([update])
-            response_sink.send_code(200)
+            return Response(200)
+
         except Exception:  # noqa: BLE001 - any failure must answer 500
-            response_sink.send_code(500)
-            return
+            return Response(500)
 
 
-class AttachSessionHandler(http_server.EndpointHandler):
+class AttachSessionHandler(EndpointHandler):
     """Serve the `/attach` endpoint
 
     responses:
@@ -64,24 +60,18 @@ class AttachSessionHandler(http_server.EndpointHandler):
         - 400 with failed validations explanation
     """
 
-    _attach_service: attach.AttachService
+    _attacher: Attacher
 
-    def __init__(self, attach_service: attach.AttachService):
-        self._attach_service = attach_service
+    def __init__(self, attacher: Attacher):
+        self._attacher = attacher
 
     @override
-    def handle(
-        self,
-        headers: "Message[str, str]",  # noqa
-        body: bytes,
-        response_sink: http_server.ResponseSink,
-    ):
+    def handle(self, headers: "Message[str, str]", body: bytes) -> Response: # noqa
 
         try:
-            request: dict[str, Any] = json.loads(body)
+            request: dict[str, Any] = json.loads(body)  # pyright: ignore[reportExplicitAny, reportAny]
         except Exception:  # noqa: BLE001 - any parse failure means bad request
-            response_sink.send_code(400)
-            return
+            return Response(400)
 
         # get values
         session_id = request.get("session_id")
@@ -91,36 +81,31 @@ class AttachSessionHandler(http_server.EndpointHandler):
 
         # validate values
         if not isinstance(session_id, str) or not session_id or session_id == "":
-            response_sink.send_error(400, "bad session_id field")
-            return
+            return ErrorResponse(400,"bad session_id field")
 
         if not isinstance(chat_id, int) or not chat_id:
-            response_sink.send_error(400, "bad chat_id field")
-            return
+            return ErrorResponse(400,"bad chat_id field")
 
         if not isinstance(message, str) or not message:
-            response_sink.send_error(400, "bad message field")
-            return
+            return ErrorResponse(400,"bad message field")
 
         if not isinstance(await_time, int) or not int:
-            response_sink.send_error(400, "bad await time field")
-            return
+            return ErrorResponse(400,"bad await time field")
 
         try:
-            self._attach_service.attach(
+            self._attacher.attach(
                 chat_id=chat_id,
                 session_id=session_id,
                 message=message,
                 await_time=float(await_time),
             )
         except Exception as e:  # noqa: BLE001 - report the attach failure to the caller
-            response_sink.send_error(400, f"attach {e}")
-            return
+            return ErrorResponse(400,f"attach {e}")
 
-        response_sink.send_code(200)
+        return Response(200)
 
 
-class ContactsHandler(http_server.EndpointHandler):
+class ContactsHandler(EndpointHandler):
     """Serve the `/contacts` endpoint
 
     responses:
@@ -128,27 +113,26 @@ class ContactsHandler(http_server.EndpointHandler):
         - 400
     """
 
-    _contact_service: contacts.ContactService
+    _contact_storage: ContactStore
+    _logger: logging.Logger
 
-    def __init__(self, contact_service: contacts.ContactService):
+    def __init__(self, contact_storage: ContactStore, logger: logging.Logger):
         super().__init__()
-        self._contact_service = contact_service
+        self._contact_storage = contact_storage
+        self._logger = logger
 
     @override
-    def handle(
-        self,
-        headers: "Message[str, str]",  # noqa
-        body: bytes,
-        response_sink: http_server.ResponseSink,
-    ):
+    def handle(self,headers: "Message[str, str]", body: bytes) -> Response: # noqa
         try:
-            contacts = self._contact_service.contacts()
-            response_sink.send_json(200, {"contacts": contacts})
-        except Exception:  # noqa: BLE001 - storage backend is pluggable
-            response_sink.send_code(400)
+            contacts = self._contact_storage.contacts()
+            return JSONResponse(200,{"contacts": contacts})
+
+        except Exception as err:  # noqa: BLE001 - storage backend is pluggable
+            self._logger.error("problems with /contacts endpoint: %s",err)
+            return Response(500)
 
 
-class HealthHandler(http_server.EndpointHandler):
+class HealthHandler(EndpointHandler):
     """Serve the `/health` endpoint
 
     responses:
@@ -156,10 +140,5 @@ class HealthHandler(http_server.EndpointHandler):
     """
 
     @override
-    def handle(
-        self,
-        headers: "Message[str, str]",  # noqa
-        body: bytes,
-        response_sink: http_server.ResponseSink,
-    ):
-        response_sink.send_code(200)
+    def handle(self,headers: "Message[str, str]", body: bytes) -> Response: # noqa
+        return Response(200)

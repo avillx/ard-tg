@@ -10,39 +10,53 @@ _SERVER_HOST = "0.0.0.0"  # noqa: S104
 _SERVER_PORT = 8443
 
 
-class ResponseSink:
-    hanlder: BaseHTTPRequestHandler
+class Response:
+    _code: int
+    def __init__(self,code: int) -> None:
+        self._code = code
 
-    def __init__(self, hanlder: BaseHTTPRequestHandler):
-        self.hanlder = hanlder
+    def send(self,hanlder: BaseHTTPRequestHandler):
+        hanlder.send_response(self._code)
+        hanlder.end_headers()
 
-    def send_code(self, code: int):
-        self.hanlder.send_response(code)
-        self.hanlder.end_headers()
 
-    def send_error(self, code: int, explain: str):
-        self.hanlder.send_error(code=code, explain=explain)
-        self.hanlder.end_headers()
+class ErrorResponse(Response):
+    _problem: str
+    def __init__(self, code: int, problem: str) -> None:
+        super().__init__(code)
+        self._problem = problem
 
-    def send_json(self, code: int, data: Any):
+    @override
+    def send(self,hanlder: BaseHTTPRequestHandler):
+        hanlder.send_error(code=self._code, explain=self._problem)
+        hanlder.end_headers()
 
-        response_body = json.dumps(data).encode("utf-8")
 
-        self.hanlder.send_response(code)
-        self.hanlder.send_header("Content-type", "application/json")
-        self.hanlder.send_header("Content-Length", str(len(response_body)))
-        self.hanlder.end_headers()
+class JSONResponse(Response):
+    _content: dict[str,Any] # pyright: ignore[reportExplicitAny]
+    def __init__(self, code: int, content: dict[str,Any]) -> None: # pyright: ignore[reportExplicitAny]
+        super().__init__(code)
+        self._content = content
 
-        _ = self.hanlder.wfile.write(response_body)
+    @override
+    def send(self,hanlder: BaseHTTPRequestHandler):
+        response_body = json.dumps(self._content).encode("utf-8")
+
+        hanlder.send_response(self._code)
+        hanlder.send_header("Content-type", "application/json")
+        hanlder.send_header("Content-Length", str(len(response_body)))
+        hanlder.end_headers()
+
+        _ = hanlder.wfile.write(response_body)
 
 
 class EndpointHandler(ABC):
     @abstractmethod
-    def handle(self, headers: "Message[str, str]", body: bytes, response_sink: ResponseSink):  # noqa
+    def handle(self, headers: "Message[str, str]", body: bytes) -> Response:  # noqa
         pass
 
 
-class Server:
+class NiceHTTPServer:
     _logger: logging.Logger
     _get_routes: dict[str, EndpointHandler]
     _post_routes: dict[str, EndpointHandler]
@@ -68,41 +82,36 @@ class Server:
         post_routes = self._post_routes
         logger = self._logger
 
-        class Server(BaseHTTPRequestHandler):
-            def __init__(self, request, client_address, server):
+        class HTTPRequestHandler(BaseHTTPRequestHandler):
+            def __init__(self, request, client_address, server):  # pyright: ignore[reportMissingParameterType, reportAny]
                 super().__init__(request, client_address, server)
 
             def do_GET(self):
-                sink = ResponseSink(self)
 
                 handler = get_routes.get(self.path)
-                if not handler:
-                    sink.send_code(404)
+                if handler is None:
+                    self.send_response(404)
+                    self.end_headers()
                     return
 
                 length = int(self.headers.get("Content-Length", 0))
-
-                handler.handle(
-                    headers=self.headers, body=self.rfile.read(length), response_sink=sink
-                )
+                response = handler.handle(self.headers, self.rfile.read(length))
+                response.send(self)
 
             def do_POST(self):
 
-                sink = ResponseSink(self)
-
                 handler = post_routes.get(self.path)
-                if not handler:
-                    sink.send_code(404)
+                if handler is None:
+                    self.send_response(404)
+                    self.end_headers()
                     return
 
                 length = int(self.headers.get("Content-Length", 0))
-
-                handler.handle(
-                    headers=self.headers, body=self.rfile.read(length), response_sink=sink
-                )
+                response = handler.handle(self.headers, self.rfile.read(length))
+                response.send(self)
 
             @override
-            def log_message(self, format, *args):
-                logger.info(format, *args)
+            def log_message(self, format: str, *args):  # pyright: ignore[reportAny, reportMissingParameterType]
+                logger.info(format, *args)  # pyright: ignore[reportAny]
 
-        return ThreadingHTTPServer((_SERVER_HOST, _SERVER_PORT), Server)
+        return ThreadingHTTPServer((_SERVER_HOST, _SERVER_PORT), HTTPRequestHandler)

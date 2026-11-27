@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import override
 lazy import logging
 
 from agent.session import SessionDefiner, SuperfluousSetSessionError
@@ -9,7 +10,12 @@ class MessangerBot(ABC):
     def send(self,chat_id: int, message: str):
         pass
 
-class AttachService:
+class Attacher(ABC):
+    @abstractmethod
+    def attach(self, session_id: str, chat_id: int, message: str, await_time: float) -> None:
+        pass
+
+class AttachService(Attacher):
     """Serve attaching an agent session to a chat from an external invocation
 
     e.g. an agent wants to initiate contact with the user from autonomous mode
@@ -28,6 +34,7 @@ class AttachService:
         self._logger = logger.getChild("Attach")
         self._messanger_bot = messanger_bot
 
+    @override
     def attach(self, session_id: str, chat_id: int, message: str, await_time: float) -> None:
         try:
             self._session_definer.set_session_id(session_id=session_id, additional_time=await_time)

@@ -6,27 +6,28 @@ lazy import types
 
 lazy import telebot
 
-from server import endpoints, http_server
-lazy import attach
-lazy import contacts
-lazy import notifications
+from agent.attach import Attacher
+from agent.contacts import ContactStore
+from agent.notifications import Notifier
+from server.endpoints import AttachSessionHandler, ContactsHandler, HealthHandler, WebhookHandler
+from server.http_server import NiceHTTPServer
 lazy import telegram
 
 
-class BotServer:
+class BotApp:
     _bot: telebot.TeleBot
-    _http_server: http_server.Server
+    _http_server: NiceHTTPServer
     _logger: logging.Logger
-    _notifier: notifications.Notifier
+    _notifier: Notifier
     _telegram_service: telegram.Service
     _use_webhook: bool
 
     def __init__(
         self,
-        attachment_service: attach.AttachService,
-        contact_service: contacts.ContactService,
+        attacher: Attacher,
+        contact_store: ContactStore,
         telegram_service: telegram.Service,
-        notifier: notifications.Notifier,
+        notifier: Notifier,
         webhook_url: str,
         bot: telebot.TeleBot,
         logger: logging.Logger,
@@ -35,20 +36,19 @@ class BotServer:
         self._notifier = notifier
         self._bot = bot
         self._use_webhook = False
-        self._http_server = http_server.Server(logger)
+        self._http_server = NiceHTTPServer(logger)
         self._telegram_service = telegram_service
 
         # routes
-        self._http_server.post("/attach", endpoints.AttachSessionHandler(attachment_service))
+        self._http_server.get("/contacts", ContactsHandler(contact_store,logger))
+        self._http_server.get("/health", HealthHandler())
+        self._http_server.post("/attach", AttachSessionHandler(attacher))
         if webhook_url != "":
             webhook_path = f"/bot/{secrets.token_hex(16)}"
             self._http_server.post(
-                webhook_path, endpoints.WebhookHandler(bot, webhook_url + webhook_path)
+                webhook_path, WebhookHandler(bot, webhook_url + webhook_path)
             )
             self._use_webhook = True
-
-        self._http_server.get("/contacts", endpoints.ContactsHandler(contact_service))
-        self._http_server.get("/health", endpoints.HealthHandler())
 
     def serve_http(self):
         # A serving failure is fatal, so log it and re-raise.
