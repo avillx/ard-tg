@@ -1,10 +1,9 @@
+from typing import TYPE_CHECKING, override
 
+from ardtg.domain.attach import MessangerBot
 
-from typing import override
-
-import telebot
-
-from ardtg.domain.notifications import MessangerBot
+if TYPE_CHECKING:
+    import telebot
 
 
 class TelegramMessangerBot(MessangerBot):

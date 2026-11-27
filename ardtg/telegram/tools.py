@@ -5,7 +5,7 @@ import telebot
 from telebot import types as telebot_types
 
 from ardtg.domain.chat import Tool, ToolArgs
-from telegram.handler_general_message import TelegramToolFactory
+from ardtg.telegram.handler_general_message import TelegramToolFactory
 
 
 class FSToolsFactory(TelegramToolFactory):

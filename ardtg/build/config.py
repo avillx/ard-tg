@@ -2,6 +2,7 @@ import os
 import urllib.parse as urlparse
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+from telebot.util import validate_token
 
 from ardtg.domain.session import DEFAULT_SESSION_TTL
 
@@ -63,6 +64,14 @@ def _requred_url(name:str,environ: Mapping[str,str]) -> str:
     _validate_url(url)
     return url
 
+def _requred_tg_token(name:str,environ: Mapping[str,str]) -> str:
+    token = _required_env(name,environ)
+    try:
+        _ = validate_token(token)
+    except ValueError as err:
+        raise ConfigError from err
+    return token
+
 def _optional_url(name:str,environ: Mapping[str,str]) -> str | None:
     url = _optional_env(name,environ)
     if url is None:
@@ -84,7 +93,7 @@ class Config:
 
 def load_config(environ: Mapping[str,str]) -> Config:
     return Config(
-        telegram_token = _required_env("ARDTG_TELEGRAM_TOKEN", environ),
+        telegram_token = _requred_tg_token("ARDTG_TELEGRAM_TOKEN", environ),
         agent_url = _requred_url("ARDTG_AGENT_URL", environ),
         agent_datapath = _required_env("ARDTG_AGENT_DATAPATH", environ),
         file_storage_path = _required_env("ARDTG_FILESTORAGE_PATH", environ),
