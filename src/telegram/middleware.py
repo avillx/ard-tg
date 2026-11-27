@@ -3,7 +3,7 @@ lazy import logging
 
 from telebot.handler_backends import BaseMiddleware, CancelUpdate
 
-from agent.contacts import AlreadyExistContactError, ContactSink
+from domain.contacts import AlreadyExistContactError, ContactSink
 from telegram.tools import telebot_types
 
 

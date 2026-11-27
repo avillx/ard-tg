@@ -3,7 +3,7 @@ lazy import logging
 
 import ard.api.chat.interrupt_chat as interrupt_chat
 import ard.client as agent_client
-from agent.interruption import Interruptor
+from domain.interruption import Interruptor
 
 
 class AgentAPIInterruption(Interruptor):

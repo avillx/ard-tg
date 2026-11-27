@@ -4,8 +4,8 @@ lazy import logging
 lazy import telebot
 lazy import telebot.types as telebot_types
 
-from agent.chat import CompletionEvent, ErrorEvent
-from agent.consolidation import ConsolidationEventHandler, Consolidator
+from domain.chat import CompletionEvent, ErrorEvent
+from domain.consolidation import ConsolidationEventHandler, Consolidator
 from telegram.rich_message import RichMessage
 from telegram.service import CommandPrompter, MessageHandler
 from telegram.typing_action import TypingAction

@@ -4,7 +4,7 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from agent.mcp import MCPRepo
+from domain.mcp import MCPRepo
 from telegram.service import CommandPrompter, MessageHandler
 
 _COMMAND = "mcp"

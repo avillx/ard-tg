@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import override
 
-from agent.chat import ContentPart, ProvidedToolCallEvent, Tool, ToolResult
+from domain.chat import ContentPart, ProvidedToolCallEvent, Tool, ToolResult
 
 
 class ToolResultSink(ABC):

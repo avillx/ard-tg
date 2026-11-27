@@ -4,7 +4,7 @@ from typing import Any, Protocol, Self, cast, override
 lazy import logging
 
 import ard.models as models
-from agent.chat import (
+from domain.chat import (
     ChatStreamer,
     CompactionEvent,
     CompletionEvent,

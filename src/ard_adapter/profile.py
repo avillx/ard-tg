@@ -1,6 +1,6 @@
 from typing import override
 
-import agent.profile as profile
+import domain.profile as profile
 from ard.api.profiles import list_profiles
 from ard.client import Client
 from ard.types import Unset

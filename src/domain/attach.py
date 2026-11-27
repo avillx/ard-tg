@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import override
 lazy import logging
 
-from agent.session import SessionDefiner, SuperfluousSetSessionError
+from domain.session import SessionDefiner, SuperfluousSetSessionError
 
 
 class MessangerBot(ABC):

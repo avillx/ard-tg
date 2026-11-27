@@ -2,7 +2,7 @@
 from typing import override
 
 import ard.models as models
-from agent.session import SessionRepo
+from domain.session import SessionRepo
 from ard.api.sessions import create_session
 from ard.client import Client
 

@@ -3,7 +3,7 @@ from typing import override
 lazy import telebot
 lazy import telebot.types as telebot_types
 
-from agent.profile import ProfileRepo, ProfileSetter
+from domain.profile import ProfileRepo, ProfileSetter
 from telegram.service import CallBackQueryHandler, CommandPrompter, MessageHandler
 
 BUTTON_PREFIX = "profile"

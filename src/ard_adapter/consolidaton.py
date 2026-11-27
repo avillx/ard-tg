@@ -2,8 +2,8 @@
 from typing import override
 
 import ard.client as agent_client
-from adapter.chat import StopStream, determine_internal_response
-from agent.consolidation import ConsolidationStreamer
+from ard_adapter.chat import StopStream, determine_internal_response
+from domain.consolidation import ConsolidationStreamer
 
 _DEFAULT_CONSOLIDATION_STREAM_TIMEOUT = 10000
 

@@ -3,8 +3,8 @@ from typing import override
 lazy import telebot
 lazy import telebot.types as telebot_types
 
-from agent.interruption import Interruptor
-from agent.session import SessionSource
+from domain.interruption import Interruptor
+from domain.session import SessionSource
 from telegram.service import CommandPrompter, MessageHandler
 
 _COMMAND = "interrupt"

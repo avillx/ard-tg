@@ -4,7 +4,7 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from agent.chat import ToolCall
+from domain.chat import ToolCall
 
 _TOOL_ARG_REPRESENT_LENGHT = 50
 

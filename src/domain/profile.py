@@ -3,7 +3,7 @@ from typing import override
 
 from attr import dataclass
 
-from agent.session import ProfileSource
+from domain.session import ProfileSource
 from ard import client as agent_client
 
 

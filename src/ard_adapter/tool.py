@@ -2,9 +2,9 @@ import logging
 from typing import override
 
 import ard.models as models
-from adapter.chat import prepare_content_part
-from agent.chat import ToolResult
-from agent.tool import ToolResultSink
+from ard_adapter.chat import prepare_content_part
+from domain.chat import ToolResult
+from domain.tool import ToolResultSink
 from ard.api.tool_results import resolve_tool_call
 from ard.client import Client
 

@@ -1,7 +1,7 @@
 from typing import override
 lazy import logging
 
-import agent.task as task
+import domain.task as task
 import ard.api.tasks.list_tasks as list_tasks
 import ard.client as agent_client
 

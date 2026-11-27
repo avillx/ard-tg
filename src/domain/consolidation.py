@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from typing import override
 
-from agent.chat import CompletionEvent, ErrorEvent, Event
+from domain.chat import CompletionEvent, ErrorEvent, Event
 
 
 class ConsolidationEventHandler(ABC):

@@ -4,7 +4,7 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from agent.activity import TodayActivity
+from domain.activity import TodayActivity
 from telegram.service import CommandPrompter, MessageHandler
 
 _COMMAND = "activity"

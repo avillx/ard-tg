@@ -3,7 +3,7 @@ from typing import override
 
 lazy import telebot
 
-from agent.chat import Tool,ToolArgs
+from domain.chat import Tool,ToolArgs
 from telegram.handler_general_message import TelegramToolFactory
 
 class SendStickerTool(Tool):

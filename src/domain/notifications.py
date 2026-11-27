@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import override
 lazy import logging
 
-from agent.attach import MessangerBot
+from domain.attach import MessangerBot
 
 
 class Notifier(ABC):

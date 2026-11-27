@@ -6,9 +6,9 @@ lazy import types
 
 lazy import telebot
 
-from agent.attach import Attacher
-from agent.contacts import ContactStore
-from agent.notifications import Notifier
+from domain.attach import Attacher
+from domain.contacts import ContactStore
+from domain.notifications import Notifier
 from server.endpoints import AttachSessionHandler, ContactsHandler, HealthHandler, WebhookHandler
 from server.http_server import NiceHTTPServer
 lazy import telegram

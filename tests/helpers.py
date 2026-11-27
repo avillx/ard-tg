@@ -1,6 +1,6 @@
 from typing import Any
 
-from agent.tool import SafeTool
+from domain.tool import SafeTool
 
 
 class FakeTool(SafeTool):

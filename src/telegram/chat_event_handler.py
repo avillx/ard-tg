@@ -2,7 +2,7 @@ from typing import override
 
 import telebot.formatting as fmt
 
-from agent.chat import (
+from domain.chat import (
     CompactionEvent,
     CompletionEvent,
     CompletionMistakeEvent,
@@ -14,7 +14,7 @@ from agent.chat import (
     ToolErrorEvent,
     ToolResultEvent,
 )
-from agent.tool import ToolExecutor
+from domain.tool import ToolExecutor
 from telegram.rich_message import RichMessage
 from telegram.typing_action import TypingAction
 

@@ -4,7 +4,7 @@ from typing import override
 import telebot
 from telebot import types as telebot_types
 
-from agent.chat import Tool, ToolArgs
+from domain.chat import Tool, ToolArgs
 from telegram.handler_general_message import TelegramToolFactory
 
 

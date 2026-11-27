@@ -2,9 +2,9 @@ import unittest.mock
 
 import pytest
 
-import agent.profile as profile_mod
+import domain.profile as profile_mod
 import ard.models as models
-from agent.profile import ProfileService
+from domain.profile import ProfileService
 
 
 def make_service(

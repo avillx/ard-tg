@@ -4,7 +4,7 @@ from typing import cast
 import pytest
 from helpers import FailingTool, FakeTool
 
-import agent.event as event
+import domain.event as event
 import ard.models as models
 
 CLIENT = unittest.mock.Mock()

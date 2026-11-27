@@ -1,7 +1,7 @@
 import json
 from typing import Any, cast, override
 
-from agent.contacts import Contact, ContactRepo
+from domain.contacts import Contact, ContactRepo
 from storage.storage import Storage
 
 _CONTACTS_FILE = "contacts.json"

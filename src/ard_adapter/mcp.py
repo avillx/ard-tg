@@ -3,7 +3,7 @@ lazy import logging
 
 import ard.api.mcp.list_mcp_servers as list_mcp_servers
 import ard.client as agent_client
-from agent.mcp import MCPRepo
+from domain.mcp import MCPRepo
 
 
 class AgentAPIMCPListAdapter(MCPRepo):

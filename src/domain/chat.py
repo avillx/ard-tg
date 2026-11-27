@@ -5,8 +5,8 @@ lazy import logging
 
 from attr import dataclass
 
-import agent.interruption as interruption
-import agent.session as session
+import domain.interruption as interruption
+import domain.session as session
 
 ToolArgs = dict[str, Any] # pyright: ignore[reportExplicitAny]
 ResultID = str

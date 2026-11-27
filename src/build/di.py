@@ -3,7 +3,7 @@ from pathlib import Path
 
 import telebot
 
-import agent
+import domain
 import ard.client as client
 import attach
 import contacts
@@ -58,20 +58,20 @@ def bot_server(cfg: build.Config) -> server.BotServer:
 
     agent_client = client.Client(base_url=cfg.agent_url)
 
-    proifle_service = agent.ProfileService(
+    proifle_service = domain.ProfileService(
         agent_client=agent_client,
     )
 
-    session_service = agent.SessionService(
+    session_service = domain.SessionService(
         agent_client=agent_client,
         life_time=float(cfg.session_life_time),
         logger=logger,
         instruction=telegram.TELEGRAM_GUIDE,
-        time=agent.SystemTime(),
+        time=domain.SystemTime(),
         profile_source=proifle_service,
     )
 
-    agent_service = agent.Service(
+    agent_service = domain.Service(
         agent_url=cfg.agent_url,
         agent_client=agent_client,
         session_service=session_service,

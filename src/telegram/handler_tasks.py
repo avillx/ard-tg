@@ -4,7 +4,7 @@ import telebot
 import telebot.formatting as fmt
 import telebot.types as telebot_types
 
-from agent.task import TasksListService
+from domain.task import TasksListService
 from telegram.service import CommandPrompter, MessageHandler
 
 _COMMAND = "tasks"

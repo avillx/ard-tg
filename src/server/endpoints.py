@@ -8,8 +8,8 @@ lazy from email.message import Message
 import telebot
 from telebot import types as telebot_types
 
-from agent.attach import Attacher
-from agent.contacts import ContactStore
+from domain.attach import Attacher
+from domain.contacts import ContactStore
 from server.http_server import EndpointHandler, ErrorResponse, JSONResponse, Response
 
 

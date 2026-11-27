@@ -5,8 +5,8 @@ lazy import logging
 import ard.api.activity.get_activity as get_activity
 import ard.client as agent_client
 import ard.models as models
-from agent.activity import ActivityRecord, ActivityRepo
 from ard.types import UNSET
+from domain.activity import ActivityRecord, ActivityRepo
 
 
 class AgentAPIActivityRepo(ActivityRepo):

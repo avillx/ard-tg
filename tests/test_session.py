@@ -3,9 +3,9 @@ import unittest.mock
 
 import pytest
 
-import agent.session as session_mod
+import domain.session as session_mod
 import ard.models as models
-from agent.session import ProfileSource, SessionService, SystemTime, TimeProvider
+from domain.session import ProfileSource, SessionService, SystemTime, TimeProvider
 
 
 class FakeTime(TimeProvider):

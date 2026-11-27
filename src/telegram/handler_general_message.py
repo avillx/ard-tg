@@ -6,8 +6,8 @@ lazy import logging
 lazy import telebot
 lazy import telebot.types as telebot_types
 
-from agent.chat import Chat, ContentPart, HandlerError, Tool
-from agent.tool import ToolExecutor
+from domain.chat import Chat, ContentPart, HandlerError, Tool
+from domain.tool import ToolExecutor
 from telegram.attachments import Attachment, extract_attachments
 from telegram.chat_event_handler import TelegramEventHandler
 from telegram.rich_message import RichMessage
