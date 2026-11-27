@@ -1,13 +1,14 @@
-import ardtg.build
+from ardtg.build.config import ConfigError, Config
+from ardtg.build.di import build_app
+from ardtg.build.logging import configure_logging
 
 if __name__ == "__main__":
-    build.configure_logging()
+    configure_logging()
 
     try:
-        config = build.Config()
-    except Exception as e:
-        raise SystemExit(f"Bad config: {e}") from e
+        config = Config()
+    except ConfigError as err:
+        raise SystemExit(f"Bad config: {err}") from err
 
-    app = build.bot_server(config)
-
+    app = build_app(config)
     app.run()

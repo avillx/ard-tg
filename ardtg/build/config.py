@@ -8,6 +8,8 @@ from ardtg.domain.session import DEFAULT_SESSION_TTL
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+class ConfigError(ValueError):
+    pass
 
 def _env_value[ValueT](
     name: str, parse: Callable[[str], ValueT], default: ValueT, expected: str
@@ -19,7 +21,7 @@ def _env_value[ValueT](
     try:
         return parse(raw)
     except ValueError as e:
-        raise ValueError(f"'{name}' must be {expected}") from e
+        raise ConfigError(f"'{name}' must be {expected}") from e
 
 
 def _parse_chat_ids(raw: str) -> list[int]:
@@ -29,40 +31,53 @@ def _parse_chat_ids(raw: str) -> list[int]:
 def _env_value_session_ttl() -> float:
     return _env_value("ARDTG_SESSION_LIFE_TIME", float, DEFAULT_SESSION_TTL, "a number")
 
+def _optional_env(name: str) -> str:
+    return os.getenv(name, "")
+
+def _required_env(name: str) -> str:
+    value = os.getenv(name, "")
+    if value == "":
+        raise ConfigError(f"'{name}' is required")
+    return value
+
+def _validate_url(url: str):
+    try:
+        parsed = urlparse.urlparse(url)
+        _ = parsed.port  # raise ValueError on invalid port
+    except ValueError as err:
+        raise ConfigError(f"config has invalid url: '{url}' ") from err
+
+    if parsed.scheme not in ("http", "https"):
+        raise ConfigError(f"config has invalid url: '{url}'. must start with http or https scheme")
+
+
+def _requred_url(name:str) -> str:
+    url = _required_env(name)
+    _validate_url(name)
+    return url
+
+def _optional_url(name:str) -> str:
+    url = _optional_env(name)
+    if url != "":
+        _validate_url(name)
+    return url
 
 @dataclass(frozen=True, slots=True)
 class Config:
-    telegram_token: str = os.getenv("ARDTG_TELEGRAM_TOKEN", "")
-    agent_url: str = os.getenv("ARDTG_AGENT_URL", "")
-    sticker_pack: str = os.getenv("ARDTG_STICKER_PACK", "")
-    webhook_url: str = os.getenv("ARDTG_WEBHOOK_URL", "")
-    agent_datapath: str = os.getenv("ARDTG_AGENT_DATAPATH", "")
-    file_storage_path: str = os.getenv("ARDTG_FILESTORAGE_PATH", "")
+
+    # required envs
+    telegram_token: str = _required_env("ARDTG_TELEGRAM_TOKEN")
+    agent_url: str = _requred_url("ARDTG_AGENT_URL")
+    agent_datapath: str = _required_env("ARDTG_AGENT_DATAPATH")
+    file_storage_path: str = _required_env("ARDTG_FILESTORAGE_PATH")
+
+    # optional envs
+    webhook_url: str = _optional_url("ARDTG_WEBHOOK_URL")
+    sticker_pack: str = _optional_env("ARDTG_STICKER_PACK")
+
+    # typed envs
     notify_chat_id: int | None = _env_value("ARDTG_NOTIFY_CHAT_ID", int, None, "a chat id")
     allowed_chats: list[int] = field(
         default_factory=lambda: _env_value("ARDTG_ALLOWED_CHATS", _parse_chat_ids, [], "a chat id")
     )
     session_life_time: float = _env_value_session_ttl()
-
-    def __post_init__(self) -> None:
-        if self.agent_datapath == "":
-            raise ValueError("'ARDTG_AGENT_DATAPATH' is required")
-
-        if self.file_storage_path == "":
-            raise ValueError("'ARDTG_FILESTORAGE_PATH' is required")
-
-        if self.telegram_token == "":
-            raise ValueError("'ARDTG_TELEGRAM_TOKEN' is required")
-
-        if self.agent_url == "":
-            raise ValueError("'ARDTG_AGENT_URL' is required")
-
-        # validate url
-        try:
-            parsed = urlparse.urlparse(self.agent_url)
-            _ = parsed.port  # raise ValueError on invalid port
-        except ValueError as e:
-            raise ValueError(f"'ARDTG_AGENT_URL' is invalid: '{self.agent_url}' ") from e
-
-        if parsed.scheme not in ("http", "https"):
-            raise ValueError("'ARDTG_AGENT_URL' must start with http or https scheme")
